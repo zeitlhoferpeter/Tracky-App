@@ -55,7 +55,7 @@
             border-radius: 6px;
             font-weight: bold;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             margin-top: 0;
             text-align: center;
             white-space: nowrap;
@@ -378,6 +378,21 @@
             margin-top: 12px;
         }
 
+        /* IFrame für Live Cup Seiten */
+        .cup-iframe-container {
+            margin-top: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+            background: white;
+            height: 450px;
+        }
+        .cup-iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
         /* Modal für Vollbild-Bildansicht */
         #imageModal {
             display: none;
@@ -419,11 +434,12 @@
         <button id="tabAppBtn" class="tab-btn active" onclick="switchPage('app')">🏁 Setup</button>
         <button id="tabCurvesBtn" class="tab-btn" onclick="switchPage('curves')">🗺️ Kurven</button>
         <button id="tabLapsBtn" class="tab-btn" onclick="switchPage('laps')">⏱️ Zeiten</button>
+        <button id="tabCupBtn" class="tab-btn" onclick="switchPage('cup')">🌐 Cup</button>
         <button id="tabPackBtn" class="tab-btn" onclick="switchPage('pack')">🎒 Packen</button>
     </div>
 
     <!-- GEMEINSAME AUSWAHLBOX FÜR DIE HAUPTSEITEN -->
-    <div class="selector-box">
+    <div id="selectorBoxContainer" class="selector-box">
         <div class="grid-2" style="margin-bottom:8px;">
             <div>
                 <label for="trackSelect"><strong>Rennstrecke:</strong></label>
@@ -605,7 +621,35 @@
         </div>
     </div>
 
-    <!-- SEITE 4: PACKLISTE -->
+    <!-- SEITE 4: CUP & LIVE-ERGEBNISSE (PDF) -->
+    <div id="pageCup" class="page-content">
+        <div class="setup-box">
+            <h3>🌐 Cup-Ergebnisse (PDF)</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0;">Da PDFs auf Smartphones im IFrame manchmal blockiert werden, öffne das Cup-PDF am besten direkt über den Button:</p>
+
+            <div style="margin-top: 15px;">
+                <button type="button" class="btn-success" style="font-size: 1.1rem; padding: 15px;" onclick="openCupInBrowser()">📄 Cup-PDF öffnen (Empfohlen)</button>
+            </div>
+
+            <div style="margin-top:15px;">
+                <label style="font-size:0.75rem; font-weight:bold; color:var(--primary)">PDF-Link anpassen (falls nötig):</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="url" id="cupUrlInput" placeholder="https://..." style="margin-bottom:0;">
+                    <button type="button" class="btn-secondary" style="margin-top:0; width:auto; padding: 0 15px;" onclick="saveCupUrl()">Speichern</button>
+                </div>
+            </div>
+
+            <div style="margin-top: 10px; display: flex; gap: 8px;">
+                <button type="button" class="btn-warning" style="margin-top:0; font-size: 0.85rem; padding: 8px;" onclick="reloadCupFrame()">🔄 Vorschau aktualisieren</button>
+            </div>
+
+            <div class="cup-iframe-container" style="margin-top: 12px;">
+                <iframe id="cupIframe" src="" title="Cup Ergebnisse PDF"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEITE 5: PACKLISTE -->
     <div id="pagePack" class="page-content">
         <div class="pack-box">
             <h3>Packliste für den Trackday</h3>
@@ -687,12 +731,22 @@
         document.getElementById('pageApp').classList.remove('active');
         document.getElementById('pageCurves').classList.remove('active');
         document.getElementById('pageLaps').classList.remove('active');
+        document.getElementById('pageCup').classList.remove('active');
         document.getElementById('pagePack').classList.remove('active');
         
         document.getElementById('tabAppBtn').classList.remove('active');
         document.getElementById('tabCurvesBtn').classList.remove('active');
         document.getElementById('tabLapsBtn').classList.remove('active');
+        document.getElementById('tabCupBtn').classList.remove('active');
         document.getElementById('tabPackBtn').classList.remove('active');
+
+        // Streckenauswahl-Box auf Cup-Seite ausblenden, auf anderen anzeigen
+        const selectorBox = document.getElementById('selectorBoxContainer');
+        if (page === 'cup') {
+            selectorBox.style.display = 'none';
+        } else {
+            selectorBox.style.display = 'block';
+        }
 
         if (page === 'app') {
             document.getElementById('pageApp').classList.add('active');
@@ -705,6 +759,10 @@
             document.getElementById('tabLapsBtn').classList.add('active');
             analyzeLaps();
             autoIncrementLapNum();
+        } else if (page === 'cup') {
+            document.getElementById('pageCup').classList.add('active');
+            document.getElementById('tabCupBtn').classList.add('active');
+            loadCupUrlIntoFrame();
         } else {
             document.getElementById('pagePack').classList.add('active');
             document.getElementById('tabPackBtn').classList.add('active');
@@ -715,7 +773,51 @@
         renderCurvesStructure();
         updateSessionDropdown();
         loadPacking();
+        loadSavedCupUrl();
         updateAllTimeBestDisplay();
+    }
+
+    function saveCupUrl() {
+        const url = document.getElementById('cupUrlInput').value.trim();
+        localStorage.setItem('trackday_cup_url', url);
+        alert('Cup-URL erfolgreich gespeichert!');
+        loadCupUrlIntoFrame();
+    }
+
+    function loadSavedCupUrl() {
+        const saved = localStorage.getItem('trackday_cup_url');
+        // PDF Link fest hinterlegen
+        const defaultUrl = "https://www.stardesignracing.com/wp-content/uploads/2026/07/Cup-2026.pdf"; 
+        
+        if (saved) {
+            document.getElementById('cupUrlInput').value = saved;
+        } else {
+            document.getElementById('cupUrlInput').value = defaultUrl;
+        }
+    }
+
+    function loadCupUrlIntoFrame() {
+        const url = document.getElementById('cupUrlInput').value.trim();
+        const iframe = document.getElementById('cupIframe');
+        if (url) {
+            iframe.src = url;
+        } else {
+            iframe.src = "about:blank";
+        }
+    }
+
+    function reloadCupFrame() {
+        const iframe = document.getElementById('cupIframe');
+        iframe.src = iframe.src;
+    }
+
+    function openCupInBrowser() {
+        const url = document.getElementById('cupUrlInput').value.trim();
+        if (!url) {
+            alert('Bitte zuerst eine gültige URL eintragen.');
+            return;
+        }
+        window.open(url, '_blank');
     }
 
     function renderCurvesStructure() {
@@ -994,7 +1096,6 @@
             lapTimesArea.value = formattedLapTimeLine;
         }
 
-        // Felder für nächstes Eingeben leeren und Runden-Nummer hochzählen
         document.getElementById('manualMin').value = '';
         document.getElementById('manualSec').value = '';
         document.getElementById('manualMs').value = '';
@@ -1003,7 +1104,6 @@
         analyzeLaps();
     }
 
-    // FOTO-SCANNER (Liest Ziffern/Zeiten aus dem Bild)
     function handleLapPhotoScan(event) {
         const file = event.target.files[0];
         if (!file) return;
