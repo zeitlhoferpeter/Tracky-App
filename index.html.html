@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracky</title>
+    <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --primary: #2563eb;
+            --text: #111827;
+            --text-muted: #4b5563;
+            --border: #d1d5db;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            padding: 10px;
+        }
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+        }
+        header {
+            background: #111827;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        header h1 { margin: 0; font-size: 1.3rem; }
+        .selector-box, .setup-box {
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border);
+        }
+        select, input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 0.9rem;
+        }
+        .curve-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        .curve-header {
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 5px;
+            font-size: 1rem;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+        }
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 1rem;
+        }
+        button:active { background-color: #1d4ed8; }
+        .save-notice {
+            text-align: center;
+            font-size: 0.85rem;
+            color: green;
+            margin-top: 8px;
+            font-weight: bold;
+            display: none;
+        }
+        h3 { margin-top: 0; color: #1f2937; font-size: 1.05rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Trackday Companion</h1>
+        <p style="margin:5px 0 0; font-size:0.8rem; color:#93c5fd;">Kurven-Protokoll, Setup & Fahrwerk</p>
+    </header>
+
+    <div class="selector-box">
+        <label for="trackSelect"><strong>Rennstrecke wählen:</strong></label>
+        <select id="trackSelect" onchange="changeTrack()">
+            <option value="pannoniaring">Pannoniaring (18 Kurven)</option>
+            <option value="slovakia">Slovakiaring (14 Kurven)</option>
+            <option value="brünn">Automotodrom Brno / Brünn (14 Kurven)</option>
+            <option value="most">Autodrom Most (21 Kurven)</option>
+            <option value="grobnik">Automotodrom Grobnik / Rijeka (18 Kurven)</option>
+        </select>
+    </div>
+
+    <div class="setup-box">
+        <h3>Turn Setup, Drücke & Fahrwerk</h3>
+        <div class="grid-3">
+            <div>
+                <label style="font-size:0.75rem">Reifendruck (kalt/warm)</label>
+                <input type="text" id="tirePressure" placeholder="z.B. 2.1 / 2.5 bar">
+            </div>
+            <div>
+                <label style="font-size:0.75rem">Außentemperatur</label>
+                <input type="text" id="outsideTemp" placeholder="z.B. 24°C">
+            </div>
+            <div>
+                <label style="font-size:0.75rem">Übersetzung / Final Drive</label>
+                <input type="text" id="gearing" placeholder="z.B. 15/42">
+            </div>
+        </div>
+        <div class="grid-3">
+            <div>
+                <label style="font-size:0.75rem">Zugstufe (v / h)</label>
+                <input type="text" id="rebound" placeholder="z.B. 8 / 10 Klicks">
+            </div>
+            <div>
+                <label style="font-size:0.75rem">Druckstufe (v / h)</label>
+                <input type="text" id="compression" placeholder="z.B. 6 / 8 Klicks">
+            </div>
+            <div>
+                <label style="font-size:0.75rem">Federvorspannung (v / h)</label>
+                <input type="text" id="preload" placeholder="z.B. 5 Ringe / 12mm">
+            </div>
+        </div>
+    </div>
+
+    <div id="curvesContainer"></div>
+
+    <button onclick="saveData()">Daten Speichern</button>
+    <div id="saveNotice" class="save-notice">Erfolgreich gespeichert!</div>
+</div>
+
+<script>
+    const tracks = {
+        pannoniaring: 18,
+        slovakia: 14,
+        brünn: 14,
+        most: 21,
+        grobnik: 18
+    };
+
+    function renderApp() {
+        const trackKey = document.getElementById('trackSelect').value;
+        const totalCurves = tracks[trackKey];
+        const container = document.getElementById('curvesContainer');
+        container.innerHTML = '';
+
+        // Start / Ziel entry
+        container.innerHTML += createCurveHTML('start', 'Start / Ziel');
+
+        for (let i = 1; i <= totalCurves; i++) {
+            container.innerHTML += createCurveHTML(i, `Kurve ${i}`);
+        }
+
+        loadData();
+    }
+
+    function createCurveHTML(id, title) {
+        return `
+            <div class="curve-card">
+                <div class="curve-header">${title}</div>
+                <div class="grid-2">
+                    <div>
+                        <label style="font-size:0.75rem">Bremspunkt / Referenz</label>
+                        <input type="text" id="brake_${id}" placeholder="z.B. 100m Schild">
+                    </div>
+                    <div>
+                        <label style="font-size:0.75rem">Gang / Drehzahl</label>
+                        <input type="text" id="gear_${id}" placeholder="z.B. 3. Gang">
+                    </div>
+                </div>
+                <div>
+                    <label style="font-size:0.75rem">Ideallinie / Apex / Notizen</label>
+                    <textarea id="notes_${id}" rows="2" placeholder="Spät einlenken, Curb mitnehmen..."></textarea>
+                </div>
+            </div>
+        `;
+    }
+
+    function changeTrack() {
+        renderApp();
+    }
+
+    function saveData() {
+        const trackKey = document.getElementById('trackSelect').value;
+        const totalCurves = tracks[trackKey];
+        const data = {};
+
+        // Save general setup
+        data['tirePressure'] = document.getElementById('tirePressure').value;
+        data['outsideTemp'] = document.getElementById('outsideTemp').value;
+        data['gearing'] = document.getElementById('gearing').value;
+        data['rebound'] = document.getElementById('rebound').value;
+        data['compression'] = document.getElementById('compression').value;
+        data['preload'] = document.getElementById('preload').value;
+
+        // Save Start/Ziel
+        data['brake_start'] = document.getElementById('brake_start').value;
+        data['gear_start'] = document.getElementById('gear_start').value;
+        data['notes_start'] = document.getElementById('notes_start').value;
+
+        for (let i = 1; i <= totalCurves; i++) {
+            data[`brake_${i}`] = document.getElementById(`brake_${i}`).value;
+            data[`gear_${i}`] = document.getElementById(`gear_${i}`).value;
+            data[`notes_${i}`] = document.getElementById(`notes_${i}`).value;
+        }
+
+        localStorage.setItem('trackday_' + trackKey, JSON.stringify(data));
+        
+        const notice = document.getElementById('saveNotice');
+        notice.style.display = 'block';
+        setTimeout(() => notice.style.display = 'none', 2000);
+    }
+
+    function loadData() {
+        const trackKey = document.getElementById('trackSelect').value;
+        const saved = localStorage.getItem('trackday_' + trackKey);
+        
+        document.getElementById('tirePressure').value = '';
+        document.getElementById('outsideTemp').value = '';
+        document.getElementById('gearing').value = '';
+        document.getElementById('rebound').value = '';
+        document.getElementById('compression').value = '';
+        document.getElementById('preload').value = '';
+
+        if (!saved) return;
+
+        const data = JSON.parse(saved);
+        
+        document.getElementById('tirePressure').value = data['tirePressure'] || '';
+        document.getElementById('outsideTemp').value = data['outsideTemp'] || '';
+        document.getElementById('gearing').value = data['gearing'] || '';
+        document.getElementById('rebound').value = data['rebound'] || '';
+        document.getElementById('compression').value = data['compression'] || '';
+        document.getElementById('preload').value = data['preload'] || '';
+
+        if(document.getElementById('brake_start')) {
+            document.getElementById('brake_start').value = data['brake_start'] || '';
+            document.getElementById('gear_start').value = data['gear_start'] || '';
+            document.getElementById('notes_start').value = data['notes_start'] || '';
+        }
+
+        const totalCurves = tracks[trackKey];
+        for (let i = 1; i <= totalCurves; i++) {
+            if(document.getElementById(`brake_${i}`)) {
+                document.getElementById(`brake_${i}`).value = data[`brake_${i}`] || '';
+                document.getElementById(`gear_${i}`).value = data[`gear_${i}`] || '';
+                document.getElementById(`notes_${i}`).value = data[`notes_${i}`] || '';
+            }
+        }
+    }
+
+    // Init on load
+    renderApp();
+</script>
+
+</body>
+</html>
