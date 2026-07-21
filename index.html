@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UpperRacing</title>
-    <link rel="manifest" href="manifest.json">
+    <!-- Eingebettetes Manifest für fehlerfreie Installation -->
+    <link rel="manifest" href='data:application/manifest+json,{"name":"UpperRacing","short_name":"UpperRacing","start_url":".","display":"standalone","background_color":"#f3f4f6","theme_color":"#2563eb","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3214/3214738.png","sizes":"512x512","type":"image/png"}]}'>
     <!-- Tesseract.js für die Texterkennung (OCR) von Screenshots -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
@@ -38,7 +39,7 @@
         }
         header h1 { margin: 0; font-size: 1.3rem; }
         
-        /* Navigation zwischen den Seiten */
+        /* Navigation zwischen den Seiten / Tabs */
         .nav-tabs {
             display: flex;
             gap: 6px;
@@ -115,7 +116,6 @@
             grid-template-columns: 1fr 1fr 1fr;
             gap: 8px;
         }
-        /* Reifendruck-Container mit +/- Buttons */
         .pressure-group {
             display: flex;
             gap: 4px;
@@ -175,7 +175,6 @@
         }
         h3 { margin-top: 0; color: #1f2937; font-size: 1.05rem; }
 
-        /* Packliste Styling */
         .pack-category {
             font-weight: bold;
             color: var(--primary);
@@ -254,7 +253,6 @@
         <p style="margin:5px 0 0; font-size:0.8rem; color:#93c5fd;">Protokoll, Setup & Rundenzeiten</p>
     </header>
 
-    <!-- Navigation zwischen den Seiten / Tabs -->
     <div class="nav-tabs">
         <button id="tabAppBtn" class="tab-btn active" onclick="switchPage('app')">🏁 Setup</button>
         <button id="tabLapsBtn" class="tab-btn" onclick="switchPage('laps')">⏱️ Rundenzeiten</button>
@@ -355,7 +353,6 @@
                 <textarea id="lapTimes" rows="6" placeholder="Runde 1: 2:05.1&#10;Runde 2: 2:04.3&#10;Runde 3: 2:03.9..."></textarea>
             </div>
 
-            <!-- RACE MONITOR IMPORT BEREICH -->
             <div class="import-box">
                 <label style="font-size:0.75rem; font-weight:bold; color:var(--primary); display:block;">📊 Race Monitor Automatik-Import</label>
                 <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom: 5px;">Screenshot der App hochladen (scannt automatisch nach Rundenzeiten und fügt sie oben ein):</div>
@@ -409,7 +406,6 @@
             <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p26" onchange="savePacking()"><label for="p26">Smartphone-Ladekabel & Powerbank</label></div></div>
             <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p27" onchange="savePacking()"><label for="p27">Schmerzmittel / persönliche Medikation</label></div></div>
 
-            <!-- Eigene Einträge Kategorie -->
             <div class="pack-category">➕ Eigene Gegenstände</div>
             <div id="customItemsContainer"></div>
 
@@ -427,372 +423,4 @@
         slovakia:     ["", "", "", "", "", "", "", "", "", "", "", "", "", ""],
         brünn:        ["", "", "", "", "", "", "", "", "", "", "", "", "", ""],
         most:         ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-        grobnik:      ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
-    };
-
-    const tracks = {
-        pannoniaring: 18,
-        slovakia: 14,
-        brünn: 14,
-        most: 21,
-        grobnik: 18
-    };
-
-    let customItemsList = [];
-    let storedImageBase64 = "";
-
-    function switchPage(page) {
-        document.getElementById('pageApp').classList.remove('active');
-        document.getElementById('pageLaps').classList.remove('active');
-        document.getElementById('pagePack').classList.remove('active');
-        document.getElementById('tabAppBtn').classList.remove('active');
-        document.getElementById('tabLapsBtn').classList.remove('active');
-        document.getElementById('tabPackBtn').classList.remove('active');
-
-        if (page === 'app') {
-            document.getElementById('pageApp').classList.add('active');
-            document.getElementById('tabAppBtn').classList.add('active');
-        } else if (page === 'laps') {
-            document.getElementById('pageLaps').classList.add('active');
-            document.getElementById('tabLapsBtn').classList.add('active');
-        } else {
-            document.getElementById('pagePack').classList.add('active');
-            document.getElementById('tabPackBtn').classList.add('active');
-        }
-    }
-
-    function renderApp() {
-        const trackKey = document.getElementById('trackSelect').value;
-        const totalCurves = tracks[trackKey];
-        const directions = trackDirections[trackKey];
-        const container = document.getElementById('curvesContainer');
-        container.innerHTML = '';
-
-        container.innerHTML += createCurveHTML('start', 'Start / Ziel', false, '');
-
-        for (let i = 1; i <= totalCurves; i++) {
-            const defaultDir = directions[i - 1] || '';
-            container.innerHTML += createCurveHTML(i, `Kurve ${i}`, true, defaultDir);
-        }
-
-        loadData();
-        loadPacking();
-    }
-
-    function createCurveHTML(id, title, showDir, defaultDir) {
-        let dirField = showDir ? `<input type="text" id="dir_${id}" class="direction-input" value="${defaultDir}" placeholder="L/R" maxlength="3">` : '';
-        return `
-            <div class="curve-card">
-                <div class="curve-header-row">
-                    <div class="curve-header">${title}</div>
-                    ${dirField}
-                </div>
-                <div class="grid-2">
-                    <div>
-                        <label style="font-size:0.75rem">Bremspunkt / Referenz</label>
-                        <input type="text" id="brake_${id}" placeholder="z.B. 100m Schild">
-                    </div>
-                    <div>
-                        <label style="font-size:0.75rem">Gang / Drehzahl</label>
-                        <input type="text" id="gear_${id}" placeholder="z.B. 3. Gang">
-                    </div>
-                </div>
-                <div>
-                    <label style="font-size:0.75rem">Ideallinie / Apex / Notizen</label>
-                    <textarea id="notes_${id}" rows="2" placeholder="Spät einlenken, Curb mitnehmen..."></textarea>
-                </div>
-            </div>
-        `;
-    }
-
-    function changeTrack() {
-        renderApp();
-    }
-
-    function adjustPressure(fieldId, amount) {
-        const input = document.getElementById(fieldId);
-        let val = parseFloat(input.value.replace(',', '.'));
-        if (isNaN(val)) {
-            val = amount > 0 ? 2.0 : 2.5;
-        }
-        val = Math.max(0, val + amount);
-        input.value = val.toFixed(1);
-    }
-
-    function handleImageUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            storedImageBase64 = e.target.result;
-            const preview = document.getElementById('tireImagePreview');
-            preview.src = storedImageBase64;
-            preview.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-    }
-
-    // Race Monitor Screenshot Import via OCR (Tesseract.js)
-    function importRaceMonitorImage(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const statusDiv = document.getElementById('ocrStatus');
-        statusDiv.innerText = "Analysiere Screenshot... Bitte warten.";
-
-        Tesseract.recognize(
-            file,
-            'eng',
-            { logger: m => console.log(m) }
-        ).then(({ data: { text } }) => {
-            statusDiv.innerText = "Auswertung erfolgreich!";
-            
-            // Regex um Rundenzeiten (z.B. 2:05.123 oder 1:45.4) zu finden
-            const timeRegex = /\b\d{1,2}:\d{2}\.\d{1,3}\b/g;
-            const foundTimes = text.match(timeRegex);
-
-            if (foundTimes && foundTimes.length > 0) {
-                let formattedList = "";
-                foundTimes.forEach((t, index) => {
-                    formattedList += `Runde ${index + 1}: ${t}\n`;
-                });
-
-                const lapBox = document.getElementById('lapTimes');
-                lapBox.value = formattedList.trim();
-                setTimeout(() => statusDiv.innerText = "", 3000);
-            } else {
-                statusDiv.innerText = "Keine Rundenzeiten im Bild gefunden. Bitte manuell prüfen.";
-            }
-        }).catch(err => {
-            console.error(err);
-            statusDiv.innerText = "Fehler bei der Texterkennung.";
-        });
-    }
-
-    function saveData() {
-        const trackKey = document.getElementById('trackSelect').value;
-        const totalCurves = tracks[trackKey];
-        const data = {};
-
-        data['tireFront'] = document.getElementById('tireFront').value;
-        data['tireRear'] = document.getElementById('tireRear').value;
-        data['outsideTemp'] = document.getElementById('outsideTemp').value;
-        data['gripNotes'] = document.getElementById('gripNotes').value;
-        data['gearing'] = document.getElementById('gearing').value;
-        data['rebound'] = document.getElementById('rebound').value;
-        data['compression'] = document.getElementById('compression').value;
-        data['preload'] = document.getElementById('preload').value;
-        data['quickFeedback'] = document.getElementById('quickFeedback').value;
-        data['lapTimes'] = document.getElementById('lapTimes').value;
-        data['tireImage'] = storedImageBase64;
-
-        data['brake_start'] = document.getElementById('brake_start').value;
-        data['gear_start'] = document.getElementById('gear_start').value;
-        data['notes_start'] = document.getElementById('notes_start').value;
-
-        for (let i = 1; i <= totalCurves; i++) {
-            data[`dir_${i}`] = document.getElementById(`dir_${i}`).value;
-            data[`brake_${i}`] = document.getElementById(`brake_${i}`).value;
-            data[`gear_${i}`] = document.getElementById(`gear_${i}`).value;
-            data[`notes_${i}`] = document.getElementById(`notes_${i}`).value;
-        }
-
-        localStorage.setItem('trackday_' + trackKey, JSON.stringify(data));
-        
-        const notice = document.getElementById('saveNotice');
-        if(notice) {
-            notice.style.display = 'block';
-            setTimeout(() => notice.style.display = 'none', 2000);
-        }
-        const noticeLaps = document.getElementById('saveNoticeLaps');
-        if(noticeLaps) {
-            noticeLaps.style.display = 'block';
-            setTimeout(() => noticeLaps.style.display = 'none', 2000);
-        }
-    }
-
-    function loadData() {
-        const trackKey = document.getElementById('trackSelect').value;
-        
-        document.getElementById('tireFront').value = '';
-        document.getElementById('tireRear').value = '';
-        document.getElementById('outsideTemp').value = '';
-        document.getElementById('gripNotes').value = '';
-        document.getElementById('gearing').value = '';
-        document.getElementById('rebound').value = '';
-        document.getElementById('compression').value = '';
-        document.getElementById('preload').value = '';
-        document.getElementById('quickFeedback').value = '';
-        document.getElementById('lapTimes').value = '';
-        document.getElementById('tireImageInput').value = '';
-        storedImageBase64 = "";
-        const preview = document.getElementById('tireImagePreview');
-        preview.src = '';
-        preview.style.display = 'none';
-
-        if(document.getElementById('brake_start')) {
-            document.getElementById('brake_start').value = '';
-            document.getElementById('gear_start').value = '';
-            document.getElementById('notes_start').value = '';
-        }
-
-        const totalCurves = tracks[trackKey];
-        for (let i = 1; i <= totalCurves; i++) {
-            if(document.getElementById(`dir_${i}`)) {
-                document.getElementById(`dir_${i}`).value = trackDirections[trackKey][i-1] || '';
-                document.getElementById(`brake_${i}`).value = '';
-                document.getElementById(`gear_${i}`).value = '';
-                document.getElementById(`notes_${i}`).value = '';
-            }
-        }
-
-        const saved = localStorage.getItem('trackday_' + trackKey);
-        if (!saved) return;
-
-        const data = JSON.parse(saved);
-        
-        document.getElementById('tireFront').value = data['tireFront'] || '';
-        document.getElementById('tireRear').value = data['tireRear'] || '';
-        document.getElementById('outsideTemp').value = data['outsideTemp'] || '';
-        document.getElementById('gripNotes').value = data['gripNotes'] || '';
-        document.getElementById('gearing').value = data['gearing'] || '';
-        document.getElementById('rebound').value = data['rebound'] || '';
-        document.getElementById('compression').value = data['compression'] || '';
-        document.getElementById('preload').value = data['preload'] || '';
-        document.getElementById('quickFeedback').value = data['quickFeedback'] || '';
-        document.getElementById('lapTimes').value = data['lapTimes'] || '';
-
-        if (data['tireImage']) {
-            storedImageBase64 = data['tireImage'];
-            preview.src = storedImageBase64;
-            preview.style.display = 'block';
-        }
-
-        if(document.getElementById('brake_start')) {
-            document.getElementById('brake_start').value = data['brake_start'] || '';
-            document.getElementById('gear_start').value = data['gear_start'] || '';
-            document.getElementById('notes_start').value = data['notes_start'] || '';
-        }
-
-        for (let i = 1; i <= totalCurves; i++) {
-            if(document.getElementById(`dir_${i}`)) {
-                document.getElementById(`dir_${i}`).value = data[`dir_${i}`] || trackDirections[trackKey][i-1] || '';
-                document.getElementById(`brake_${i}`).value = data[`brake_${i}`] || '';
-                document.getElementById(`gear_${i}`).value = data[`gear_${i}`] || '';
-                document.getElementById(`notes_${i}`).value = data[`notes_${i}`] || '';
-            }
-        }
-    }
-
-    function addCustomItem() {
-        const input = document.getElementById('newItemInput');
-        const text = input.value.trim();
-        if (!text) return;
-
-        customItemsList.push({ text: text, checked: false });
-        input.value = '';
-        renderCustomItems();
-        savePacking();
-    }
-
-    function removeCustomItem(index) {
-        customItemsList.splice(index, 1);
-        renderCustomItems();
-        savePacking();
-    }
-
-    function renderCustomItems() {
-        const container = document.getElementById('customItemsContainer');
-        container.innerHTML = '';
-
-        customItemsList.forEach((item, index) => {
-            const div = document.createElement('div');
-            div.className = 'pack-item';
-            div.innerHTML = `
-                <div class="pack-item-left">
-                    <input type="checkbox" id="custom_${index}" ${item.checked ? 'checked' : ''} onchange="updateCustomCheck(${index})">
-                    <label for="custom_${index}">${item.text}</label>
-                </div>
-                <button class="btn-danger" onclick="removeCustomItem(${index})">Löschen</button>
-            `;
-            container.appendChild(div);
-        });
-    }
-
-    function updateCustomCheck(index) {
-        const chk = document.getElementById('custom_' + index);
-        if (chk) {
-            customItemsList[index].checked = chk.checked;
-            savePacking();
-        }
-    }
-
-    function savePacking() {
-        const packData = {
-            fixed: {},
-            custom: customItemsList
-        };
-
-        for (let i = 1; i <= 27; i++) {
-            const chk = document.getElementById('p' + i);
-            if (chk) {
-                packData.fixed['p' + i] = chk.checked;
-            }
-        }
-        localStorage.setItem('trackday_packing', JSON.stringify(packData));
-    }
-
-    function loadPacking() {
-        const saved = localStorage.getItem('trackday_packing');
-        if (!saved) return;
-
-        try {
-            const packData = JSON.parse(saved);
-
-            if (packData.fixed) {
-                for (let i = 1; i <= 27; i++) {
-                    const chk = document.getElementById('p' + i);
-                    if (chk && packData.fixed['p' + i] !== undefined) {
-                        chk.checked = packData.fixed['p' + i];
-                    }
-                }
-                customItemsList = packData.custom || [];
-            } else {
-                for (let i = 1; i <= 27; i++) {
-                    const chk = document.getElementById('p' + i);
-                    if (chk && packData['p' + i] !== undefined) {
-                        chk.checked = packData['p' + i];
-                    }
-                }
-            }
-            renderCustomItems();
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
-    function exportData() {
-        const trackKey = document.getElementById('trackSelect').value;
-        const saved = localStorage.getItem('trackday_' + trackKey);
-        
-        if (!saved) {
-            alert('Keine gespeicherten Daten für diese Strecke vorhanden!');
-            return;
-        }
-
-        if (navigator.share) {
-            navigator.share({
-                title: 'UpperRacing - ' + trackKey,
-                text: 'Meine Daten für ' + trackKey + ':\n\n' + saved
-            }).catch(() => {});
-        } else {
-            navigator.clipboard.writeText(saved);
-            alert('Daten wurden in die Zwischenablage kopiert!');
-        }
-    }
-
-    renderApp();
-</script>
-
-</body>
-</html>
+        grobnik:      ["", 
