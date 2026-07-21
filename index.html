@@ -297,6 +297,15 @@
 </div>
 
 <script>
+    // Hier kannst du deine Kurven selbst eintragen ("R" für Rechts, "L" für Links)
+    const trackDirections = {
+        pannoniaring: ["R", "R", "L", "L", "R", "R", "L", "L", "R", "R", "R", "L", "R", "L", "L", "R", "R", "R"],
+        slovakia:     ["", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+        brünn:        ["", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+        most:         ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+        grobnik:      ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+    };
+
     const tracks = {
         pannoniaring: 18,
         slovakia: 14,
@@ -323,21 +332,23 @@
     function renderApp() {
         const trackKey = document.getElementById('trackSelect').value;
         const totalCurves = tracks[trackKey];
+        const directions = trackDirections[trackKey];
         const container = document.getElementById('curvesContainer');
         container.innerHTML = '';
 
-        container.innerHTML += createCurveHTML('start', 'Start / Ziel', false);
+        container.innerHTML += createCurveHTML('start', 'Start / Ziel', false, '');
 
         for (let i = 1; i <= totalCurves; i++) {
-            container.innerHTML += createCurveHTML(i, `Kurve ${i}`, true);
+            const defaultDir = directions[i - 1] || '';
+            container.innerHTML += createCurveHTML(i, `Kurve ${i}`, true, defaultDir);
         }
 
         loadData();
         loadPacking();
     }
 
-    function createCurveHTML(id, title, showDir) {
-        let dirField = showDir ? `<input type="text" id="dir_${id}" class="direction-input" placeholder="L/R" maxlength="3">` : '';
+    function createCurveHTML(id, title, showDir, defaultDir) {
+        let dirField = showDir ? `<input type="text" id="dir_${id}" class="direction-input" value="${defaultDir}" placeholder="L/R" maxlength="3">` : '';
         return `
             <div class="curve-card">
                 <div class="curve-header-row">
@@ -421,7 +432,7 @@
         const totalCurves = tracks[trackKey];
         for (let i = 1; i <= totalCurves; i++) {
             if(document.getElementById(`dir_${i}`)) {
-                document.getElementById(`dir_${i}`).value = '';
+                document.getElementById(`dir_${i}`).value = trackDirections[trackKey][i-1] || '';
                 document.getElementById(`brake_${i}`).value = '';
                 document.getElementById(`gear_${i}`).value = '';
                 document.getElementById(`notes_${i}`).value = '';
@@ -451,8 +462,8 @@
 
         for (let i = 1; i <= totalCurves; i++) {
             if(document.getElementById(`dir_${i}`)) {
-                document.getElementById(`dir_${i}`).value = data[`dir_${i}`] || '';
-                document.getElementById(`brake_${i}` ).value = data[`brake_${i}`] || '';
+                document.getElementById(`dir_${i}`).value = data[`dir_${i}`] || trackDirections[trackKey][i-1] || '';
+                document.getElementById(`brake_${i}`).value = data[`brake_${i}`] || '';
                 document.getElementById(`gear_${i}`).value = data[`gear_${i}`] || '';
                 document.getElementById(`notes_${i}`).value = data[`notes_${i}`] || '';
             }
