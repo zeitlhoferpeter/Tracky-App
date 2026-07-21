@@ -111,6 +111,32 @@
             grid-template-columns: 1fr 1fr 1fr;
             gap: 8px;
         }
+        /* Reifendruck-Container mit +/- Buttons */
+        .pressure-group {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        .pressure-group input {
+            margin-bottom: 0 !important;
+        }
+        .btn-pressure {
+            background: #e5e7eb;
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 8px 10px;
+            width: auto;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-pressure:active {
+            background: #d1d5db;
+        }
+
         button {
             background-color: var(--primary);
             color: white;
@@ -193,6 +219,15 @@
         .page-content.active {
             display: block;
         }
+        /* Bildvorschau für Reifenbild */
+        .img-preview {
+            max-width: 100%;
+            max-height: 150px;
+            margin-top: 5px;
+            border-radius: 4px;
+            display: none;
+            border: 1px solid var(--border);
+        }
     </style>
 </head>
 <body>
@@ -225,26 +260,34 @@
         <div class="setup-box">
             <h3>Turn Setup, Drücke & Fahrwerk</h3>
             
-            <label style="font-size:0.75rem; font-weight:bold; color:var(--primary);">Reifendruck (Bar)</label>
+            <label style="font-size:0.75rem; font-weight:bold; color:var(--primary);">Reifendruck (Bar) mit Schnell-Anpassung</label>
             <div class="grid-2">
                 <div>
                     <label style="font-size:0.75rem">Vorne (Kalt / Heiß)</label>
-                    <input type="text" id="tireFront" placeholder="z.B. 2.1 / 2.4">
+                    <div class="pressure-group">
+                        <input type="text" id="tireFront" placeholder="z.B. 2.1 / 2.4">
+                        <button type="button" class="btn-pressure" onclick="adjustPressure('tireFront', -0.1)">-</button>
+                        <button type="button" class="btn-pressure" onclick="adjustPressure('tireFront', 0.1)">+</button>
+                    </div>
                 </div>
                 <div>
                     <label style="font-size:0.75rem">Hinten (Kalt / Heiß)</label>
-                    <input type="text" id="tireRear" placeholder="z.B. 1.9 / 2.2">
+                    <div class="pressure-group">
+                        <input type="text" id="tireRear" placeholder="z.B. 1.9 / 2.2">
+                        <button type="button" class="btn-pressure" onclick="adjustPressure('tireRear', -0.1)">-</button>
+                        <button type="button" class="btn-pressure" onclick="adjustPressure('tireRear', 0.1)">+</button>
+                    </div>
                 </div>
             </div>
 
             <div class="grid-3">
                 <div>
-                    <label style="font-size:0.75rem">Außentemperatur</label>
-                    <input type="text" id="outsideTemp" placeholder="z.B. 24°C">
+                    <label style="font-size:0.75rem">Außen- / Asphalttemp.</label>
+                    <input type="text" id="outsideTemp" placeholder="z.B. 24°C / As. 35°C">
                 </div>
                 <div>
                     <label style="font-size:0.75rem">Grip & Bedingungen</label>
-                    <input type="text" id="gripNotes" placeholder="z.B. Gut, Asphalt heiß">
+                    <input type="text" id="gripNotes" placeholder="z.B. Sonne, super Grip">
                 </div>
                 <div>
                     <label style="font-size:0.75rem">Übersetzung</label>
@@ -267,10 +310,19 @@
                 </div>
             </div>
 
-            <label style="font-size:0.75rem; font-weight:bold; color:var(--primary); margin-top:10px; display:block;">Rundenzeiten / Stints</label>
+            <label style="font-size:0.75rem; font-weight:bold; color:var(--primary); margin-top:10px; display:block;">Quick-Notiz / Turn-Feedback (direkt nach dem Turn)</label>
+            <div>
+                <textarea id="quickFeedback" rows="2" placeholder="Z.B. Vorderrad stempelt beim harten Anbremsen in T1..."></textarea>
+            </div>
+
+            <label style="font-size:0.75rem; font-weight:bold; color:var(--primary); margin-top:5px; display:block;">Rundenzeiten / Stints</label>
             <div>
                 <textarea id="lapTimes" rows="2" placeholder="Runde 1: 2:05.1&#10;Runde 2: 2:04.3..."></textarea>
             </div>
+
+            <label style="font-size:0.75rem; font-weight:bold; color:var(--primary); margin-top:10px; display:block;">Reifenbild / Verschleiß (Foto hochladen)</label>
+            <input type="file" id="tireImageInput" accept="image/*" onchange="handleImageUpload(event)">
+            <img id="tireImagePreview" class="img-preview" alt="Reifenbild Vorschau">
         </div>
 
         <div id="curvesContainer"></div>
@@ -351,6 +403,7 @@
     };
 
     let customItemsList = [];
+    let storedImageBase64 = "";
 
     function switchPage(page) {
         document.getElementById('pageApp').classList.remove('active');
@@ -415,6 +468,29 @@
         renderApp();
     }
 
+    function adjustPressure(fieldId, amount) {
+        const input = document.getElementById(fieldId);
+        let val = parseFloat(input.value.replace(',', '.'));
+        if (isNaN(val)) {
+            val = amount > 0 ? 2.0 : 2.5;
+        }
+        val = Math.max(0, val + amount);
+        input.value = val.toFixed(1);
+    }
+
+    function handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            storedImageBase64 = e.target.result;
+            const preview = document.getElementById('tireImagePreview');
+            preview.src = storedImageBase64;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+
     function saveData() {
         const trackKey = document.getElementById('trackSelect').value;
         const totalCurves = tracks[trackKey];
@@ -428,7 +504,9 @@
         data['rebound'] = document.getElementById('rebound').value;
         data['compression'] = document.getElementById('compression').value;
         data['preload'] = document.getElementById('preload').value;
+        data['quickFeedback'] = document.getElementById('quickFeedback').value;
         data['lapTimes'] = document.getElementById('lapTimes').value;
+        data['tireImage'] = storedImageBase64;
 
         data['brake_start'] = document.getElementById('brake_start').value;
         data['gear_start'] = document.getElementById('gear_start').value;
@@ -459,7 +537,13 @@
         document.getElementById('rebound').value = '';
         document.getElementById('compression').value = '';
         document.getElementById('preload').value = '';
+        document.getElementById('quickFeedback').value = '';
         document.getElementById('lapTimes').value = '';
+        document.getElementById('tireImageInput').value = '';
+        storedImageBase64 = "";
+        const preview = document.getElementById('tireImagePreview');
+        preview.src = '';
+        preview.style.display = 'none';
 
         if(document.getElementById('brake_start')) {
             document.getElementById('brake_start').value = '';
@@ -490,7 +574,14 @@
         document.getElementById('rebound').value = data['rebound'] || '';
         document.getElementById('compression').value = data['compression'] || '';
         document.getElementById('preload').value = data['preload'] || '';
+        document.getElementById('quickFeedback').value = data['quickFeedback'] || '';
         document.getElementById('lapTimes').value = data['lapTimes'] || '';
+
+        if (data['tireImage']) {
+            storedImageBase64 = data['tireImage'];
+            preview.src = storedImageBase64;
+            preview.style.display = 'block';
+        }
 
         if(document.getElementById('brake_start')) {
             document.getElementById('brake_start').value = data['brake_start'] || '';
@@ -573,7 +664,6 @@
         try {
             const packData = JSON.parse(saved);
 
-            // Wenn es das neue Format ist
             if (packData.fixed) {
                 for (let i = 1; i <= 27; i++) {
                     const chk = document.getElementById('p' + i);
@@ -583,7 +673,6 @@
                 }
                 customItemsList = packData.custom || [];
             } else {
-                // Abwärtskompatibilität für das alte Format
                 for (let i = 1; i <= 27; i++) {
                     const chk = document.getElementById('p' + i);
                     if (chk && packData['p' + i] !== undefined) {
@@ -608,7 +697,7 @@
 
         if (navigator.share) {
             navigator.share({
-                title: 'Trackday Setup - ' + trackKey,
+                title: 'UpperRacing - ' + trackKey,
                 text: 'Meine Daten für ' + trackKey + ':\n\n' + saved
             }).catch(() => {});
         } else {
