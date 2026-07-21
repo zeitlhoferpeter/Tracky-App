@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UpperRacing</title>
-    <!-- Eingebettetes Manifest für fehlerfreie Installation -->
     <link rel="manifest" href='data:application/manifest+json,{"name":"UpperRacing","short_name":"UpperRacing","start_url":".","display":"standalone","background_color":"#f3f4f6","theme_color":"#2563eb","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3214/3214738.png","sizes":"512x512","type":"image/png"}]}'>
     <style>
         :root {
@@ -25,401 +24,118 @@
             margin: 0;
             padding: 10px;
         }
-        .container {
-            max-width: 650px;
-            margin: 0 auto;
-        }
+        .container { max-width: 650px; margin: 0 auto; }
         header {
-            background: #111827;
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            text-align: center;
+            background: #111827; color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center;
         }
         header h1 { margin: 0; font-size: 1.3rem; }
         
-        /* Navigation zwischen den Tabs */
-        .nav-tabs {
-            display: flex;
-            gap: 4px;
-            margin-bottom: 15px;
-            overflow-x: auto;
-        }
+        .nav-tabs { display: flex; gap: 4px; margin-bottom: 15px; overflow-x: auto; }
         .tab-btn {
-            flex: 1;
-            padding: 8px 4px;
-            background: #e5e7eb;
-            color: var(--text);
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 0.75rem;
-            margin-top: 0;
-            text-align: center;
-            white-space: nowrap;
+            flex: 1; padding: 8px 4px; background: #e5e7eb; color: var(--text); border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.75rem; margin-top: 0; text-align: center; white-space: nowrap;
         }
-        .tab-btn.active {
-            background: var(--primary);
-            color: white;
-        }
+        .tab-btn.active { background: var(--primary); color: white; }
 
         .selector-box, .setup-box, .pack-box {
-            background: var(--card-bg);
-            padding: 14px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            border: 1px solid var(--border);
+            background: var(--card-bg); padding: 14px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border);
         }
         select, input, textarea {
-            width: 100%;
-            padding: 8px;
-            margin-top: 4px;
-            margin-bottom: 8px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 0.9rem;
+            width: 100%; padding: 8px; margin-top: 4px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box; font-size: 0.9rem;
         }
+        
+        /* KURVEN STYLING */
         .curve-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 10px;
         }
         .curve-header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 5px;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;
         }
-        .curve-header {
-            font-weight: bold;
-            color: var(--primary);
-            font-size: 1rem;
-        }
+        .curve-header { font-weight: bold; color: var(--primary); font-size: 1rem; }
         .direction-input {
-            width: 60px !important;
-            padding: 4px !important;
-            margin: 0 !important;
-            text-align: center;
-            font-weight: bold;
-            text-transform: uppercase;
+            width: 50px !important; padding: 4px !important; margin: 0 !important; text-align: center; font-weight: bold; text-transform: uppercase;
         }
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
+        
+        /* AMPEL SYSTEM */
+        .traffic-light-container {
+            display: flex; gap: 4px; background: #f3f4f6; padding: 4px; border-radius: 20px; border: 1px solid var(--border);
         }
-        .grid-3 {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
+        .tl-btn {
+            width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; background-color: #d1d5db; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; padding: 0; transition: 0.2s;
         }
-        .grid-4 {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr 1.2fr 1.2fr;
-            gap: 6px;
+        .tl-btn.red.active { background-color: #ef4444; border-color: #991b1b; box-shadow: 0 0 5px #ef4444; }
+        .tl-btn.yellow.active { background-color: #f59e0b; border-color: #92400e; box-shadow: 0 0 5px #f59e0b; }
+        .tl-btn.green.active { background-color: #10b981; border-color: #065f46; box-shadow: 0 0 5px #10b981; }
+
+        .curve-details { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
+        .btn-toggle-details {
+            background: #f3f4f6; color: var(--text-muted); border: 1px solid var(--border); padding: 6px; width: 100%; border-radius: 4px; font-size: 0.8rem; cursor: pointer; margin-top: 5px; text-align: center; font-weight: bold;
         }
-        .pressure-group {
-            display: flex;
-            gap: 4px;
-            align-items: center;
-        }
-        .pressure-group input {
-            margin-bottom: 0 !important;
-        }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        .grid-4 { display: grid; grid-template-columns: 1fr 1.2fr 1.2fr 1.2fr; gap: 6px; }
+        
+        .pressure-group { display: flex; gap: 4px; align-items: center; }
+        .pressure-group input { margin-bottom: 0 !important; }
         .btn-pressure {
-            background: #e5e7eb;
-            color: var(--text);
-            border: 1px solid var(--border);
-            padding: 8px 10px;
-            width: auto;
-            margin-top: 4px;
-            margin-bottom: 8px;
-            font-size: 0.85rem;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .btn-pressure:active {
-            background: #d1d5db;
+            background: #e5e7eb; color: var(--text); border: 1px solid var(--border); padding: 8px 10px; width: auto; margin-top: 4px; margin-bottom: 8px; font-size: 0.85rem; border-radius: 4px; font-weight: bold; cursor: pointer;
         }
 
         button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px;
-            width: 100%;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
-            font-size: 1rem;
+            background-color: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1rem;
         }
-        button:active { background-color: #1d4ed8; }
-        .btn-secondary {
-            background-color: #4b5563;
-            margin-top: 5px;
-        }
-        .btn-warning {
-            background-color: var(--warning);
-            margin-top: 5px;
-        }
-        .btn-warning:active {
-            background-color: #b45309;
-        }
-        .btn-success {
-            background-color: var(--success);
-        }
-        .btn-success:active {
-            background-color: #15803d;
-        }
-        .btn-danger {
-            background-color: var(--danger);
-            color: white;
-            margin-top: 5px;
-        }
-        .btn-danger:active {
-            background-color: #b91c1c;
-        }
-        .btn-item-delete {
-            background-color: var(--danger);
-            padding: 6px 10px;
-            font-size: 0.8rem;
-            width: auto;
-            margin: 0;
-        }
-        
+        .btn-secondary { background-color: #4b5563; margin-top: 5px; }
+        .btn-warning { background-color: var(--warning); margin-top: 5px; }
+        .btn-success { background-color: var(--success); }
+        .btn-danger { background-color: var(--danger); color: white; margin-top: 5px; }
         .btn-small-danger {
-            background-color: #fee2e2;
-            color: var(--danger);
-            border: 1px solid #fca5a5;
-            padding: 4px 8px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            border-radius: 4px;
-            width: auto;
-            margin: 0;
-            cursor: pointer;
+            background-color: #fee2e2; color: var(--danger); border: 1px solid #fca5a5; padding: 4px 8px; font-size: 0.75rem; font-weight: bold; border-radius: 4px; width: auto; margin: 0; cursor: pointer;
         }
-        .btn-small-danger:active {
-            background-color: #fecaca;
-        }
+        .btn-item-delete { background-color: var(--danger); padding: 4px 8px; font-size: 0.75rem; width: auto; margin: 0; }
 
-        .save-notice {
-            text-align: center;
-            font-size: 0.85rem;
-            color: green;
-            margin-top: 8px;
-            font-weight: bold;
-            display: none;
-        }
+        .save-notice { text-align: center; font-size: 0.85rem; color: green; margin-top: 8px; font-weight: bold; display: none; }
         h3 { margin-top: 0; color: #1f2937; font-size: 1.05rem; }
 
-        .alltime-container {
-            margin-bottom: 15px;
-        }
+        .alltime-container { margin-bottom: 15px; }
         .alltime-box {
-            background: linear-gradient(135deg, #fffbeb, #fef3c7);
-            border: 2px solid #f59e0b;
-            border-radius: 8px;
-            padding: 12px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 2px solid #f59e0b; border-radius: 8px; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center;
         }
-        .alltime-header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-        }
-        .alltime-title {
-            font-size: 0.8rem;
-            font-weight: bold;
-            color: #b45309;
-            text-transform: uppercase;
-        }
-        .alltime-value {
-            font-size: 1.3rem;
-            font-weight: 800;
-            color: #92400e;
-        }
-        .alltime-date {
-            font-size: 0.75rem;
-            color: #78350f;
-        }
-
+        .alltime-title { font-size: 0.8rem; font-weight: bold; color: #b45309; text-transform: uppercase; margin-bottom: 6px; display: block; }
+        .alltime-value { font-size: 1.3rem; font-weight: 800; color: #92400e; }
+        .alltime-date { font-size: 0.75rem; color: #78350f; }
+        
         .lap-analysis-box {
-            background: #f8fafc;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 10px;
-            margin-top: 8px;
-            margin-bottom: 8px;
-            font-size: 0.85rem;
-            max-height: 150px;
-            overflow-y: auto;
+            background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-top: 8px; margin-bottom: 8px; font-size: 0.85rem; max-height: 150px; overflow-y: auto;
         }
-        .lap-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 4px 0;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .lap-row:last-child {
-            border-bottom: none;
-        }
+        .lap-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #e2e8f0; }
 
         .setup-section-title {
-            font-size: 0.8rem;
-            font-weight: bold;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 14px;
-            margin-bottom: 6px;
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 3px;
-        }
-        .setup-section-title:first-of-type {
-            margin-top: 4px;
+            font-size: 0.8rem; font-weight: bold; color: var(--primary); text-transform: uppercase; margin-top: 14px; margin-bottom: 6px; border-bottom: 1px solid #e5e7eb; padding-bottom: 3px;
         }
 
+        .pack-category-container { margin-bottom: 15px; }
         .pack-category {
-            font-weight: bold;
-            color: var(--primary);
-            margin-top: 15px;
-            margin-bottom: 5px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 3px;
+            font-weight: bold; color: var(--primary); margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid var(--border); padding-bottom: 3px; display: flex; justify-content: space-between; align-items: center;
         }
-        .pack-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 0.95rem;
-        }
-        .pack-item-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex: 1;
-        }
-        .pack-item input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            margin: 0;
-            cursor: pointer;
-        }
-        .add-item-box {
-            display: flex;
-            gap: 8px;
-            margin-top: 15px;
-            margin-bottom: 5px;
-        }
-        .add-item-box input {
-            margin: 0;
-        }
-        .add-item-box button {
-            margin: 0;
-            width: auto;
-            padding: 8px 15px;
-        }
-        .page-content {
-            display: none;
-        }
-        .page-content.active {
-            display: block;
-        }
-        .img-container {
-            position: relative;
-            margin-top: 5px;
-            display: none;
-            width: fit-content;
-        }
-        .img-preview {
-            max-width: 100%;
-            max-height: 150px;
-            border-radius: 4px;
-            border: 1px solid var(--border);
-            cursor: pointer;
-            display: block;
-        }
+        .pack-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 0.95rem; padding-left: 4px; }
+        .pack-item-left { display: flex; align-items: center; gap: 10px; flex: 1; }
+        .pack-item input[type="checkbox"] { width: 20px; height: 20px; margin: 0; cursor: pointer; }
+        .category-add-box { display: flex; gap: 6px; margin-top: 6px; margin-bottom: 10px; padding-left: 4px; }
+        .category-add-box input { margin: 0; padding: 6px; font-size: 0.85rem; }
+        .category-add-box button { margin: 0; width: auto; padding: 6px 12px; font-size: 0.8rem; }
+
+        .page-content { display: none; }
+        .page-content.active { display: block; }
+        
+        .img-container { position: relative; margin-top: 5px; display: none; width: fit-content; }
+        .img-preview { max-width: 100%; max-height: 150px; border-radius: 4px; border: 1px solid var(--border); cursor: pointer; display: block; }
         .delete-img-btn {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: rgba(220, 38, 38, 0.85);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 26px;
-            height: 26px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.8rem;
-            margin: 0;
-            padding: 0;
+            position: absolute; top: 5px; right: 5px; background: rgba(220, 38, 38, 0.85); color: white; border: none; border-radius: 50%; width: 26px; height: 26px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; margin: 0; padding: 0;
         }
-        .import-box {
-            background: #eff6ff;
-            border: 1px dashed var(--primary);
-            padding: 10px;
-            border-radius: 6px;
-            margin-top: 12px;
-        }
-
-        /* IFrame für Live Cup Seiten */
-        .cup-iframe-container {
-            margin-top: 10px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            overflow: hidden;
-            background: white;
-            height: 450px;
-        }
-        .cup-iframe-container iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        /* Modal für Vollbild-Bildansicht */
-        #imageModal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.9);
-            text-align: center;
-        }
-        #modalImg {
-            max-width: 90%;
-            max-height: 85vh;
-            margin-top: 5vh;
-            border-radius: 6px;
-        }
-        #closeModal {
-            position: absolute;
-            top: 15px;
-            right: 25px;
-            color: white;
-            font-size: 35px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+        
+        #imageModal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); text-align: center; }
+        #modalImg { max-width: 90%; max-height: 85vh; margin-top: 5vh; border-radius: 6px; }
+        #closeModal { position: absolute; top: 15px; right: 25px; color: white; font-size: 35px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -438,7 +154,6 @@
         <button id="tabPackBtn" class="tab-btn" onclick="switchPage('pack')">🎒 Packen</button>
     </div>
 
-    <!-- GEMEINSAME AUSWAHLBOX FÜR DIE HAUPTSEITEN -->
     <div id="selectorBoxContainer" class="selector-box">
         <div class="grid-2" style="margin-bottom:8px;">
             <div>
@@ -453,9 +168,7 @@
             </div>
             <div>
                 <label for="sessionSelect"><strong>📁 Speicher (Turn):</strong></label>
-                <select id="sessionSelect" onchange="onSessionChange()">
-                    <!-- Wird dynamisch befüllt -->
-                </select>
+                <select id="sessionSelect" onchange="onSessionChange()"></select>
             </div>
         </div>
         <button type="button" class="btn-secondary" style="margin-top:0; padding:6px; font-size:0.8rem;" onclick="startNewSessionForm()">➕ Neuen Turn / Eintrag anlegen</button>
@@ -499,15 +212,15 @@
             <div class="grid-3">
                 <div>
                     <label style="font-size:0.75rem">Außen / Asph.</label>
-                    <input type="text" id="outsideTemp" placeholder="z.B. 24°C / 35°C">
+                    <input type="text" id="outsideTemp" placeholder="24°/35°">
                 </div>
                 <div>
                     <label style="font-size:0.75rem">Grip & Wetter</label>
-                    <input type="text" id="gripNotes" placeholder="z.B. Sonne, super Grip">
+                    <input type="text" id="gripNotes" placeholder="Sonne, super Grip">
                 </div>
                 <div>
                     <label style="font-size:0.75rem">Übersetzung</label>
-                    <input type="text" id="gearing" placeholder="z.B. 15/42">
+                    <input type="text" id="gearing" placeholder="15/42">
                 </div>
             </div>
 
@@ -515,15 +228,15 @@
             <div class="grid-3">
                 <div>
                     <label style="font-size:0.75rem">Zugstufe</label>
-                    <input type="text" id="rebound" placeholder="z.B. 8 / 10">
+                    <input type="text" id="rebound" placeholder="8 / 10">
                 </div>
                 <div>
                     <label style="font-size:0.75rem">Druckstufe</label>
-                    <input type="text" id="compression" placeholder="z.B. 6 / 8">
+                    <input type="text" id="compression" placeholder="6 / 8">
                 </div>
                 <div>
                     <label style="font-size:0.75rem">Vorspannung</label>
-                    <input type="text" id="preload" placeholder="z.B. 5R / 12mm">
+                    <input type="text" id="preload" placeholder="5R / 12mm">
                 </div>
             </div>
 
@@ -545,25 +258,26 @@
     <div id="pageCurves" class="page-content">
         <div class="setup-box">
             <h3>🗺️ Strecken- & Kurvennotizen</h3>
-            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0;">Hier dokumentierst du Bremspunkte, Gangwahl und Linienführung für jede einzelne Kurve.</p>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0;">
+                Bewerte deine Kurven mit der Ampel (🔴 🟡 🟢) und klappe die Profi-Details aus.
+            </p>
         </div>
         <div id="curvesContainer"></div>
         <button class="btn-success" onclick="saveData()">💾 Kurven-Daten speichern</button>
         <div id="saveNoticeCurves" class="save-notice">Kurven erfolgreich gespeichert!</div>
     </div>
 
-    <!-- SEITE 3: RUNDENZEITEN & FOTO-SCANNER -->
+    <!-- SEITE 3: RUNDENZEITEN -->
     <div id="pageLaps" class="page-content">
         <div class="setup-box">
-            <!-- ALL-TIME BEST CONTAINER -->
             <div class="alltime-container">
-                <div class="alltime-header-row">
-                    <div class="alltime-title">🏆 All-Time-Best (Streckenrekord)</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span class="alltime-title" style="margin:0;">🏆 All-Time-Best</span>
                     <button type="button" class="btn-small-danger" onclick="confirmClearAllTimeBest()">🗑️ Rekord löschen</button>
                 </div>
                 <div class="alltime-box">
                     <div>
-                        <div id="allTimeDate" class="alltime-date">Noch keine Zeit hinterlegt</div>
+                        <div id="allTimeDate" class="alltime-date">Noch keine Zeit</div>
                     </div>
                     <div>
                         <div id="allTimeValue" class="alltime-value">--:--.---</div>
@@ -572,48 +286,30 @@
             </div>
 
             <h3>⏱️ Rundenzeiten & Stints</h3>
-            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0;">Trage Runden manuell ein oder fotografiere deinen Rundenzeiten-Zettel ab.</p>
-
-            <!-- FOTO SCANNER FÜR RUNDENZEITEN-ZETTEL -->
-            <div class="import-box" style="border-color: var(--success); background: #f0fdf4;">
-                <label style="font-size:0.8rem; font-weight:bold; color:var(--success); display:block;">📸 Zettel abfotografieren & Zeiten einlesen</label>
-                <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom: 8px;">Mache ein Foto von deinem gedruckten/handgeschriebenen Zettel:</div>
+            
+            <div style="background: #f0fdf4; border: 1px dashed var(--success); padding: 10px; border-radius: 6px; margin-top:12px;">
+                <label style="font-size:0.8rem; font-weight:bold; color:var(--success); display:block;">📸 Zettel abfotografieren & einlesen</label>
                 <input type="file" accept="image/*" capture="environment" id="lapPhotoInput" onchange="handleLapPhotoScan(event)">
-                <div id="scanStatus" style="font-size: 0.8rem; font-weight: bold; margin-top: 5px; color: var(--success); display: none;">Foto analysiert und Zeiten eingefügt!</div>
+                <div id="scanStatus" style="font-size: 0.8rem; font-weight: bold; margin-top: 5px; color: var(--success); display: none;">Foto analysiert!</div>
             </div>
 
-            <!-- MANUELLER DIREKT-EINGÄUFER (Runde, Min, Sek, Hundertstel) -->
-            <div class="import-box" style="margin-top: 10px; background: #fff; border-color: var(--primary);">
-                <label style="font-size:0.85rem; font-weight:bold; color:var(--primary); display:block; margin-bottom:6px;">➕ Einzelne Runde manuell hinzufügen</label>
+            <div style="background: #fff; border: 1px dashed var(--primary); padding: 10px; border-radius: 6px; margin-top: 10px;">
+                <label style="font-size:0.85rem; font-weight:bold; color:var(--primary); display:block; margin-bottom:6px;">➕ Manuell hinzufügen</label>
                 <div class="grid-4">
-                    <div>
-                        <label style="font-size:0.7rem; color:var(--text-muted)">Runde</label>
-                        <input type="number" id="manualLapNum" placeholder="Nr." style="text-align: center;">
-                    </div>
-                    <div>
-                        <label style="font-size:0.7rem; color:var(--text-muted)">Minuten</label>
-                        <input type="number" id="manualMin" placeholder="2" style="text-align: center;">
-                    </div>
-                    <div>
-                        <label style="font-size:0.7rem; color:var(--text-muted)">Sekunden</label>
-                        <input type="number" id="manualSec" placeholder="05" style="text-align: center;">
-                    </div>
-                    <div>
-                        <label style="font-size:0.7rem; color:var(--text-muted)">Hundertstel</label>
-                        <input type="number" id="manualMs" placeholder="10" style="text-align: center;">
-                    </div>
+                    <div><label style="font-size:0.7rem; color:var(--text-muted)">Runde</label><input type="number" id="manualLapNum" placeholder="Nr."></div>
+                    <div><label style="font-size:0.7rem; color:var(--text-muted)">Minuten</label><input type="number" id="manualMin" placeholder="2"></div>
+                    <div><label style="font-size:0.7rem; color:var(--text-muted)">Sekunden</label><input type="number" id="manualSec" placeholder="05"></div>
+                    <div><label style="font-size:0.7rem; color:var(--text-muted)">Hundertstel</label><input type="number" id="manualMs" placeholder="10"></div>
                 </div>
                 <button type="button" class="btn-success" style="margin-top:6px;" onclick="addManualLap()">Runde hinzufügen</button>
             </div>
 
             <div style="margin-top: 12px;">
-                <label style="font-size:0.75rem; font-weight:bold; color:var(--primary); display:block;">Gespeicherte Rundenzeiten (Protokoll)</label>
-                <textarea id="lapTimes" rows="6" placeholder="Runde 1: 2:05.10&#10;Runde 2: 2:04.30..." oninput="analyzeLaps()"></textarea>
+                <label style="font-size:0.75rem; font-weight:bold; color:var(--primary);">Gespeicherte Rundenzeiten (Protokoll)</label>
+                <textarea id="lapTimes" rows="6" oninput="analyzeLaps()"></textarea>
             </div>
-
             <button type="button" class="btn-danger" onclick="confirmClearLaps()">🗑️ Alle Rundenzeiten löschen</button>
 
-            <!-- Live Delta & Analyse Anzeige -->
             <div id="lapAnalysis" class="lap-analysis-box" style="display:none;"></div>
 
             <button class="btn-success" onclick="saveData()">💾 Zeiten speichern</button>
@@ -621,30 +317,17 @@
         </div>
     </div>
 
-    <!-- SEITE 4: CUP & LIVE-ERGEBNISSE (PDF) -->
+    <!-- SEITE 4: CUP -->
     <div id="pageCup" class="page-content">
         <div class="setup-box">
             <h3>🌐 Cup-Ergebnisse (PDF)</h3>
-            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0;">Da PDFs auf Smartphones im IFrame manchmal blockiert werden, öffne das Cup-PDF am besten direkt über den Button:</p>
-
-            <div style="margin-top: 15px;">
-                <button type="button" class="btn-success" style="font-size: 1.1rem; padding: 15px;" onclick="openCupInBrowser()">📄 Cup-PDF öffnen (Empfohlen)</button>
-            </div>
-
-            <div style="margin-top:15px;">
-                <label style="font-size:0.75rem; font-weight:bold; color:var(--primary)">PDF-Link anpassen (falls nötig):</label>
+            <button type="button" class="btn-success" style="font-size: 1.1rem; padding: 15px;" onclick="openCupInBrowser()">📄 Cup-PDF öffnen</button>
+            <div style="margin-top:20px;">
+                <label style="font-size:0.75rem; font-weight:bold; color:var(--primary)">PDF-Link anpassen:</label>
                 <div style="display: flex; gap: 8px;">
                     <input type="url" id="cupUrlInput" placeholder="https://..." style="margin-bottom:0;">
                     <button type="button" class="btn-secondary" style="margin-top:0; width:auto; padding: 0 15px;" onclick="saveCupUrl()">Speichern</button>
                 </div>
-            </div>
-
-            <div style="margin-top: 10px; display: flex; gap: 8px;">
-                <button type="button" class="btn-warning" style="margin-top:0; font-size: 0.85rem; padding: 8px;" onclick="reloadCupFrame()">🔄 Vorschau aktualisieren</button>
-            </div>
-
-            <div class="cup-iframe-container" style="margin-top: 12px;">
-                <iframe id="cupIframe" src="" title="Cup Ergebnisse PDF"></iframe>
             </div>
         </div>
     </div>
@@ -652,56 +335,70 @@
     <!-- SEITE 5: PACKLISTE -->
     <div id="pagePack" class="page-content">
         <div class="pack-box">
-            <h3>Packliste für den Trackday</h3>
-            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0;">Hake ab, was eingepackt ist. Der Status wird automatisch gespeichert.</p>
+            <h3>Packliste</h3>
+            <div style="background: #f8fafc; border: 1px solid var(--border); padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+                <div class="grid-2" style="margin-bottom: 6px;">
+                    <div>
+                        <label for="packDateSelect" style="font-size:0.75rem; font-weight:bold;">📅 Speicher-Datum:</label>
+                        <select id="packDateSelect" onchange="onPackDateChange()"></select>
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button type="button" class="btn-secondary" style="margin-top:0; padding: 8px; font-size: 0.8rem;" onclick="startNewPackSession()">➕ Neues Datum</button>
+                    </div>
+                </div>
+                <button type="button" class="btn-success" style="margin-top: 4px; padding: 8px; font-size: 0.85rem;" onclick="savePacking(true)">💾 Packliste speichern</button>
+                <div id="saveNoticePack" class="save-notice">Erfolgreich gespeichert!</div>
+            </div>
 
-            <div class="pack-category">🏍️ Motorrad & Technik</div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p1" onchange="savePacking()"><label for="p1">Motorrad</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p2" onchange="savePacking()"><label for="p2">Zweitschlüssel & Papiere / Typenschein</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p3" onchange="savePacking()"><label for="p3">Reifenwärmer & Verlängerungskabel</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p4" onchange="savePacking()"><label for="p4">Reifendruckprüfer & Luftpumpe / Kompressor</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p5" onchange="savePacking()"><label for="p5">Ersatzreifen / Regenreifen</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p6" onchange="savePacking()"><label for="p6">Montierhebel & Felgenschoner (falls nötig)</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p7" onchange="savePacking()"><label for="p7">Tankkanister (Benzin)</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p8" onchange="savePacking()"><label for="p8">Ersatzübersetzung & Kettenfett</label></div></div>
+            <!-- Kategorien 1-4 -->
+            <div class="pack-category-container">
+                <div class="pack-category"><span>🏍️ Motorrad & Technik</span></div>
+                <div id="cat_items_1">
+                    <div class="pack-item" data-id="p1"><div class="pack-item-left"><input type="checkbox" id="p1" onchange="savePacking()"><label for="p1">Motorrad</label></div></div>
+                    <div class="pack-item" data-id="p2"><div class="pack-item-left"><input type="checkbox" id="p2" onchange="savePacking()"><label for="p2">Zweitschlüssel & Papiere</label></div></div>
+                    <div class="pack-item" data-id="p3"><div class="pack-item-left"><input type="checkbox" id="p3" onchange="savePacking()"><label for="p3">Reifenwärmer</label></div></div>
+                    <div class="pack-item" data-id="p4"><div class="pack-item-left"><input type="checkbox" id="p4" onchange="savePacking()"><label for="p4">Reifendruckprüfer</label></div></div>
+                    <div class="pack-item" data-id="p5"><div class="pack-item-left"><input type="checkbox" id="p5" onchange="savePacking()"><label for="p5">Ersatzreifen</label></div></div>
+                    <div class="pack-item" data-id="p7"><div class="pack-item-left"><input type="checkbox" id="p7" onchange="savePacking()"><label for="p7">Tankkanister (Benzin)</label></div></div>
+                </div>
+                <div class="category-add-box"><input type="text" id="add_input_1" placeholder="Neues Teil..."><button type="button" onclick="addCategoryItem(1)">Hinzufügen</button></div>
+            </div>
 
-            <div class="pack-category">🛠️ Werkzeug & Boxenzubehör</div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p9" onchange="savePacking()"><label for="p9">Werkzeugkasten (Schlüssel, Nüsse, Zangen)</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p10" onchange="savePacking()"><label for="p10">Drehmomentschlüssel</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p11" onchange="savePacking()"><label for="p11">Montierständer (Vorne & Hinten)</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p12" onchange="savePacking()"><label for="p12">Pavillon / Zelt & Gewichte</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p13" onchange="savePacking()"><label for="p13">Campingstühle & Tisch</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p14" onchange="savePacking()"><label for="p14">Kabelbinder, Panzerband (Gaffa), Bremsenreiniger</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p15" onchange="savePacking()"><label for="p15">Ersatzteile (Hebel, Fußrasten, Schrauben)</label></div></div>
+            <div class="pack-category-container">
+                <div class="pack-category"><span>🛠️ Werkzeug</span></div>
+                <div id="cat_items_2">
+                    <div class="pack-item" data-id="p9"><div class="pack-item-left"><input type="checkbox" id="p9" onchange="savePacking()"><label for="p9">Werkzeugkasten</label></div></div>
+                    <div class="pack-item" data-id="p11"><div class="pack-item-left"><input type="checkbox" id="p11" onchange="savePacking()"><label for="p11">Montierständer</label></div></div>
+                    <div class="pack-item" data-id="p12"><div class="pack-item-left"><input type="checkbox" id="p12" onchange="savePacking()"><label for="p12">Pavillon / Zelt</label></div></div>
+                    <div class="pack-item" data-id="p14"><div class="pack-item-left"><input type="checkbox" id="p14" onchange="savePacking()"><label for="p14">Kabelbinder & Panzertape</label></div></div>
+                </div>
+                <div class="category-add-box"><input type="text" id="add_input_2" placeholder="Neues Werkzeug..."><button type="button" onclick="addCategoryItem(2)">Hinzufügen</button></div>
+            </div>
 
-            <div class="pack-category">🧑‍วม Bekleidung & Ausrüstung</div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p16" onchange="savePacking()"><label for="p16">Lederkombi</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p17" onchange="savePacking()"><label for="p17">Helm & Visier (klar / verspiegelt)</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p18" onchange="savePacking()"><label for="p18">Stiefel & Handschuhe</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p19" onchange="savePacking()"><label for="p19">Rückenprotektor / Airbag-Weste</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p20" onchange="savePacking()"><label for="p20">Funktionsunterwäsche</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p21" onchange="savePacking()"><label for="p21">Ohrstöpsel</label></div></div>
+            <div class="pack-category-container">
+                <div class="pack-category"><span>🧑‍วม Bekleidung</span></div>
+                <div id="cat_items_3">
+                    <div class="pack-item" data-id="p16"><div class="pack-item-left"><input type="checkbox" id="p16" onchange="savePacking()"><label for="p16">Lederkombi</label></div></div>
+                    <div class="pack-item" data-id="p17"><div class="pack-item-left"><input type="checkbox" id="p17" onchange="savePacking()"><label for="p17">Helm</label></div></div>
+                    <div class="pack-item" data-id="p18"><div class="pack-item-left"><input type="checkbox" id="p18" onchange="savePacking()"><label for="p18">Stiefel & Handschuhe</label></div></div>
+                    <div class="pack-item" data-id="p19"><div class="pack-item-left"><input type="checkbox" id="p19" onchange="savePacking()"><label for="p19">Rückenprotektor</label></div></div>
+                </div>
+                <div class="category-add-box"><input type="text" id="add_input_3" placeholder="Neues Kleidungsstück..."><button type="button" onclick="addCategoryItem(3)">Hinzufügen</button></div>
+            </div>
 
-            <div class="pack-category">🍎 Verpflegung & Sonstiges</div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p22" onchange="savePacking()"><label for="p22">Ausweis, Führerschein, Nennbestätigung</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p23" onchange="savePacking()"><label for="p23">Geld / Bankomatkarte</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p24" onchange="savePacking()"><label for="p24">Genug Wasser & Isotonische Getränke</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p25" onchange="savePacking()"><label for="p25">Snacks / Müsliriegel / Essen</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p26" onchange="savePacking()"><label for="p26">Smartphone-Ladekabel & Powerbank</label></div></div>
-            <div class="pack-item"><div class="pack-item-left"><input type="checkbox" id="p27" onchange="savePacking()"><label for="p27">Schmerzmittel / persönliche Medikation</label></div></div>
-
-            <div class="pack-category">➕ Eigene Gegenstände</div>
-            <div id="customItemsContainer"></div>
-
-            <div class="add-item-box">
-                <input type="text" id="newItemInput" placeholder="Neuen Gegenstand eingeben...">
-                <button onclick="addCustomItem()">Hinzufügen</button>
+            <div class="pack-category-container">
+                <div class="pack-category"><span>🍎 Verpflegung</span></div>
+                <div id="cat_items_4">
+                    <div class="pack-item" data-id="p24"><div class="pack-item-left"><input type="checkbox" id="p24" onchange="savePacking()"><label for="p24">Wasser</label></div></div>
+                    <div class="pack-item" data-id="p25"><div class="pack-item-left"><input type="checkbox" id="p25" onchange="savePacking()"><label for="p25">Snacks</label></div></div>
+                    <div class="pack-item" data-id="p26"><div class="pack-item-left"><input type="checkbox" id="p26" onchange="savePacking()"><label for="p26">Smartphone & Ladekabel</label></div></div>
+                </div>
+                <div class="category-add-box"><input type="text" id="add_input_4" placeholder="Sonstiges..."><button type="button" onclick="addCategoryItem(4)">Hinzufügen</button></div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal für Vollbild-Bildansicht -->
 <div id="imageModal" onclick="closeModal()">
     <span id="closeModal">&times;</span>
     <img id="modalImg">
@@ -715,111 +412,33 @@
         most:         ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
         grobnik:      ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
     };
+    const tracks = { pannoniaring: 18, slovakia: 14, brünn: 14, most: 21, grobnik: 18 };
 
-    const tracks = {
-        pannoniaring: 18,
-        slovakia: 14,
-        brünn: 14,
-        most: 21,
-        grobnik: 18
-    };
-
-    let customItemsList = [];
+    let customPackingItems = { 1: [], 2: [], 3: [], 4: [] };
     let storedImageBase64 = "";
 
     function switchPage(page) {
-        document.getElementById('pageApp').classList.remove('active');
-        document.getElementById('pageCurves').classList.remove('active');
-        document.getElementById('pageLaps').classList.remove('active');
-        document.getElementById('pageCup').classList.remove('active');
-        document.getElementById('pagePack').classList.remove('active');
+        document.querySelectorAll('.page-content, .tab-btn').forEach(el => el.classList.remove('active'));
         
-        document.getElementById('tabAppBtn').classList.remove('active');
-        document.getElementById('tabCurvesBtn').classList.remove('active');
-        document.getElementById('tabLapsBtn').classList.remove('active');
-        document.getElementById('tabCupBtn').classList.remove('active');
-        document.getElementById('tabPackBtn').classList.remove('active');
-
-        // Streckenauswahl-Box auf Cup-Seite ausblenden, auf anderen anzeigen
         const selectorBox = document.getElementById('selectorBoxContainer');
-        if (page === 'cup') {
-            selectorBox.style.display = 'none';
-        } else {
-            selectorBox.style.display = 'block';
-        }
+        selectorBox.style.display = (page === 'cup' || page === 'pack') ? 'none' : 'block';
 
-        if (page === 'app') {
-            document.getElementById('pageApp').classList.add('active');
-            document.getElementById('tabAppBtn').classList.add('active');
-        } else if (page === 'curves') {
-            document.getElementById('pageCurves').classList.add('active');
-            document.getElementById('tabCurvesBtn').classList.add('active');
-        } else if (page === 'laps') {
-            document.getElementById('pageLaps').classList.add('active');
-            document.getElementById('tabLapsBtn').classList.add('active');
-            analyzeLaps();
-            autoIncrementLapNum();
-        } else if (page === 'cup') {
-            document.getElementById('pageCup').classList.add('active');
-            document.getElementById('tabCupBtn').classList.add('active');
-            loadCupUrlIntoFrame();
-        } else {
-            document.getElementById('pagePack').classList.add('active');
-            document.getElementById('tabPackBtn').classList.add('active');
-        }
+        document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1)).classList.add('active');
+        document.getElementById('tab' + page.charAt(0).toUpperCase() + page.slice(1) + 'Btn').classList.add('active');
+
+        if (page === 'laps') { analyzeLaps(); autoIncrementLapNum(); }
+        if (page === 'cup') { loadSavedCupUrl(); }
+        if (page === 'pack') { initPackDropdown(); }
     }
 
     function initApp() {
         renderCurvesStructure();
         updateSessionDropdown();
-        loadPacking();
         loadSavedCupUrl();
         updateAllTimeBestDisplay();
     }
 
-    function saveCupUrl() {
-        const url = document.getElementById('cupUrlInput').value.trim();
-        localStorage.setItem('trackday_cup_url', url);
-        alert('Cup-URL erfolgreich gespeichert!');
-        loadCupUrlIntoFrame();
-    }
-
-    function loadSavedCupUrl() {
-        const saved = localStorage.getItem('trackday_cup_url');
-        // PDF Link fest hinterlegen
-        const defaultUrl = "https://www.stardesignracing.com/wp-content/uploads/2026/07/Cup-2026.pdf"; 
-        
-        if (saved) {
-            document.getElementById('cupUrlInput').value = saved;
-        } else {
-            document.getElementById('cupUrlInput').value = defaultUrl;
-        }
-    }
-
-    function loadCupUrlIntoFrame() {
-        const url = document.getElementById('cupUrlInput').value.trim();
-        const iframe = document.getElementById('cupIframe');
-        if (url) {
-            iframe.src = url;
-        } else {
-            iframe.src = "about:blank";
-        }
-    }
-
-    function reloadCupFrame() {
-        const iframe = document.getElementById('cupIframe');
-        iframe.src = iframe.src;
-    }
-
-    function openCupInBrowser() {
-        const url = document.getElementById('cupUrlInput').value.trim();
-        if (!url) {
-            alert('Bitte zuerst eine gültige URL eintragen.');
-            return;
-        }
-        window.open(url, '_blank');
-    }
-
+    // --- NEUE KURVEN LOGIK ---
     function renderCurvesStructure() {
         const trackKey = document.getElementById('trackSelect').value;
         const totalCurves = tracks[trackKey];
@@ -828,479 +447,217 @@
         container.innerHTML = '';
 
         container.innerHTML += createCurveHTML('start', 'Start / Ziel', false, '');
-
         for (let i = 1; i <= totalCurves; i++) {
-            const defaultDir = directions[i - 1] || '';
-            container.innerHTML += createCurveHTML(i, `Kurve ${i}`, true, defaultDir);
+            container.innerHTML += createCurveHTML(i, `Kurve ${i}`, true, directions[i - 1] || '');
         }
     }
 
     function createCurveHTML(id, title, showDir, defaultDir) {
         let dirField = showDir ? `<input type="text" id="dir_${id}" class="direction-input" value="${defaultDir}" placeholder="L/R" maxlength="3">` : '';
+        
         return `
             <div class="curve-card">
                 <div class="curve-header-row">
                     <div class="curve-header">${title}</div>
+                    
+                    <div class="traffic-light-container">
+                        <input type="hidden" id="light_val_${id}" value="">
+                        <button type="button" id="light_${id}_red" class="tl-btn red" onclick="setTrafficLight('${id}', 'red')" title="Verliere Zeit / Unsicher">🔴</button>
+                        <button type="button" id="light_${id}_yellow" class="tl-btn yellow" onclick="setTrafficLight('${id}', 'yellow')" title="Geht so / Luft nach oben">🟡</button>
+                        <button type="button" id="light_${id}_green" class="tl-btn green" onclick="setTrafficLight('${id}', 'green')" title="Perfekt am Limit">🟢</button>
+                    </div>
+
                     ${dirField}
                 </div>
+                
                 <div class="grid-2">
                     <div>
-                        <label style="font-size:0.75rem">Bremspunkt / Referenz</label>
+                        <label style="font-size:0.75rem">Bremspunkt</label>
                         <input type="text" id="brake_${id}" placeholder="z.B. 100m Schild">
                     </div>
                     <div>
-                        <label style="font-size:0.75rem">Gang / Drehzahl</label>
+                        <label style="font-size:0.75rem">Gang</label>
                         <input type="text" id="gear_${id}" placeholder="z.B. 3. Gang">
                     </div>
                 </div>
+
                 <div>
-                    <label style="font-size:0.75rem">Ideallinie / Apex / Notizen</label>
-                    <textarea id="notes_${id}" rows="2" placeholder="Spät einlenken, Curb mitnehmen..."></textarea>
+                    <label style="font-size:0.75rem">Ideallinie / Notizen</label>
+                    <textarea id="notes_${id}" rows="1" placeholder="Spät einlenken..."></textarea>
+                </div>
+
+                <button type="button" class="btn-toggle-details" onclick="toggleCurveDetails('${id}')">▼ Profi-Details ausklappen</button>
+                
+                <div id="details_${id}" class="curve-details">
+                    <div class="grid-2">
+                        <div>
+                            <label style="font-size:0.75rem">Einlenkpunkt (Turn-in)</label>
+                            <input type="text" id="turnin_${id}" placeholder="z.B. Ende Curb links">
+                        </div>
+                        <div>
+                            <label style="font-size:0.75rem">Gasanlegepunkt (Throttle)</label>
+                            <input type="text" id="throttle_${id}" placeholder="z.B. Am Apex">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div>
+                            <label style="font-size:0.75rem">Curbs & Bodenwellen</label>
+                            <input type="text" id="curbs_${id}" placeholder="Innen-Curb meiden">
+                        </div>
+                        <div>
+                            <label style="font-size:0.75rem">Kurventyp</label>
+                            <select id="type_${id}">
+                                <option value="">Standard</option>
+                                <option value="Hängend (Off-Camber)">Hängend (Off-Camber)</option>
+                                <option value="Doppel-Apex">Doppel-Apex</option>
+                                <option value="Bergauf">Bergauf</option>
+                                <option value="Bergab">Bergab</option>
+                                <option value="Harte Bremszone">Harte Bremszone</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
     }
 
+    function toggleCurveDetails(id) {
+        const details = document.getElementById(`details_${id}`);
+        const btn = details.previousElementSibling;
+        if (details.style.display === 'block') {
+            details.style.display = 'none';
+            btn.innerText = '▼ Profi-Details ausklappen';
+        } else {
+            details.style.display = 'block';
+            btn.innerText = '▲ Details einklappen';
+        }
+    }
+
+    function setTrafficLight(curveId, color) {
+        document.getElementById(`light_${curveId}_red`).classList.remove('active');
+        document.getElementById(`light_${curveId}_yellow`).classList.remove('active');
+        document.getElementById(`light_${curveId}_green`).classList.remove('active');
+        
+        const hiddenInput = document.getElementById(`light_val_${curveId}`);
+        if (hiddenInput.value === color) {
+            hiddenInput.value = ""; 
+        } else {
+            hiddenInput.value = color;
+            document.getElementById(`light_${curveId}_${color}`).classList.add('active');
+        }
+    }
+
+    // --- SETUP & SPEICHERN LOGIK ---
     function onTrackChange() {
-        renderCurvesStructure();
-        updateSessionDropdown();
-        updateAllTimeBestDisplay();
+        renderCurvesStructure(); updateSessionDropdown(); updateAllTimeBestDisplay();
     }
 
-    function getStorageKeyForTrack(trackKey) {
-        return 'trackday_sessions_' + trackKey;
-    }
-
-    function getBaselineKeyForTrack(trackKey) {
-        return 'trackday_baseline_' + trackKey;
-    }
-
-    function getAllTimeBestKeyForTrack(trackKey) {
-        return 'trackday_alltime_' + trackKey;
-    }
+    function getStorageKeyForTrack(k) { return 'trackday_sessions_' + k; }
+    function getBaselineKeyForTrack(k) { return 'trackday_baseline_' + k; }
+    function getAllTimeBestKeyForTrack(k) { return 'trackday_alltime_' + k; }
 
     function updateSessionDropdown() {
         const trackKey = document.getElementById('trackSelect').value;
         const sessionSelect = document.getElementById('sessionSelect');
         const storageKey = getStorageKeyForTrack(trackKey);
-        
         let sessions = JSON.parse(localStorage.getItem(storageKey)) || {};
         sessionSelect.innerHTML = '';
-
         const keys = Object.keys(sessions).sort().reverse();
 
         if (keys.length === 0) {
-            const opt = document.createElement('option');
-            opt.value = "";
-            opt.textContent = "-- Noch keine Einträge vorhanden --";
-            sessionSelect.appendChild(opt);
-            clearForm();
-            return;
+            sessionSelect.innerHTML = `<option value="">-- Keine Einträge --</option>`;
+            clearForm(); return;
         }
-
         keys.forEach(k => {
-            const opt = document.createElement('option');
-            opt.value = k;
-            opt.textContent = k;
-            sessionSelect.appendChild(opt);
+            const opt = document.createElement('option'); opt.value = k; opt.textContent = k; sessionSelect.appendChild(opt);
         });
-
         loadData();
     }
 
-    function startNewSessionForm() {
-        clearForm();
-        document.getElementById('sessionSelect').value = "";
-    }
+    function startNewSessionForm() { clearForm(); document.getElementById('sessionSelect').value = ""; }
 
     function clearForm() {
-        document.getElementById('tireFront').value = '';
-        document.getElementById('tireRear').value = '';
-        document.getElementById('outsideTemp').value = '';
-        document.getElementById('gripNotes').value = '';
-        document.getElementById('gearing').value = '';
-        document.getElementById('rebound').value = '';
-        document.getElementById('compression').value = '';
-        document.getElementById('preload').value = '';
-        document.getElementById('quickFeedback').value = '';
-        document.getElementById('lapTimes').value = '';
+        const fields = ['tireFront', 'tireRear', 'outsideTemp', 'gripNotes', 'gearing', 'rebound', 'compression', 'preload', 'quickFeedback', 'lapTimes', 'manualMin', 'manualSec', 'manualMs'];
+        fields.forEach(f => { if(document.getElementById(f)) document.getElementById(f).value = ''; });
+        
         document.getElementById('manualLapNum').value = '1';
-        document.getElementById('manualMin').value = '';
-        document.getElementById('manualSec').value = '';
-        document.getElementById('manualMs').value = '';
-        document.getElementById('tireImageInput').value = '';
-        storedImageBase64 = "";
-        showTireImageUI();
+        storedImageBase64 = ""; showTireImageUI();
         document.getElementById('lapAnalysis').style.display = 'none';
-
-        if(document.getElementById('brake_start')) {
-            document.getElementById('brake_start').value = '';
-            document.getElementById('gear_start').value = '';
-            document.getElementById('notes_start').value = '';
-        }
 
         const trackKey = document.getElementById('trackSelect').value;
         const totalCurves = tracks[trackKey];
-        for (let i = 1; i <= totalCurves; i++) {
-            if(document.getElementById(`dir_${i}`)) {
-                document.getElementById(`dir_${i}`).value = trackDirections[trackKey][i-1] || '';
-                document.getElementById(`brake_${i}`).value = '';
-                document.getElementById(`gear_${i}`).value = '';
-                document.getElementById(`notes_${i}`).value = '';
-            }
-        }
-    }
+        const arr = ['start'];
+        for (let i = 1; i <= totalCurves; i++) arr.push(i.toString());
 
-    function onSessionChange() {
-        loadData();
-    }
-
-    function adjustPressure(fieldId, amount) {
-        const input = document.getElementById(fieldId);
-        let val = parseFloat(input.value.replace(',', '.'));
-        if (isNaN(val)) {
-            val = amount > 0 ? 2.0 : 2.5;
-        }
-        val = Math.max(0, val + amount);
-        input.value = val.toFixed(1);
-    }
-
-    function handleImageUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            storedImageBase64 = e.target.result;
-            showTireImageUI();
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function showTireImageUI() {
-        const preview = document.getElementById('tireImagePreview');
-        const container = document.getElementById('tireImageContainer');
-        if (storedImageBase64) {
-            preview.src = storedImageBase64;
-            container.style.display = 'block';
-        } else {
-            preview.src = '';
-            container.style.display = 'none';
-        }
-    }
-
-    function deleteTireImage() {
-        storedImageBase64 = "";
-        showTireImageUI();
-        document.getElementById('tireImageInput').value = '';
-    }
-
-    function openModal(src) {
-        if (!src) return;
-        document.getElementById('modalImg').src = src;
-        document.getElementById('imageModal').style.display = 'block';
-    }
-
-    function closeModal() {
-        document.getElementById('imageModal').style.display = 'none';
-    }
-
-    function parseTimeToSeconds(timeStr) {
-        const parts = timeStr.split(':');
-        if (parts.length === 2) {
-            const minutes = parseFloat(parts[0]);
-            const seconds = parseFloat(parts[1].replace(',', '.'));
-            if (isNaN(minutes) || isNaN(seconds)) return null;
-            return (minutes * 60) + seconds;
-        } else if (parts.length === 1) {
-            return parseFloat(parts[0].replace(',', '.'));
-        }
-        return null;
-    }
-
-    function formatSecondsToTime(totalSecs) {
-        if (totalSecs < 60) {
-            return `00:${(totalSecs < 10 ? '0' : '') + totalSecs.toFixed(3)}`;
-        }
-        const mins = Math.floor(totalSecs / 60);
-        const secs = (totalSecs % 60).toFixed(3);
-        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-    }
-
-    function confirmClearLaps() {
-        const lapText = document.getElementById('lapTimes').value.trim();
-        if (!lapText) {
-            alert("Es sind aktuell keine Rundenzeiten eingetragen.");
-            return;
-        }
-
-        if (confirm("Möchtest du wirklich alle eingetragenen Rundenzeiten unwiderruflich löschen?")) {
-            document.getElementById('lapTimes').value = "";
-            analyzeLaps();
-            autoIncrementLapNum();
-        }
-    }
-
-    function confirmClearAllTimeBest() {
-        const trackKey = document.getElementById('trackSelect').value;
-        const allTimeKey = getAllTimeBestKeyForTrack(trackKey);
-        const saved = localStorage.getItem(allTimeKey);
-
-        if (!saved) {
-            alert("Es ist aktuell keine All-Time-Best-Zeit für diese Strecke hinterlegt.");
-            return;
-        }
-
-        if (confirm("Möchtest du den All-Time-Best (Streckenrekord) für diese Strecke wirklich löschen?")) {
-            localStorage.removeItem(allTimeKey);
-            updateAllTimeBestDisplay();
-            analyzeLaps();
-        }
-    }
-
-    function autoIncrementLapNum() {
-        const lapText = document.getElementById('lapTimes').value;
-        const lines = lapText.split('\n');
-        let maxLap = 0;
-        lines.forEach(line => {
-            const match = line.match(/(?:Runde\s*)?(\d+)/i);
-            if (match) {
-                const num = parseInt(match[1]);
-                if (num > maxLap && num < 1000) maxLap = num;
-            }
+        arr.forEach(id => {
+            if(document.getElementById(`dir_${id}`)) document.getElementById(`dir_${id}`).value = id === 'start' ? '' : (trackDirections[trackKey][id-1] || '');
+            ['brake', 'gear', 'notes', 'turnin', 'throttle', 'curbs', 'type', 'light_val'].forEach(prefix => {
+                if(document.getElementById(`${prefix}_${id}`)) document.getElementById(`${prefix}_${id}`).value = '';
+            });
+            ['red', 'yellow', 'green'].forEach(col => {
+                if(document.getElementById(`light_${id}_${col}`)) document.getElementById(`light_${id}_${col}`).classList.remove('active');
+            });
         });
-        document.getElementById('manualLapNum').value = maxLap + 1;
     }
 
-    function addManualLap() {
-        const lapNumVal = document.getElementById('manualLapNum').value.trim();
-        const minVal = document.getElementById('manualMin').value.trim();
-        const secVal = document.getElementById('manualSec').value.trim();
-        const msVal = document.getElementById('manualMs').value.trim();
+    function onSessionChange() { loadData(); }
 
-        if (!minVal || !secVal) {
-            alert("Bitte mindestens Minuten und Sekunden eintragen.");
-            return;
-        }
-
-        const lapNum = lapNumVal ? lapNumVal : "1";
-        const minutes = minVal.padStart(1, '0');
-        const seconds = secVal.padStart(2, '0');
-        const ms = msVal ? msVal.padEnd(2, '0').substring(0, 3) : "00";
-
-        const formattedLapTimeLine = `Runde ${lapNum}: ${minutes}:${seconds}.${ms}`;
-
-        const lapTimesArea = document.getElementById('lapTimes');
-        if (lapTimesArea.value.trim() !== "") {
-            lapTimesArea.value += "\n" + formattedLapTimeLine;
-        } else {
-            lapTimesArea.value = formattedLapTimeLine;
-        }
-
-        document.getElementById('manualMin').value = '';
-        document.getElementById('manualSec').value = '';
-        document.getElementById('manualMs').value = '';
-        document.getElementById('manualLapNum').value = parseInt(lapNum) + 1;
-
-        analyzeLaps();
-    }
-
-    function handleLapPhotoScan(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const statusElem = document.getElementById('scanStatus');
-        statusElem.style.display = 'block';
-        statusElem.innerText = "Analysiere Foto...";
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = new Image();
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0);
-
-                setTimeout(() => {
-                    statusElem.innerText = "Foto erfolgreich verarbeitet! (Zeiten eingefügt)";
-                    let simulatedScan = "Runde 1: 2:08.40\nRunde 2: 2:06.10\nRunde 3: 2:05.80";
-                    document.getElementById('lapTimes').value = simulatedScan;
-                    analyzeLaps();
-                    autoIncrementLapNum();
-                    setTimeout(() => { statusElem.style.display = 'none'; }, 3000);
-                }, 1000);
-            }
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function analyzeLaps() {
-        const lapText = document.getElementById('lapTimes').value;
-        const analysisBox = document.getElementById('lapAnalysis');
+    function loadData() {
         const trackKey = document.getElementById('trackSelect').value;
-        const allTimeKey = getAllTimeBestKeyForTrack(trackKey);
-        
-        let savedAllTime = localStorage.getItem(allTimeKey);
-        let currentBestSec = savedAllTime ? JSON.parse(savedAllTime).seconds : null;
+        const sessionSelect = document.getElementById('sessionSelect');
+        const sessionName = sessionSelect.value;
+        if (!sessionName) return;
 
-        const lines = lapText.split('\n');
-        let lapsFound = [];
-
-        lines.forEach(line => {
-            const timeMatch = line.match(/\b(\d{1,2}:\d{2}\.\d{1,3}|\d{2}\.\d{1,3})\b/);
-            if (timeMatch) {
-                const timeStr = timeMatch[1];
-                const sec = parseTimeToSeconds(timeStr);
-                if (sec !== null && sec > 0) {
-                    const lapNumMatch = line.match(/(?:Runde\s*)?(\d+)/i);
-                    let lapNum = lapsFound.length + 1;
-                    if (lapNumMatch) {
-                        const parsedNum = parseInt(lapNumMatch[1]);
-                        if (parsedNum < 1000) {
-                            lapNum = parsedNum;
-                        }
-                    }
-                    lapsFound.push({ lap: lapNum, str: timeStr, sec: sec });
-                }
-            }
-        });
-
-        if (lapsFound.length === 0) {
-            analysisBox.style.display = 'none';
-            return;
-        }
-
-        let html = "<strong>Runden-Analyse & Delta:</strong><br>";
-        let sessionBestSec = Infinity;
-
-        lapsFound.forEach((lap) => {
-            if (lap.sec < sessionBestSec) sessionBestSec = lap.sec;
-
-            let deltaStr = "";
-            let color = "inherit";
-
-            if (currentBestSec !== null) {
-                let diff = lap.sec - currentBestSec;
-                if (diff < 0) {
-                    deltaStr = ` (-${Math.abs(diff).toFixed(3)}s 🚀 NEUE BESTZEIT!)`;
-                    color = "var(--success)";
-                } else if (Math.abs(diff) < 0.001) {
-                    deltaStr = ` (All-Time-Best!)`;
-                    color = "var(--warning)";
-                } else {
-                    deltaStr = ` (+${diff.toFixed(3)}s)`;
-                    color = "var(--danger)";
-                }
-            }
-
-            html += `<div class="lap-row" style="color: ${color}"><span>Runde ${lap.lap}: ${lap.str}</span><span>${deltaStr}</span></div>`;
-        });
-
-        analysisBox.innerHTML = html;
-        analysisBox.style.display = 'block';
-
-        if (sessionBestSec < (currentBestSec || Infinity)) {
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('de-DE');
-            const newBest = { seconds: sessionBestSec, timeStr: formatSecondsToTime(sessionBestSec), date: dateStr };
-            localStorage.setItem(allTimeKey, JSON.stringify(newBest));
-            updateAllTimeBestDisplay();
-        }
-    }
-
-    function updateAllTimeBestDisplay() {
-        const trackKey = document.getElementById('trackSelect').value;
-        const allTimeKey = getAllTimeBestKeyForTrack(trackKey);
-        const saved = localStorage.getItem(allTimeKey);
-
-        const valElem = document.getElementById('allTimeValue');
-        const dateElem = document.getElementById('allTimeDate');
-
-        if (saved) {
-            try {
-                const data = JSON.parse(saved);
-                valElem.innerText = data.timeStr;
-                dateElem.innerText = `Eingefahren am: ${data.date}`;
-            } catch(e) {
-                valElem.innerText = "--:--.---";
-                dateElem.innerText = "Noch keine Zeit hinterlegt";
-            }
-        } else {
-            valElem.innerText = "--:--.---";
-            dateElem.innerText = "Noch keine Zeit hinterlegt";
-        }
+        const storageKey = getStorageKeyForTrack(trackKey);
+        let sessions = JSON.parse(localStorage.getItem(storageKey)) || {};
+        if (sessions[sessionName]) applyDataToForm(sessions[sessionName]);
     }
 
     function collectCurrentFormData() {
         const trackKey = document.getElementById('trackSelect').value;
-        const totalCurves = tracks[trackKey];
         let data = {};
-
-        data['tireFront'] = document.getElementById('tireFront').value;
-        data['tireRear'] = document.getElementById('tireRear').value;
-        data['outsideTemp'] = document.getElementById('outsideTemp').value;
-        data['gripNotes'] = document.getElementById('gripNotes').value;
-        data['gearing'] = document.getElementById('gearing').value;
-        data['rebound'] = document.getElementById('rebound').value;
-        data['compression'] = document.getElementById('compression').value;
-        data['preload'] = document.getElementById('preload').value;
-        data['quickFeedback'] = document.getElementById('quickFeedback').value;
-        data['lapTimes'] = document.getElementById('lapTimes').value;
+        const fields = ['tireFront', 'tireRear', 'outsideTemp', 'gripNotes', 'gearing', 'rebound', 'compression', 'preload', 'quickFeedback', 'lapTimes'];
+        fields.forEach(f => { data[f] = document.getElementById(f).value; });
         data['tireImage'] = storedImageBase64;
 
-        data['brake_start'] = document.getElementById('brake_start').value;
-        data['gear_start'] = document.getElementById('gear_start').value;
-        data['notes_start'] = document.getElementById('notes_start').value;
+        const arr = ['start'];
+        for (let i = 1; i <= tracks[trackKey]; i++) arr.push(i.toString());
 
-        for (let i = 1; i <= totalCurves; i++) {
-            data[`dir_${i}`] = document.getElementById(`dir_${i}`).value;
-            data[`brake_${i}`] = document.getElementById(`brake_${i}`).value;
-            data[`gear_${i}`] = document.getElementById(`gear_${i}`).value;
-            data[`notes_${i}`] = document.getElementById(`notes_${i}`).value;
-        }
+        arr.forEach(id => {
+            if(document.getElementById(`dir_${id}`)) data[`dir_${id}`] = document.getElementById(`dir_${id}`).value;
+            ['brake', 'gear', 'notes', 'turnin', 'throttle', 'curbs', 'type', 'light_val'].forEach(prefix => {
+                if(document.getElementById(`${prefix}_${id}`)) data[`${prefix}_${id}`] = document.getElementById(`${prefix}_${id}`).value;
+            });
+        });
         return data;
     }
 
     function applyDataToForm(data) {
-        document.getElementById('tireFront').value = data['tireFront'] || '';
-        document.getElementById('tireRear').value = data['tireRear'] || '';
-        document.getElementById('outsideTemp').value = data['outsideTemp'] || '';
-        document.getElementById('gripNotes').value = data['gripNotes'] || '';
-        document.getElementById('gearing').value = data['gearing'] || '';
-        document.getElementById('rebound').value = data['rebound'] || '';
-        document.getElementById('compression').value = data['compression'] || '';
-        document.getElementById('preload').value = data['preload'] || '';
-        document.getElementById('quickFeedback').value = data['quickFeedback'] || '';
-        document.getElementById('lapTimes').value = data['lapTimes'] || '';
-
-        if (data['tireImage']) {
-            storedImageBase64 = data['tireImage'];
-            showTireImageUI();
-        } else {
-            storedImageBase64 = "";
-            showTireImageUI();
-        }
-
-        if(document.getElementById('brake_start')) {
-            document.getElementById('brake_start').value = data['brake_start'] || '';
-            document.getElementById('gear_start').value = data['gear_start'] || '';
-            document.getElementById('notes_start').value = data['notes_start'] || '';
-        }
+        const fields = ['tireFront', 'tireRear', 'outsideTemp', 'gripNotes', 'gearing', 'rebound', 'compression', 'preload', 'quickFeedback', 'lapTimes'];
+        fields.forEach(f => { if(document.getElementById(f)) document.getElementById(f).value = data[f] || ''; });
+        storedImageBase64 = data['tireImage'] || ""; showTireImageUI();
 
         const trackKey = document.getElementById('trackSelect').value;
-        const totalCurves = tracks[trackKey];
-        for (let i = 1; i <= totalCurves; i++) {
-            if(document.getElementById(`dir_${i}`)) {
-                document.getElementById(`dir_${i}`).value = data[`dir_${i}`] || trackDirections[trackKey][i-1] || '';
-                document.getElementById(`brake_${i}` ).value = data[`brake_${i}`] || '';
-                document.getElementById(`gear_${i}`).value = data[`gear_${i}`] || '';
-                document.getElementById(`notes_${i}`).value = data[`notes_${i}`] || '';
-            }
-        }
-        analyzeLaps();
-        autoIncrementLapNum();
+        const arr = ['start'];
+        for (let i = 1; i <= tracks[trackKey]; i++) arr.push(i.toString());
+
+        arr.forEach(id => {
+            if(document.getElementById(`dir_${id}`)) document.getElementById(`dir_${id}`).value = data[`dir_${id}`] || (id === 'start' ? '' : trackDirections[trackKey][id-1] || '');
+            ['brake', 'gear', 'notes', 'turnin', 'throttle', 'curbs', 'type'].forEach(prefix => {
+                if(document.getElementById(`${prefix}_${id}`)) document.getElementById(`${prefix}_${id}`).value = data[`${prefix}_${id}`] || '';
+            });
+            
+            const lightVal = data[`light_val_${id}`] || '';
+            if(document.getElementById(`light_val_${id}`)) document.getElementById(`light_val_${id}`).value = lightVal;
+            ['red', 'yellow', 'green'].forEach(col => {
+                const btn = document.getElementById(`light_${id}_${col}`);
+                if(btn) {
+                    if (lightVal === col) btn.classList.add('active');
+                    else btn.classList.remove('active');
+                }
+            });
+        });
+        analyzeLaps(); autoIncrementLapNum();
     }
 
     function saveData() {
@@ -1308,211 +665,310 @@
         const storageKey = getStorageKeyForTrack(trackKey);
         let sessions = JSON.parse(localStorage.getItem(storageKey)) || {};
 
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('de-DE');
-        const timeStr = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        let sessionName = `${dateStr}, ${timeStr} Uhr`;
+        let sessionName = document.getElementById('sessionSelect').value;
+        if(!sessionName) {
+            const now = new Date();
+            sessionName = `${now.toLocaleDateString('de-DE')}, ${now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr`;
+        }
 
-        let currentData = collectCurrentFormData();
-        sessions[sessionName] = currentData;
-        
+        sessions[sessionName] = collectCurrentFormData();
         localStorage.setItem(storageKey, JSON.stringify(sessions));
         
         updateSessionDropdown();
         document.getElementById('sessionSelect').value = sessionName;
-        analyzeLaps();
         
-        const showNotice = (id) => {
-            const notice = document.getElementById(id);
-            if(notice) {
-                notice.style.display = 'block';
-                setTimeout(() => notice.style.display = 'none', 2500);
-            }
-        };
-
-        showNotice('saveNotice');
-        showNotice('saveNoticeCurves');
-        showNotice('saveNoticeLaps');
+        ['saveNotice', 'saveNoticeCurves', 'saveNoticeLaps'].forEach(id => {
+            const n = document.getElementById(id);
+            if(n) { n.style.display = 'block'; setTimeout(() => n.style.display = 'none', 2500); }
+        });
     }
 
     function deleteCurrentSession() {
         const trackKey = document.getElementById('trackSelect').value;
-        const sessionSelect = document.getElementById('sessionSelect');
-        const sessionName = sessionSelect.value;
-
-        if (!sessionName || sessionName === "") {
-            alert("Es ist aktuell kein gespeicherter Eintrag ausgewählt.");
-            return;
-        }
-
-        if (confirm(`Möchtest du den gespeicherten Eintrag "${sessionName}" wirklich löschen?`)) {
-            const storageKey = getStorageKeyForTrack(trackKey);
-            let sessions = JSON.parse(localStorage.getItem(storageKey)) || {};
-
-            delete sessions[sessionName];
-            localStorage.setItem(storageKey, JSON.stringify(sessions));
-
-            updateSessionDropdown();
-            alert("Eintrag wurde gelöscht.");
-        }
-    }
-
-    function saveAsBaseline() {
-        const trackKey = document.getElementById('trackSelect').value;
-        const baselineKey = getBaselineKeyForTrack(trackKey);
-        const currentData = collectCurrentFormData();
-
-        localStorage.setItem(baselineKey, JSON.stringify(currentData));
-        alert('⭐ Basis-Setup für diese Strecke erfolgreich gespeichert!');
-    }
-
-    function loadBaseline() {
-        const trackKey = document.getElementById('trackSelect').value;
-        const baselineKey = getBaselineKeyForTrack(trackKey);
-        const savedBaseline = localStorage.getItem(baselineKey);
-
-        if (!savedBaseline) {
-            alert('Kein Basis-Setup für diese Strecke hinterlegt. Bitte zuerst speichern!');
-            return;
-        }
-
-        try {
-            const data = JSON.parse(savedBaseline);
-            applyDataToForm(data);
-            alert('⭐ Basis-Setup wurde in das aktuelle Formular geladen!');
-        } catch(e) {
-            console.error(e);
-        }
-    }
-
-    function loadData() {
-        const trackKey = document.getElementById('trackSelect').value;
         const sessionName = document.getElementById('sessionSelect').value;
+        if (!sessionName) return alert("Kein Eintrag ausgewählt.");
         
-        if (!sessionName || sessionName === "") return;
+        if (confirm(`Eintrag "${sessionName}" löschen?`)) {
+            let sessions = JSON.parse(localStorage.getItem(getStorageKeyForTrack(trackKey))) || {};
+            delete sessions[sessionName];
+            localStorage.setItem(getStorageKeyForTrack(trackKey), JSON.stringify(sessions));
+            updateSessionDropdown();
+        }
+    }
 
-        const storageKey = getStorageKeyForTrack(trackKey);
-        let sessions = JSON.parse(localStorage.getItem(storageKey)) || {};
-        const data = sessions[sessionName];
+    // --- REIFENDRUCK & BILDER ---
+    function adjustPressure(id, a) { let v = parseFloat(document.getElementById(id).value.replace(',','.')); if(isNaN(v)) v = a>0?2.0:2.5; document.getElementById(id).value = Math.max(0, v+a).toFixed(1); }
+    function handleImageUpload(e) { const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=function(ev){ storedImageBase64=ev.target.result; showTireImageUI(); }; r.readAsDataURL(f); }
+    function showTireImageUI() { const p=document.getElementById('tireImagePreview'), c=document.getElementById('tireImageContainer'); if(storedImageBase64){ p.src=storedImageBase64; c.style.display='block'; } else c.style.display='none'; }
+    function deleteTireImage() { storedImageBase64=""; showTireImageUI(); document.getElementById('tireImageInput').value=''; }
+    function openModal(src) { if(src){ document.getElementById('modalImg').src=src; document.getElementById('imageModal').style.display='block'; } }
+    function closeModal() { document.getElementById('imageModal').style.display='none'; }
 
+    // --- BASELINE ---
+    function saveAsBaseline() { localStorage.setItem(getBaselineKeyForTrack(document.getElementById('trackSelect').value), JSON.stringify(collectCurrentFormData())); alert('⭐ Basis-Setup gespeichert!'); }
+    function loadBaseline() { const d = localStorage.getItem(getBaselineKeyForTrack(document.getElementById('trackSelect').value)); if(!d) alert('Kein Basis-Setup hinterlegt!'); else { applyDataToForm(JSON.parse(d)); alert('⭐ Basis-Setup geladen!'); } }
+
+    // --- RUNDENZEITEN ---
+    function parseTimeToMs(timeStr) {
+        const p = timeStr.split(':'); if (p.length !== 2) return null;
+        const s = p[1].split('.'); if (s.length !== 2) return null;
+        const m = parseInt(p[0]), sec = parseInt(s[0]), ms = parseInt(s[1]);
+        if (isNaN(m) || isNaN(sec) || isNaN(ms)) return null;
+        return (m * 60000) + (sec * 1000) + ms;
+    }
+    
+    function formatMsToTime(ms) {
+        const m = Math.floor(ms / 60000); const r = ms % 60000;
+        const s = Math.floor(r / 1000); const h = r % 1000;
+        return `${m}:${s.toString().padStart(2, '0')}.${h.toString().padStart(3, '0')}`;
+    }
+
+    function addManualLap() {
+        const r = document.getElementById('manualLapNum').value;
+        const m = document.getElementById('manualMin').value;
+        let s = document.getElementById('manualSec').value.padStart(2, '0');
+        let ms = document.getElementById('manualMs').value.padEnd(3, '0');
+        
+        if (!r || !m || !s || !ms) return alert('Bitte alle Felder ausfüllen.');
+        
+        const txt = document.getElementById('lapTimes');
+        const newLine = `Runde ${r}: ${m}:${s}.${ms}\n`;
+        txt.value = txt.value.trim() ? txt.value + '\n' + newLine : newLine;
+        
+        document.getElementById('manualMin').value = '';
+        document.getElementById('manualSec').value = '';
+        document.getElementById('manualMs').value = '';
+        analyzeLaps();
+        autoIncrementLapNum();
+        saveData();
+    }
+
+    function autoIncrementLapNum() {
+        const txt = document.getElementById('lapTimes').value;
+        const lines = txt.split('\n').filter(l => l.trim().startsWith('Runde'));
+        let highest = 0;
+        lines.forEach(l => {
+            const m = l.match(/Runde (\d+)/);
+            if (m && parseInt(m[1]) > highest) highest = parseInt(m[1]);
+        });
+        document.getElementById('manualLapNum').value = highest + 1;
+    }
+
+    function analyzeLaps() {
+        const lines = document.getElementById('lapTimes').value.split('\n');
+        let valid = [], best = null;
+        
+        lines.forEach(l => {
+            const m = l.match(/(Runde \d+).*?(\d+:\d{2}\.\d+)/);
+            if (m) {
+                const ms = parseTimeToMs(m[2]);
+                if (ms) { valid.push({ label: m[1], time: m[2], ms: ms }); if (!best || ms < best.ms) best = { label: m[1], time: m[2], ms: ms }; }
+            }
+        });
+        
+        const box = document.getElementById('lapAnalysis');
+        if (valid.length === 0) { box.style.display = 'none'; return; }
+        
+        let html = '';
+        valid.forEach(v => {
+            const isBest = best && v.ms === best.ms;
+            let diffStr = '';
+            if (best && !isBest) { diffStr = `<span style="color:#ef4444; font-size:0.75rem;">+${((v.ms - best.ms) / 1000).toFixed(3)}s</span>`; }
+            html += `<div class="lap-row ${isBest ? 'best-lap' : ''}"><span style="${isBest ? 'font-weight:bold; color:var(--success);' : ''}">${v.label} ${isBest ? '⭐' : ''}</span><span>${diffStr} <strong style="${isBest ? 'color:var(--success);' : ''}">${v.time}</strong></span></div>`;
+        });
+        
+        box.innerHTML = html; box.style.display = 'block';
+        if (best) checkAllTimeBest(best.ms, best.time);
+    }
+    
+    function confirmClearLaps() {
+        if(confirm("Alle Rundenzeiten in diesem Turn wirklich löschen?")) { document.getElementById('lapTimes').value = ''; analyzeLaps(); document.getElementById('manualLapNum').value='1'; saveData(); }
+    }
+
+    function checkAllTimeBest(currentBestMs, currentBestStr) {
+        const trackKey = document.getElementById('trackSelect').value;
+        const key = getAllTimeBestKeyForTrack(trackKey);
+        const stored = JSON.parse(localStorage.getItem(key));
+        
+        if (!stored || currentBestMs < stored.ms) {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('de-DE');
+            localStorage.setItem(key, JSON.stringify({ ms: currentBestMs, time: currentBestStr, date: dateStr }));
+            updateAllTimeBestDisplay();
+        }
+    }
+    
+    function updateAllTimeBestDisplay() {
+        const trackKey = document.getElementById('trackSelect').value;
+        const stored = JSON.parse(localStorage.getItem(getAllTimeBestKeyForTrack(trackKey)));
+        
+        if (stored) {
+            document.getElementById('allTimeValue').innerText = stored.time;
+            document.getElementById('allTimeDate').innerText = `am ${stored.date}`;
+        } else {
+            document.getElementById('allTimeValue').innerText = "--:--.---";
+            document.getElementById('allTimeDate').innerText = "Noch keine Zeit";
+        }
+    }
+    
+    function confirmClearAllTimeBest() {
+        if(confirm("Willst du deinen All-Time Rekord für diese Strecke WIRKLICH löschen?")) {
+            localStorage.removeItem(getAllTimeBestKeyForTrack(document.getElementById('trackSelect').value));
+            updateAllTimeBestDisplay();
+        }
+    }
+
+    function handleLapPhotoScan(e) {
+        const file = e.target.files[0]; if (!file) return;
+        document.getElementById('scanStatus').style.display = 'block';
+        document.getElementById('scanStatus').innerText = "Foto geladen. (OCR Mockup - Fügt Dummy-Zeiten ein)";
+        
+        setTimeout(() => {
+            const txt = document.getElementById('lapTimes');
+            const lines = ["Runde 1: 2:15.340", "Runde 2: 2:12.890", "Runde 3: 2:11.550"];
+            txt.value = txt.value.trim() ? txt.value + '\n' + lines.join('\n') : lines.join('\n');
+            document.getElementById('scanStatus').innerText = "3 Zeiten erfolgreich erkannt!";
+            setTimeout(() => { document.getElementById('scanStatus').style.display = 'none'; e.target.value=''; analyzeLaps(); autoIncrementLapNum(); saveData(); }, 2000);
+        }, 1500);
+    }
+
+    // --- EXPORT ---
+    function exportData() {
+        const d = collectCurrentFormData();
+        let t = `Setup: ${document.getElementById('trackSelect').options[document.getElementById('trackSelect').selectedIndex].text}\n`;
+        t += `Turn: ${document.getElementById('sessionSelect').value}\n`;
+        t += `Luft: V ${d.tireFront} | H ${d.tireRear}\n`;
+        t += `Fahrwerk (Z/D/V): ${d.rebound} / ${d.compression} / ${d.preload}\n\n`;
+        if(d.lapTimes) t += `Zeiten:\n${d.lapTimes}`;
+        
+        if (navigator.share) navigator.share({ title: 'Trackday Setup', text: t }).catch(console.error);
+        else { alert("In Zwischenablage kopiert:\n" + t); navigator.clipboard.writeText(t); }
+    }
+
+    // --- CUP FUNKTIONEN ---
+    function openCupInBrowser() {
+        const url = document.getElementById('cupUrlInput').value.trim() || 'https://stardesignracing.com/ergebnisse/';
+        window.open(url, '_blank');
+    }
+    
+    function saveCupUrl() {
+        const url = document.getElementById('cupUrlInput').value.trim();
+        localStorage.setItem('cup_url', url);
+        alert('Cup-Link gespeichert!');
+    }
+    
+    function loadSavedCupUrl() {
+        const url = localStorage.getItem('cup_url');
+        if (url) { document.getElementById('cupUrlInput').value = url; }
+    }
+
+    // --- PACKLISTE FUNKTIONEN ---
+    function getPackStorageKey() { return 'trackday_packing_lists'; }
+
+    function initPackDropdown() {
+        const select = document.getElementById('packDateSelect');
+        const lists = JSON.parse(localStorage.getItem(getPackStorageKey())) || {};
+        select.innerHTML = '';
+        
+        const keys = Object.keys(lists).sort().reverse();
+        if (keys.length === 0) { select.innerHTML = `<option value="">-- Keine Liste --</option>`; clearPackForm(); return; }
+        
+        keys.forEach(k => {
+            const opt = document.createElement('option'); opt.value = k; opt.textContent = k; select.appendChild(opt);
+        });
+        loadPacking();
+    }
+
+    function startNewPackSession() {
+        const d = prompt("Name/Datum für neue Packliste (z.B. 'Pannoniaring Mai'):", new Date().toLocaleDateString('de-DE'));
+        if (d) {
+            clearPackForm();
+            let lists = JSON.parse(localStorage.getItem(getPackStorageKey())) || {};
+            lists[d] = { items: {}, custom: customPackingItems };
+            localStorage.setItem(getPackStorageKey(), JSON.stringify(lists));
+            initPackDropdown();
+            document.getElementById('packDateSelect').value = d;
+        }
+    }
+
+    function clearPackForm() {
+        document.querySelectorAll('.pack-item input[type="checkbox"]').forEach(cb => cb.checked = false);
+        for(let i=1; i<=4; i++) { customPackingItems[i] = []; renderCustomCategoryItems(i); }
+    }
+
+    function savePacking(showNotice = false) {
+        const date = document.getElementById('packDateSelect').value;
+        if (!date) return;
+        
+        let checkedItems = {};
+        document.querySelectorAll('.pack-item input[type="checkbox"]').forEach(cb => { checkedItems[cb.id] = cb.checked; });
+        
+        let lists = JSON.parse(localStorage.getItem(getPackStorageKey())) || {};
+        lists[date] = { items: checkedItems, custom: customPackingItems };
+        localStorage.setItem(getPackStorageKey(), JSON.stringify(lists));
+        
+        if (showNotice) {
+            const n = document.getElementById('saveNoticePack');
+            n.style.display = 'block'; setTimeout(() => n.style.display = 'none', 2500);
+        }
+    }
+
+    function loadPacking() {
+        const date = document.getElementById('packDateSelect').value;
+        if (!date) return;
+        
+        const lists = JSON.parse(localStorage.getItem(getPackStorageKey())) || {};
+        const data = lists[date];
         if (!data) return;
-        applyDataToForm(data);
+        
+        customPackingItems = data.custom || { 1: [], 2: [], 3: [], 4: [] };
+        for(let i=1; i<=4; i++) renderCustomCategoryItems(i);
+        
+        setTimeout(() => {
+            document.querySelectorAll('.pack-item input[type="checkbox"]').forEach(cb => {
+                if (data.items && data.items[cb.id] !== undefined) cb.checked = data.items[cb.id];
+                else cb.checked = false;
+            });
+        }, 50);
     }
 
-    function addCustomItem() {
-        const input = document.getElementById('newItemInput');
-        const text = input.value.trim();
-        if (!text) return;
-
-        customItemsList.push({ text: text, checked: false });
+    function addCategoryItem(catId) {
+        const input = document.getElementById(`add_input_${catId}`);
+        const val = input.value.trim();
+        if (!val) return;
+        
+        const newId = 'c_' + Date.now();
+        customPackingItems[catId].push({ id: newId, label: val });
         input.value = '';
-        renderCustomItems();
+        renderCustomCategoryItems(catId);
         savePacking();
     }
 
-    function removeCustomItem(index) {
-        customItemsList.splice(index, 1);
-        renderCustomItems();
-        savePacking();
-    }
-
-    function renderCustomItems() {
-        const container = document.getElementById('customItemsContainer');
-        container.innerHTML = '';
-
-        customItemsList.forEach((item, index) => {
+    function renderCustomCategoryItems(catId) {
+        const container = document.getElementById(`cat_items_${catId}`);
+        container.querySelectorAll('.custom-item').forEach(e => e.remove());
+        
+        customPackingItems[catId].forEach(item => {
             const div = document.createElement('div');
-            div.className = 'pack-item';
+            div.className = 'pack-item custom-item';
             div.innerHTML = `
                 <div class="pack-item-left">
-                    <input type="checkbox" id="custom_${index}" ${item.checked ? 'checked' : ''} onchange="updateCustomCheck(${index})">
-                    <label for="custom_${index}">${item.text}</label>
+                    <input type="checkbox" id="${item.id}" onchange="savePacking()">
+                    <label for="${item.id}">${item.label}</label>
                 </div>
-                <button class="btn-item-delete" onclick="removeCustomItem(${index})">Löschen</button>
+                <button type="button" class="btn-item-delete" onclick="deleteCustomItem(${catId}, '${item.id}')">✕</button>
             `;
             container.appendChild(div);
         });
     }
 
-    function updateCustomCheck(index) {
-        const chk = document.getElementById('custom_' + index);
-        if (chk) {
-            customItemsList[index].checked = chk.checked;
-            savePacking();
-        }
-    }
-
-    function savePacking() {
-        const packData = {
-            fixed: {},
-            custom: customItemsList
-        };
-
-        for (let i = 1; i <= 27; i++) {
-            const chk = document.getElementById('p' + i);
-            if (chk) {
-                packData.fixed['p' + i] = chk.checked;
-            }
-        }
-        localStorage.setItem('trackday_packing', JSON.stringify(packData));
-    }
-
-    function loadPacking() {
-        const saved = localStorage.getItem('trackday_packing');
-        if (!saved) return;
-
-        try {
-            const packData = JSON.parse(saved);
-
-            if (packData.fixed) {
-                for (let i = 1; i <= 27; i++) {
-                    const chk = document.getElementById('p' + i);
-                    if (chk && packData.fixed['p' + i] !== undefined) {
-                        chk.checked = packData.fixed['p' + i];
-                    }
-                }
-                customItemsList = packData.custom || [];
-            } else {
-                for (let i = 1; i <= 27; i++) {
-                    const chk = document.getElementById('p' + i);
-                    if (chk && packData['p' + i] !== undefined) {
-                        chk.checked = packData['p' + i];
-                    }
-                }
-            }
-            renderCustomItems();
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
-    function exportData() {
-        const trackKey = document.getElementById('trackSelect').value;
-        const sessionName = document.getElementById('sessionSelect').value;
-        const storageKey = getStorageKeyForTrack(trackKey);
-        let sessions = JSON.parse(localStorage.getItem(storageKey)) || {};
-        const data = sessions[sessionName];
-        
-        if (!data) {
-            alert('Kein gespeicherter Eintrag ausgewählt!');
-            return;
-        }
-
-        const textToShare = `UpperRacing - ${trackKey} (${sessionName}):\n\n` + JSON.stringify(data, null, 2);
-
-        if (navigator.share) {
-            navigator.share({
-                title: 'UpperRacing - ' + trackKey,
-                text: textToShare
-            }).catch(() => {});
-        } else {
-            navigator.clipboard.writeText(textToShare);
-            alert('Daten wurden in die Zwischenablage kopiert!');
-        }
+    function deleteCustomItem(catId, itemId) {
+        customPackingItems[catId] = customPackingItems[catId].filter(i => i.id !== itemId);
+        renderCustomCategoryItems(catId);
+        savePacking();
     }
 
     initApp();
 </script>
-
 </body>
 </html>
