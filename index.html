@@ -6,8 +6,6 @@
     <title>UpperRacing</title>
     <!-- Eingebettetes Manifest für fehlerfreie Installation -->
     <link rel="manifest" href='data:application/manifest+json,{"name":"UpperRacing","short_name":"UpperRacing","start_url":".","display":"standalone","background_color":"#f3f4f6","theme_color":"#2563eb","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3214/3214738.png","sizes":"512x512","type":"image/png"}]}'>
-    <!-- Tesseract.js für die Texterkennung (OCR) von Screenshots -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         :root {
             --bg-color: #f3f4f6;
@@ -18,6 +16,7 @@
             --border: #d1d5db;
             --danger: #dc2626;
             --success: #16a34a;
+            --warning: #d97706;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -43,8 +42,9 @@
         /* Navigation zwischen den Tabs */
         .nav-tabs {
             display: flex;
-            gap: 6px;
+            gap: 4px;
             margin-bottom: 15px;
+            overflow-x: auto;
         }
         .tab-btn {
             flex: 1;
@@ -55,9 +55,10 @@
             border-radius: 6px;
             font-weight: bold;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             margin-top: 0;
             text-align: center;
+            white-space: nowrap;
         }
         .tab-btn.active {
             background: var(--primary);
@@ -66,7 +67,7 @@
 
         .selector-box, .setup-box, .pack-box {
             background: var(--card-bg);
-            padding: 12px;
+            padding: 14px;
             border-radius: 8px;
             margin-bottom: 15px;
             border: 1px solid var(--border);
@@ -74,8 +75,8 @@
         select, input, textarea {
             width: 100%;
             padding: 8px;
-            margin-top: 5px;
-            margin-bottom: 10px;
+            margin-top: 4px;
+            margin-bottom: 8px;
             border: 1px solid var(--border);
             border-radius: 4px;
             box-sizing: border-box;
@@ -131,8 +132,8 @@
             border: 1px solid var(--border);
             padding: 8px 10px;
             width: auto;
-            margin-top: 5px;
-            margin-bottom: 10px;
+            margin-top: 4px;
+            margin-bottom: 8px;
             font-size: 0.85rem;
             border-radius: 4px;
             font-weight: bold;
@@ -159,6 +160,13 @@
             background-color: #4b5563;
             margin-top: 5px;
         }
+        .btn-warning {
+            background-color: var(--warning);
+            margin-top: 5px;
+        }
+        .btn-warning:active {
+            background-color: #b45309;
+        }
         .btn-success {
             background-color: var(--success);
         }
@@ -167,11 +175,36 @@
         }
         .btn-danger {
             background-color: var(--danger);
+            color: white;
+            margin-top: 5px;
+        }
+        .btn-danger:active {
+            background-color: #b91c1c;
+        }
+        .btn-item-delete {
+            background-color: var(--danger);
             padding: 6px 10px;
             font-size: 0.8rem;
             width: auto;
             margin: 0;
         }
+        
+        .btn-small-danger {
+            background-color: #fee2e2;
+            color: var(--danger);
+            border: 1px solid #fca5a5;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border-radius: 4px;
+            width: auto;
+            margin: 0;
+            cursor: pointer;
+        }
+        .btn-small-danger:active {
+            background-color: #fecaca;
+        }
+
         .save-notice {
             text-align: center;
             font-size: 0.85rem;
@@ -181,6 +214,76 @@
             display: none;
         }
         h3 { margin-top: 0; color: #1f2937; font-size: 1.05rem; }
+
+        .alltime-container {
+            margin-bottom: 15px;
+        }
+        .alltime-box {
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+            border: 2px solid #f59e0b;
+            border-radius: 8px;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .alltime-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .alltime-title {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #b45309;
+            text-transform: uppercase;
+        }
+        .alltime-value {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #92400e;
+        }
+        .alltime-date {
+            font-size: 0.75rem;
+            color: #78350f;
+        }
+
+        .lap-analysis-box {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .lap-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .lap-row:last-child {
+            border-bottom: none;
+        }
+
+        .setup-section-title {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 14px;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 3px;
+        }
+        .setup-section-title:first-of-type {
+            margin-top: 4px;
+        }
 
         .pack-category {
             font-weight: bold;
@@ -267,13 +370,7 @@
             border: 1px dashed var(--primary);
             padding: 10px;
             border-radius: 6px;
-            margin-top: 10px;
-        }
-        #ocrStatus {
-            font-size: 0.8rem;
-            color: var(--primary);
-            margin-top: 4px;
-            font-weight: bold;
+            margin-top: 12px;
         }
 
         /* Modal für Vollbild-Bildansicht */
@@ -315,63 +412,75 @@
 
     <div class="nav-tabs">
         <button id="tabAppBtn" class="tab-btn active" onclick="switchPage('app')">🏁 Setup</button>
-        <button id="tabLapsBtn" class="tab-btn" onclick="switchPage('laps')">⏱️ Rundenzeiten</button>
-        <button id="tabPackBtn" class="tab-btn" onclick="switchPage('pack')">🎒 Packliste</button>
+        <button id="tabCurvesBtn" class="tab-btn" onclick="switchPage('curves')">🗺️ Kurven</button>
+        <button id="tabLapsBtn" class="tab-btn" onclick="switchPage('laps')">⏱️ Zeiten</button>
+        <button id="tabPackBtn" class="tab-btn" onclick="switchPage('pack')">🎒 Packen</button>
+    </div>
+
+    <!-- GEMEINSAME AUSWAHLBOX FÜR DIE HAUPTSEITEN -->
+    <div class="selector-box">
+        <div class="grid-2" style="margin-bottom:0;">
+            <div>
+                <label for="trackSelect"><strong>Rennstrecke:</strong></label>
+                <select id="trackSelect" onchange="onTrackChange()">
+                    <option value="pannoniaring">Pannoniaring (18 Kurven)</option>
+                    <option value="slovakia">Slovakiaring (14 Kurven)</option>
+                    <option value="brünn">Automotodrom Brno / Brünn (14 Kurven)</option>
+                    <option value="most">Autodrom Most (21 Kurven)</option>
+                    <option value="grobnik">Automotodrom Grobnik / Rijeka (18 Kurven)</option>
+                </select>
+            </div>
+            <div>
+                <label for="sessionSelect"><strong>📁 Speicher:</strong></label>
+                <select id="sessionSelect" onchange="onSessionChange()">
+                    <!-- Wird dynamisch befüllt -->
+                </select>
+            </div>
+        </div>
     </div>
 
     <!-- SEITE 1: STRECKEN & SETUP -->
     <div id="pageApp" class="page-content active">
-        <div class="selector-box">
-            <div class="grid-2" style="margin-bottom:0;">
-                <div>
-                    <label for="trackSelect"><strong>Rennstrecke:</strong></label>
-                    <select id="trackSelect" onchange="onTrackChange()">
-                        <option value="pannoniaring">Pannoniaring (18 Kurven)</option>
-                        <option value="slovakia">Slovakiaring (14 Kurven)</option>
-                        <option value="brünn">Automotodrom Brno / Brünn (14 Kurven)</option>
-                        <option value="most">Autodrom Most (21 Kurven)</option>
-                        <option value="grobnik">Automotodrom Grobnik / Rijeka (18 Kurven)</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="sessionSelect"><strong>📂 Gespeicherte Einträge:</strong></label>
-                    <select id="sessionSelect" onchange="onSessionChange()">
-                        <!-- Wird dynamisch nach Datum befüllt -->
-                    </select>
-                </div>
-            </div>
-        </div>
-
         <div class="setup-box">
-            <h3>Turn Setup, Drücke & Fahrwerk</h3>
+            <h3>Turn Setup & Fahrwerk</h3>
             
-            <label style="font-size:0.75rem; font-weight:bold; color:var(--primary);">Reifendruck (Bar) mit Schnell-Anpassung</label>
+            <div class="setup-section-title">🛞 Reifendruck</div>
             <div class="grid-2">
                 <div>
-                    <label style="font-size:0.75rem">Vorne (Kalt / Heiß)</label>
+                    <label style="font-size:0.75rem">Vorne</label>
                     <div class="pressure-group">
-                        <input type="text" id="tireFront" placeholder="z.B. 2.1 / 2.4">
+                        <input type="text" id="tireFront" placeholder="z.B. 2.1">
                         <button type="button" class="btn-pressure" onclick="adjustPressure('tireFront', -0.1)">-</button>
                         <button type="button" class="btn-pressure" onclick="adjustPressure('tireFront', 0.1)">+</button>
                     </div>
                 </div>
                 <div>
-                    <label style="font-size:0.75rem">Hinten (Kalt / Heiß)</label>
+                    <label style="font-size:0.75rem">Hinten</label>
                     <div class="pressure-group">
-                        <input type="text" id="tireRear" placeholder="z.B. 1.9 / 2.2">
+                        <input type="text" id="tireRear" placeholder="z.B. 1.9">
                         <button type="button" class="btn-pressure" onclick="adjustPressure('tireRear', -0.1)">-</button>
                         <button type="button" class="btn-pressure" onclick="adjustPressure('tireRear', 0.1)">+</button>
                     </div>
                 </div>
             </div>
 
+            <div>
+                <label style="font-size:0.75rem; font-weight:bold; color:var(--text-muted); margin-top:6px; display:block;">Reifenbild / Verschleiß (Foto)</label>
+                <input type="file" id="tireImageInput" accept="image/*" onchange="handleImageUpload(event)">
+                <div id="tireImageContainer" class="img-container">
+                    <img id="tireImagePreview" class="img-preview" alt="Reifenbild Vorschau" onclick="openModal(this.src)">
+                    <button type="button" class="delete-img-btn" onclick="deleteTireImage()" title="Bild löschen">✕</button>
+                </div>
+            </div>
+
+            <div class="setup-section-title">🌡️ Bedingungen & Übersetzung</div>
             <div class="grid-3">
                 <div>
-                    <label style="font-size:0.75rem">Außen- / Asphalttemp.</label>
-                    <input type="text" id="outsideTemp" placeholder="z.B. 24°C / As. 35°C">
+                    <label style="font-size:0.75rem">Außen / Asph.</label>
+                    <input type="text" id="outsideTemp" placeholder="z.B. 24°C / 35°C">
                 </div>
                 <div>
-                    <label style="font-size:0.75rem">Grip & Bedingungen</label>
+                    <label style="font-size:0.75rem">Grip & Wetter</label>
                     <input type="text" id="gripNotes" placeholder="z.B. Sonne, super Grip">
                 </div>
                 <div>
@@ -380,66 +489,91 @@
                 </div>
             </div>
 
+            <div class="setup-section-title">⚙️ Fahrwerkseinstellungen (v / h)</div>
             <div class="grid-3">
                 <div>
-                    <label style="font-size:0.75rem">Zugstufe (v / h)</label>
+                    <label style="font-size:0.75rem">Zugstufe</label>
                     <input type="text" id="rebound" placeholder="z.B. 8 / 10">
                 </div>
                 <div>
-                    <label style="font-size:0.75rem">Druckstufe (v / h)</label>
+                    <label style="font-size:0.75rem">Druckstufe</label>
                     <input type="text" id="compression" placeholder="z.B. 6 / 8">
                 </div>
                 <div>
-                    <label style="font-size:0.75rem">Vorspannung (v / h)</label>
+                    <label style="font-size:0.75rem">Vorspannung</label>
                     <input type="text" id="preload" placeholder="z.B. 5R / 12mm">
                 </div>
             </div>
 
-            <label style="font-size:0.75rem; font-weight:bold; color:var(--primary); margin-top:10px; display:block;">Quick-Notiz / Turn-Feedback (direkt nach dem Turn)</label>
+            <div class="setup-section-title">📝 Turn-Feedback / Notizen</div>
             <div>
-                <textarea id="quickFeedback" rows="2" placeholder="Z.B. Vorderrad stempelt beim harten Anbremsen in T1..."></textarea>
-            </div>
-
-            <label style="font-size:0.75rem; font-weight:bold; color:var(--primary); margin-top:10px; display:block;">Reifenbild / Verschleiß (Foto)</label>
-            <input type="file" id="tireImageInput" accept="image/*" onchange="handleImageUpload(event)">
-            
-            <div id="tireImageContainer" class="img-container">
-                <img id="tireImagePreview" class="img-preview" alt="Reifenbild Vorschau" onclick="openModal(this.src)">
-                <button type="button" class="delete-img-btn" onclick="deleteTireImage()" title="Bild löschen">✕</button>
+                <textarea id="quickFeedback" rows="3" placeholder="Z.B. Vorderrad stempelt beim harten Anbremsen in T1..."></textarea>
             </div>
         </div>
 
-        <div id="curvesContainer"></div>
-
-        <button class="btn-success" onclick="saveData()">💾 Als neuen Eintrag (mit Datum/Uhrzeit) speichern</button>
+        <button class="btn-success" onclick="saveData()">💾 Als neuen Eintrag speichern</button>
+        <button class="btn-warning" onclick="saveAsBaseline()">⭐ Aktuelles Setup als Basis-Setup speichern</button>
+        <button class="btn-secondary" onclick="loadBaseline()">⭐ Basis-Setup laden</button>
         <button class="btn-secondary" onclick="exportData()">Daten Teilen / Exportieren</button>
-        <div id="saveNotice" class="save-notice">Erfolgreich als neuer Eintrag gespeichert!</div>
+        <div id="saveNotice" class="save-notice">Erfolgreich gespeichert!</div>
     </div>
 
-    <!-- SEITE 2: RUNDENZEITEN & RACE MONITOR -->
+    <!-- SEITE 2: KURVEN & LINIE -->
+    <div id="pageCurves" class="page-content">
+        <div class="setup-box">
+            <h3>🗺️ Strecken- & Kurvennotizen</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0;">Hier dokumentierst du Bremspunkte, Gangwahl und Linienführung für jede einzelne Kurve.</p>
+        </div>
+        <div id="curvesContainer"></div>
+        <button class="btn-success" onclick="saveData()">💾 Kurven-Daten speichern</button>
+        <div id="saveNoticeCurves" class="save-notice">Kurven erfolgreich gespeichert!</div>
+    </div>
+
+    <!-- SEITE 3: RUNDENZEITEN & RACE MONITOR SCHNELL-EINFÜGER -->
     <div id="pageLaps" class="page-content">
         <div class="setup-box">
+            <!-- ALL-TIME BEST CONTAINER -->
+            <div class="alltime-container">
+                <div class="alltime-header-row">
+                    <div class="alltime-title">🏆 All-Time-Best (Streckenrekord)</div>
+                    <button type="button" class="btn-small-danger" onclick="confirmClearAllTimeBest()">🗑️ Rekord löschen</button>
+                </div>
+                <div class="alltime-box">
+                    <div>
+                        <div id="allTimeDate" class="alltime-date">Noch keine Zeit hinterlegt</div>
+                    </div>
+                    <div>
+                        <div id="allTimeValue" class="alltime-value">--:--.---</div>
+                    </div>
+                </div>
+            </div>
+
             <h3>⏱️ Rundenzeiten & Stints</h3>
-            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0;">Trage hier deine Runden ein oder nutze den automatischen Race Monitor Screenshot-Import.</p>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0;">Trage Runden manuell ein oder nutze den Race Monitor Schnell-Einfüger.</p>
 
-            <label style="font-size:0.75rem; font-weight:bold; color:var(--primary); display:block;">Manuelle Rundenzeiten / Stint-Protokoll</label>
-            <div>
-                <textarea id="lapTimes" rows="6" placeholder="Runde 1: 2:05.1&#10;Runde 2: 2:04.3&#10;Runde 3: 2:03.9..."></textarea>
-            </div>
-
+            <!-- OPTION 1: SCHNELL-EINFÜGER FÜR KOPIERTEN TEXT -->
             <div class="import-box">
-                <label style="font-size:0.75rem; font-weight:bold; color:var(--primary); display:block;">📊 Race Monitor Automatik-Import</label>
-                <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom: 5px;">Screenshot der App hochladen (scannt automatisch nach Rundenzeiten und fügt sie oben ein):</div>
-                <input type="file" id="raceMonitorScreenshot" accept="image/*" onchange="importRaceMonitorImage(event)">
-                <div id="ocrStatus"></div>
+                <label style="font-size:0.8rem; font-weight:bold; color:var(--primary); display:block;">⚡ Race Monitor Schnell-Einfüger (Copy & Paste)</label>
+                <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom: 5px;">Kopierten Text aus Race Monitor hier einfügen (wird sofort automatisch sauber formatiert):</div>
+                <textarea id="raceMonitorPasteBox" rows="3" placeholder="Füge hier den kopierten Text aus der App ein..." oninput="parseRaceMonitorPaste()"></textarea>
             </div>
+
+            <div style="margin-top: 12px;">
+                <label style="font-size:0.75rem; font-weight:bold; color:var(--primary); display:block;">Gespeicherte Rundenzeiten (Protokoll)</label>
+                <textarea id="lapTimes" rows="6" placeholder="Runde 1: 2:05.1&#10;Runde 2: 2:04.3&#10;Runde 3: 2:03.9..." oninput="analyzeLaps()"></textarea>
+            </div>
+
+            <button type="button" class="btn-danger" onclick="confirmClearLaps()">🗑️ Alle Rundenzeiten löschen</button>
+
+            <!-- Live Delta & Analyse Anzeige -->
+            <div id="lapAnalysis" class="lap-analysis-box" style="display:none;"></div>
 
             <button class="btn-success" onclick="saveData()">💾 Zeiten speichern</button>
             <div id="saveNoticeLaps" class="save-notice">Zeiten erfolgreich gespeichert!</div>
         </div>
     </div>
 
-    <!-- SEITE 3: PACKLISTE -->
+    <!-- SEITE 4: PACKLISTE -->
     <div id="pagePack" class="page-content">
         <div class="pack-box">
             <h3>Packliste für den Trackday</h3>
@@ -519,18 +653,25 @@
 
     function switchPage(page) {
         document.getElementById('pageApp').classList.remove('active');
+        document.getElementById('pageCurves').classList.remove('active');
         document.getElementById('pageLaps').classList.remove('active');
         document.getElementById('pagePack').classList.remove('active');
+        
         document.getElementById('tabAppBtn').classList.remove('active');
+        document.getElementById('tabCurvesBtn').classList.remove('active');
         document.getElementById('tabLapsBtn').classList.remove('active');
         document.getElementById('tabPackBtn').classList.remove('active');
 
         if (page === 'app') {
             document.getElementById('pageApp').classList.add('active');
             document.getElementById('tabAppBtn').classList.add('active');
+        } else if (page === 'curves') {
+            document.getElementById('pageCurves').classList.add('active');
+            document.getElementById('tabCurvesBtn').classList.add('active');
         } else if (page === 'laps') {
             document.getElementById('pageLaps').classList.add('active');
             document.getElementById('tabLapsBtn').classList.add('active');
+            analyzeLaps();
         } else {
             document.getElementById('pagePack').classList.add('active');
             document.getElementById('tabPackBtn').classList.add('active');
@@ -541,6 +682,7 @@
         renderCurvesStructure();
         updateSessionDropdown();
         loadPacking();
+        updateAllTimeBestDisplay();
     }
 
     function renderCurvesStructure() {
@@ -587,10 +729,19 @@
     function onTrackChange() {
         renderCurvesStructure();
         updateSessionDropdown();
+        updateAllTimeBestDisplay();
     }
 
     function getStorageKeyForTrack(trackKey) {
         return 'trackday_sessions_' + trackKey;
+    }
+
+    function getBaselineKeyForTrack(trackKey) {
+        return 'trackday_baseline_' + trackKey;
+    }
+
+    function getAllTimeBestKeyForTrack(trackKey) {
+        return 'trackday_alltime_' + trackKey;
     }
 
     function updateSessionDropdown() {
@@ -601,7 +752,7 @@
         let sessions = JSON.parse(localStorage.getItem(storageKey)) || {};
         sessionSelect.innerHTML = '';
 
-        const keys = Object.keys(sessions).sort().reverse(); // Neueste Datum/Uhrzeit zuerst
+        const keys = Object.keys(sessions).sort().reverse();
 
         if (keys.length === 0) {
             const opt = document.createElement('option');
@@ -633,9 +784,11 @@
         document.getElementById('preload').value = '';
         document.getElementById('quickFeedback').value = '';
         document.getElementById('lapTimes').value = '';
+        document.getElementById('raceMonitorPasteBox').value = '';
         document.getElementById('tireImageInput').value = '';
         storedImageBase64 = "";
         showTireImageUI();
+        document.getElementById('lapAnalysis').style.display = 'none';
 
         if(document.getElementById('brake_start')) {
             document.getElementById('brake_start').value = '';
@@ -708,45 +861,211 @@
         document.getElementById('imageModal').style.display = 'none';
     }
 
-    function importRaceMonitorImage(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const statusDiv = document.getElementById('ocrStatus');
-        statusDiv.innerText = "Analysiere Screenshot... Bitte warten.";
-
-        Tesseract.recognize(
-            file,
-            'eng',
-            { logger: m => console.log(m) }
-        ).then(({ data: { text } }) => {
-            statusDiv.innerText = "Auswertung erfolgreich!";
-            
-            const timeRegex = /\b\d{1,2}:\d{2}\.\d{1,3}\b/g;
-            const foundTimes = text.match(timeRegex);
-
-            if (foundTimes && foundTimes.length > 0) {
-                let formattedList = "";
-                foundTimes.forEach((t, index) => {
-                    formattedList += `Runde ${index + 1}: ${t}\n`;
-                });
-
-                const lapBox = document.getElementById('lapTimes');
-                lapBox.value = formattedList.trim();
-                setTimeout(() => statusDiv.innerText = "", 3000);
-            } else {
-                statusDiv.innerText = "Keine Rundenzeiten im Bild gefunden. Bitte manuell prüfen.";
-            }
-        }).catch(err => {
-            console.error(err);
-            statusDiv.innerText = "Fehler bei der Texterkennung.";
-        });
+    function parseTimeToSeconds(timeStr) {
+        const parts = timeStr.split(':');
+        if (parts.length === 2) {
+            const minutes = parseFloat(parts[0]);
+            const seconds = parseFloat(parts[1].replace(',', '.'));
+            if (isNaN(minutes) || isNaN(seconds)) return null;
+            return (minutes * 60) + seconds;
+        } else if (parts.length === 1) {
+            return parseFloat(parts[0].replace(',', '.'));
+        }
+        return null;
     }
 
-    function saveData() {
+    function formatSecondsToTime(totalSecs) {
+        if (totalSecs < 60) {
+            return `00:${(totalSecs < 10 ? '0' : '') + totalSecs.toFixed(3)}`;
+        }
+        const mins = Math.floor(totalSecs / 60);
+        const secs = (totalSecs % 60).toFixed(3);
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    function confirmClearLaps() {
+        const lapText = document.getElementById('lapTimes').value.trim();
+        if (!lapText) {
+            alert("Es sind aktuell keine Rundenzeiten eingetragen.");
+            return;
+        }
+
+        if (confirm("Möchtest du wirklich alle eingetragenen Rundenzeiten unwiderruflich löschen?")) {
+            document.getElementById('lapTimes').value = "";
+            document.getElementById('raceMonitorPasteBox').value = "";
+            analyzeLaps();
+        }
+    }
+
+    function confirmClearAllTimeBest() {
+        const trackKey = document.getElementById('trackSelect').value;
+        const allTimeKey = getAllTimeBestKeyForTrack(trackKey);
+        const saved = localStorage.getItem(allTimeKey);
+
+        if (!saved) {
+            alert("Es ist aktuell keine All-Time-Best-Zeit für diese Strecke hinterlegt.");
+            return;
+        }
+
+        if (confirm("Möchtest du den All-Time-Best (Streckenrekord) für diese Strecke wirklich löschen?")) {
+            localStorage.removeItem(allTimeKey);
+            updateAllTimeBestDisplay();
+            analyzeLaps();
+        }
+    }
+
+    // Intelligenter Race Monitor Schnell-Einfüger (Parst kopierten Text direkt zu 100% verlässlich)
+    function parseRaceMonitorPaste() {
+        const pasteText = document.getElementById('raceMonitorPasteBox').value;
+        if (!pasteText.trim()) return;
+
+        const lines = pasteText.split('\n');
+        let lapDataList = [];
+
+        lines.forEach(line => {
+            // Findet Rundenzeiten im Format m:ss.ms oder ss.ms
+            const timeMatch = line.match(/\b(\d{1,2}:\d{2}\.\d{1,3}|\d{2}\.\d{1,3})\b/);
+            if (timeMatch) {
+                const timeStr = timeMatch[1];
+                // Versucht Rundennummer zu finden
+                const lapNumMatch = line.match(/\b(?:Runde|Lap)?\s*(\d{1,3})\b/i);
+                let lapNum = lapDataList.length + 1;
+                
+                if (lapNumMatch) {
+                    const parsed = parseInt(lapNumMatch[1]);
+                    // Verhindert, dass Sekundenbruchteile als Rundennummer interpretiert werden
+                    if (parsed > 0 && parsed < 200 && parsed !== parseInt(timeStr.split('.')[0])) {
+                        lapNum = parsed;
+                    }
+                }
+                lapDataList.push({ lap: lapNum, time: timeStr });
+            }
+        });
+
+        if (lapDataList.length > 0) {
+            // Nach Rundennummer sortieren und Duplikate filtern
+            lapDataList.sort((a, b) => a.lap - b.lap);
+            let uniqueLaps = [];
+            let seenLaps = new Set();
+            
+            lapDataList.forEach(item => {
+                if (!seenLaps.has(item.lap)) {
+                    seenLaps.add(item.lap);
+                    uniqueLaps.push(item);
+                }
+            });
+
+            let formattedList = "";
+            uniqueLaps.forEach(item => {
+                formattedList += `Runde ${item.lap}: ${item.time}\n`;
+            });
+
+            document.getElementById('lapTimes').value = formattedList.trim();
+            analyzeLaps();
+        }
+    }
+
+    function analyzeLaps() {
+        const lapText = document.getElementById('lapTimes').value;
+        const analysisBox = document.getElementById('lapAnalysis');
+        const trackKey = document.getElementById('trackSelect').value;
+        const allTimeKey = getAllTimeBestKeyForTrack(trackKey);
+        
+        let savedAllTime = localStorage.getItem(allTimeKey);
+        let currentBestSec = savedAllTime ? JSON.parse(savedAllTime).seconds : null;
+
+        const lines = lapText.split('\n');
+        let lapsFound = [];
+
+        lines.forEach(line => {
+            const timeMatch = line.match(/\b(\d{1,2}:\d{2}\.\d{1,3}|\d{2}\.\d{1,3})\b/);
+            if (timeMatch) {
+                const timeStr = timeMatch[1];
+                const sec = parseTimeToSeconds(timeStr);
+                if (sec !== null && sec > 0) {
+                    const lapNumMatch = line.match(/(?:Runde\s*)?(\d+)/i);
+                    let lapNum = lapsFound.length + 1;
+                    if (lapNumMatch) {
+                        const parsedNum = parseInt(lapNumMatch[1]);
+                        if (parsedNum < 1000) {
+                            lapNum = parsedNum;
+                        }
+                    }
+                    lapsFound.push({ lap: lapNum, str: timeStr, sec: sec });
+                }
+            }
+        });
+
+        if (lapsFound.length === 0) {
+            analysisBox.style.display = 'none';
+            return;
+        }
+
+        let html = "<strong>Runden-Analyse & Delta:</strong><br>";
+        let sessionBestSec = Infinity;
+
+        lapsFound.forEach((lap) => {
+            if (lap.sec < sessionBestSec) sessionBestSec = lap.sec;
+
+            let deltaStr = "";
+            let color = "inherit";
+
+            if (currentBestSec !== null) {
+                let diff = lap.sec - currentBestSec;
+                if (diff < 0) {
+                    deltaStr = ` (-${Math.abs(diff).toFixed(3)}s 🚀 NEUE BESTZEIT!)`;
+                    color = "var(--success)";
+                } else if (Math.abs(diff) < 0.001) {
+                    deltaStr = ` (All-Time-Best!)`;
+                    color = "var(--warning)";
+                } else {
+                    deltaStr = ` (+${diff.toFixed(3)}s)`;
+                    color = "var(--danger)";
+                }
+            }
+
+            html += `<div class="lap-row" style="color: ${color}"><span>Runde ${lap.lap}: ${lap.str}</span><span>${deltaStr}</span></div>`;
+        });
+
+        analysisBox.innerHTML = html;
+        analysisBox.style.display = 'block';
+
+        if (sessionBestSec < (currentBestSec || Infinity)) {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('de-DE');
+            const newBest = { seconds: sessionBestSec, timeStr: formatSecondsToTime(sessionBestSec), date: dateStr };
+            localStorage.setItem(allTimeKey, JSON.stringify(newBest));
+            updateAllTimeBestDisplay();
+        }
+    }
+
+    function updateAllTimeBestDisplay() {
+        const trackKey = document.getElementById('trackSelect').value;
+        const allTimeKey = getAllTimeBestKeyForTrack(trackKey);
+        const saved = localStorage.getItem(allTimeKey);
+
+        const valElem = document.getElementById('allTimeValue');
+        const dateElem = document.getElementById('allTimeDate');
+
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                valElem.innerText = data.timeStr;
+                dateElem.innerText = `Eingefahren am: ${data.date}`;
+            } catch(e) {
+                valElem.innerText = "--:--.---";
+                dateElem.innerText = "Noch keine Zeit hinterlegt";
+            }
+        } else {
+            valElem.innerText = "--:--.---";
+            dateElem.innerText = "Noch keine Zeit hinterlegt";
+        }
+    }
+
+    function collectCurrentFormData() {
         const trackKey = document.getElementById('trackSelect').value;
         const totalCurves = tracks[trackKey];
-        const data = {};
+        let data = {};
 
         data['tireFront'] = document.getElementById('tireFront').value;
         data['tireRear'] = document.getElementById('tireRear').value;
@@ -758,6 +1077,7 @@
         data['preload'] = document.getElementById('preload').value;
         data['quickFeedback'] = document.getElementById('quickFeedback').value;
         data['lapTimes'] = document.getElementById('lapTimes').value;
+        data['raceMonitorPasteBox'] = document.getElementById('raceMonitorPasteBox').value;
         data['tireImage'] = storedImageBase64;
 
         data['brake_start'] = document.getElementById('brake_start').value;
@@ -770,30 +1090,115 @@
             data[`gear_${i}`] = document.getElementById(`gear_${i}`).value;
             data[`notes_${i}`] = document.getElementById(`notes_${i}`).value;
         }
+        return data;
+    }
 
-        // Aktuelles Datum & Uhrzeit als eindeutigen Schlüssel generieren (z.B. "21.07.2026, 18:30:15")
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('de-DE');
-        const timeStr = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        const timestampKey = `${dateStr}, ${timeStr} Uhr`;
+    function applyDataToForm(data) {
+        document.getElementById('tireFront').value = data['tireFront'] || '';
+        document.getElementById('tireRear').value = data['tireRear'] || '';
+        document.getElementById('outsideTemp').value = data['outsideTemp'] || '';
+        document.getElementById('gripNotes').value = data['gripNotes'] || '';
+        document.getElementById('gearing').value = data['gearing'] || '';
+        document.getElementById('rebound').value = data['rebound'] || '';
+        document.getElementById('compression').value = data['compression'] || '';
+        document.getElementById('preload').value = data['preload'] || '';
+        document.getElementById('quickFeedback').value = data['quickFeedback'] || '';
+        document.getElementById('lapTimes').value = data['lapTimes'] || '';
+        document.getElementById('raceMonitorPasteBox').value = data['raceMonitorPasteBox'] || '';
 
+        if (data['tireImage']) {
+            storedImageBase64 = data['tireImage'];
+            showTireImageUI();
+        } else {
+            storedImageBase64 = "";
+            showTireImageUI();
+        }
+
+        if(document.getElementById('brake_start')) {
+            document.getElementById('brake_start').value = data['brake_start'] || '';
+            document.getElementById('gear_start').value = data['gear_start'] || '';
+            document.getElementById('notes_start').value = data['notes_start'] || '';
+        }
+
+        const trackKey = document.getElementById('trackSelect').value;
+        const totalCurves = tracks[trackKey];
+        for (let i = 1; i <= totalCurves; i++) {
+            if(document.getElementById(`dir_${i}`)) {
+                document.getElementById(`dir_${i}`).value = data[`dir_${i}`] || trackDirections[trackKey][i-1] || '';
+                document.getElementById(`brake_${i}`).value = data[`brake_${i}`] || '';
+                document.getElementById(`gear_${i}`).value = data[`gear_${i}`] || '';
+                document.getElementById(`notes_${i}`).value = data[`notes_${i}`] || '';
+            }
+        }
+        analyzeLaps();
+    }
+
+    function saveData() {
+        const trackKey = document.getElementById('trackSelect').value;
         const storageKey = getStorageKeyForTrack(trackKey);
         let sessions = JSON.parse(localStorage.getItem(storageKey)) || {};
-        sessions[timestampKey] = data;
+
+        let sessionName = document.getElementById('sessionSelect').value;
+
+        if (!sessionName || sessionName === "") {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('de-DE');
+            const timeStr = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            sessionName = `${dateStr}, ${timeStr} Uhr`;
+        }
+
+        let data = sessions[sessionName] || {};
+        let currentData = collectCurrentFormData();
+        
+        for (let key in currentData) {
+            data[key] = currentData[key];
+        }
+
+        sessions[sessionName] = data;
         localStorage.setItem(storageKey, JSON.stringify(sessions));
         
         updateSessionDropdown();
-        document.getElementById('sessionSelect').value = timestampKey;
+        document.getElementById('sessionSelect').value = sessionName;
+        analyzeLaps();
+        
+        const showNotice = (id) => {
+            const notice = document.getElementById(id);
+            if(notice) {
+                notice.style.display = 'block';
+                setTimeout(() => notice.style.display = 'none', 2500);
+            }
+        };
 
-        const notice = document.getElementById('saveNotice');
-        if(notice) {
-            notice.style.display = 'block';
-            setTimeout(() => notice.style.display = 'none', 2500);
+        showNotice('saveNotice');
+        showNotice('saveNoticeCurves');
+        showNotice('saveNoticeLaps');
+    }
+
+    function saveAsBaseline() {
+        const trackKey = document.getElementById('trackSelect').value;
+        const baselineKey = getBaselineKeyForTrack(trackKey);
+        const currentData = collectCurrentFormData();
+
+        localStorage.setItem(baselineKey, JSON.stringify(currentData));
+        alert('⭐ Basis-Setup für diese Strecke erfolgreich gespeichert!');
+    }
+
+    function loadBaseline() {
+        const trackKey = document.getElementById('trackSelect').value;
+        const baselineKey = getBaselineKeyForTrack(trackKey);
+        const savedBaseline = localStorage.getItem(baselineKey);
+
+        if (!savedBaseline) {
+            alert('Kein Basis-Setup für diese Strecke hinterlegt. Bitte zuerst speichern!');
+            return;
         }
-        const noticeLaps = document.getElementById('saveNoticeLaps');
-        if(noticeLaps) {
-            noticeLaps.style.display = 'block';
-            setTimeout(() => noticeLaps.style.display = 'none', 2500);
+
+        try {
+            const data = JSON.parse(savedBaseline);
+            applyDataToForm(data);
+            alert('⭐ Basis-Setup wurde in das aktuelle Formular geladen!');
+        } catch(e) {
+            console.error(e);
         }
     }
 
@@ -810,38 +1215,7 @@
         const data = sessions[sessionName];
 
         if (!data) return;
-        
-        document.getElementById('tireFront').value = data['tireFront'] || '';
-        document.getElementById('tireRear').value = data['tireRear'] || '';
-        document.getElementById('outsideTemp').value = data['outsideTemp'] || '';
-        document.getElementById('gripNotes').value = data['gripNotes'] || '';
-        document.getElementById('gearing').value = data['gearing'] || '';
-        document.getElementById('rebound').value = data['rebound'] || '';
-        document.getElementById('compression').value = data['compression'] || '';
-        document.getElementById('preload').value = data['preload'] || '';
-        document.getElementById('quickFeedback').value = data['quickFeedback'] || '';
-        document.getElementById('lapTimes').value = data['lapTimes'] || '';
-
-        if (data['tireImage']) {
-            storedImageBase64 = data['tireImage'];
-            showTireImageUI();
-        }
-
-        if(document.getElementById('brake_start')) {
-            document.getElementById('brake_start').value = data['brake_start'] || '';
-            document.getElementById('gear_start').value = data['gear_start'] || '';
-            document.getElementById('notes_start').value = data['notes_start'] || '';
-        }
-
-        const totalCurves = tracks[trackKey];
-        for (let i = 1; i <= totalCurves; i++) {
-            if(document.getElementById(`dir_${i}`)) {
-                document.getElementById(`dir_${i}`).value = data[`dir_${i}`] || trackDirections[trackKey][i-1] || '';
-                document.getElementById(`brake_${i}`).value = data[`brake_${i}`] || '';
-                document.getElementById(`gear_${i}`).value = data[`gear_${i}`] || '';
-                document.getElementById(`notes_${i}`).value = data[`notes_${i}`] || '';
-            }
-        }
+        applyDataToForm(data);
     }
 
     function addCustomItem() {
@@ -873,7 +1247,7 @@
                     <input type="checkbox" id="custom_${index}" ${item.checked ? 'checked' : ''} onchange="updateCustomCheck(${index})">
                     <label for="custom_${index}">${item.text}</label>
                 </div>
-                <button class="btn-danger" onclick="removeCustomItem(${index})">Löschen</button>
+                <button class="btn-item-delete" onclick="removeCustomItem(${index})">Löschen</button>
             `;
             container.appendChild(div);
         });
