@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracky</title>
+    <title>Trackday Companion Pro</title>
     <style>
         :root {
             --bg-color: #f3f4f6;
@@ -33,7 +33,31 @@
             text-align: center;
         }
         header h1 { margin: 0; font-size: 1.3rem; }
-        .selector-box, .setup-box {
+        
+        /* Navigation zwischen den Seiten */
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: #e5e7eb;
+            color: var(--text);
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.95rem;
+            margin-top: 0;
+        }
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .selector-box, .setup-box, .pack-box {
             background: var(--card-bg);
             padding: 12px;
             border-radius: 8px;
@@ -57,11 +81,24 @@
             padding: 12px;
             margin-bottom: 10px;
         }
+        .curve-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
         .curve-header {
             font-weight: bold;
             color: var(--primary);
-            margin-bottom: 5px;
             font-size: 1rem;
+        }
+        .direction-input {
+            width: 60px !important;
+            padding: 4px !important;
+            margin: 0 !important;
+            text-align: center;
+            font-weight: bold;
+            text-transform: uppercase;
         }
         .grid-2 {
             display: grid;
@@ -86,6 +123,10 @@
             font-size: 1rem;
         }
         button:active { background-color: #1d4ed8; }
+        .btn-secondary {
+            background-color: #4b5563;
+            margin-top: 5px;
+        }
         .save-notice {
             text-align: center;
             font-size: 0.85rem;
@@ -95,6 +136,35 @@
             display: none;
         }
         h3 { margin-top: 0; color: #1f2937; font-size: 1.05rem; }
+
+        /* Packliste Styling */
+        .pack-category {
+            font-weight: bold;
+            color: var(--primary);
+            margin-top: 15px;
+            margin-bottom: 5px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 3px;
+        }
+        .pack-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+        .pack-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin: 0;
+            cursor: pointer;
+        }
+        .page-content {
+            display: none;
+        }
+        .page-content.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -102,56 +172,128 @@
 <div class="container">
     <header>
         <h1>Trackday Companion</h1>
-        <p style="margin:5px 0 0; font-size:0.8rem; color:#93c5fd;">Kurven-Protokoll, Setup & Fahrwerk</p>
+        <p style="margin:5px 0 0; font-size:0.8rem; color:#93c5fd;">Protokoll, Setup & Packliste</p>
     </header>
 
-    <div class="selector-box">
-        <label for="trackSelect"><strong>Rennstrecke wählen:</strong></label>
-        <select id="trackSelect" onchange="changeTrack()">
-            <option value="pannoniaring">Pannoniaring (18 Kurven)</option>
-            <option value="slovakia">Slovakiaring (14 Kurven)</option>
-            <option value="brünn">Automotodrom Brno / Brünn (14 Kurven)</option>
-            <option value="most">Autodrom Most (21 Kurven)</option>
-            <option value="grobnik">Automotodrom Grobnik / Rijeka (18 Kurven)</option>
-        </select>
+    <!-- Navigation zwischen App und Packliste -->
+    <div class="nav-tabs">
+        <button id="tabAppBtn" class="tab-btn active" onclick="switchPage('app')">🏁 Strecken & Setup</button>
+        <button id="tabPackBtn" class="tab-btn" onclick="switchPage('pack')">🎒 Packliste</button>
     </div>
 
-    <div class="setup-box">
-        <h3>Turn Setup, Drücke & Fahrwerk</h3>
-        <div class="grid-3">
-            <div>
-                <label style="font-size:0.75rem">Reifendruck (kalt/warm)</label>
-                <input type="text" id="tirePressure" placeholder="z.B. 2.1 / 2.5 bar">
+    <!-- SEITE 1: STRECKEN & SETUP -->
+    <div id="pageApp" class="page-content active">
+        <div class="selector-box">
+            <label for="trackSelect"><strong>Rennstrecke wählen:</strong></label>
+            <select id="trackSelect" onchange="changeTrack()">
+                <option value="pannoniaring">Pannoniaring (18 Kurven)</option>
+                <option value="slovakia">Slovakiaring (14 Kurven)</option>
+                <option value="brünn">Automotodrom Brno / Brünn (14 Kurven)</option>
+                <option value="most">Autodrom Most (21 Kurven)</option>
+                <option value="grobnik">Automotodrom Grobnik / Rijeka (18 Kurven)</option>
+            </select>
+        </div>
+
+        <div class="setup-box">
+            <h3>Turn Setup, Drücke & Fahrwerk</h3>
+            
+            <label style="font-size:0.75rem; font-weight:bold; color:var(--primary);">Reifendruck (Bar)</label>
+            <div class="grid-2">
+                <div>
+                    <label style="font-size:0.75rem">Vorne (Kalt / Heiß)</label>
+                    <input type="text" id="tireFront" placeholder="z.B. 2.1 / 2.4">
+                </div>
+                <div>
+                    <label style="font-size:0.75rem">Hinten (Kalt / Heiß)</label>
+                    <input type="text" id="tireRear" placeholder="z.B. 1.9 / 2.2">
+                </div>
             </div>
-            <div>
-                <label style="font-size:0.75rem">Außentemperatur</label>
-                <input type="text" id="outsideTemp" placeholder="z.B. 24°C">
+
+            <div class="grid-3">
+                <div>
+                    <label style="font-size:0.75rem">Außentemperatur</label>
+                    <input type="text" id="outsideTemp" placeholder="z.B. 24°C">
+                </div>
+                <div>
+                    <label style="font-size:0.75rem">Grip & Bedingungen</label>
+                    <input type="text" id="gripNotes" placeholder="z.B. Gut, Asphalt heiß">
+                </div>
+                <div>
+                    <label style="font-size:0.75rem">Übersetzung</label>
+                    <input type="text" id="gearing" placeholder="z.B. 15/42">
+                </div>
             </div>
+
+            <div class="grid-3">
+                <div>
+                    <label style="font-size:0.75rem">Zugstufe (v / h)</label>
+                    <input type="text" id="rebound" placeholder="z.B. 8 / 10">
+                </div>
+                <div>
+                    <label style="font-size:0.75rem">Druckstufe (v / h)</label>
+                    <input type="text" id="compression" placeholder="z.B. 6 / 8">
+                </div>
+                <div>
+                    <label style="font-size:0.75rem">Vorspannung (v / h)</label>
+                    <input type="text" id="preload" placeholder="z.B. 5R / 12mm">
+                </div>
+            </div>
+
+            <label style="font-size:0.75rem; font-weight:bold; color:var(--primary); margin-top:10px; display:block;">Rundenzeiten / Stints</label>
             <div>
-                <label style="font-size:0.75rem">Übersetzung / Final Drive</label>
-                <input type="text" id="gearing" placeholder="z.B. 15/42">
+                <textarea id="lapTimes" rows="2" placeholder="Runde 1: 2:05.1&#10;Runde 2: 2:04.3..."></textarea>
             </div>
         </div>
-        <div class="grid-3">
-            <div>
-                <label style="font-size:0.75rem">Zugstufe (v / h)</label>
-                <input type="text" id="rebound" placeholder="z.B. 8 / 10 Klicks">
-            </div>
-            <div>
-                <label style="font-size:0.75rem">Druckstufe (v / h)</label>
-                <input type="text" id="compression" placeholder="z.B. 6 / 8 Klicks">
-            </div>
-            <div>
-                <label style="font-size:0.75rem">Federvorspannung (v / h)</label>
-                <input type="text" id="preload" placeholder="z.B. 5 Ringe / 12mm">
-            </div>
-        </div>
+
+        <div id="curvesContainer"></div>
+
+        <button onclick="saveData()">Daten Speichern</button>
+        <button class="btn-secondary" onclick="exportData()">Daten Teilen / Exportieren</button>
+        <div id="saveNotice" class="save-notice">Erfolgreich gespeichert!</div>
     </div>
 
-    <div id="curvesContainer"></div>
+    <!-- SEITE 2: PACKLISTE -->
+    <div id="pagePack" class="page-content">
+        <div class="pack-box">
+            <h3>Packliste für den Trackday</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0;">Hake ab, was eingepackt ist. Der Status wird automatisch gespeichert.</p>
 
-    <button onclick="saveData()">Daten Speichern</button>
-    <div id="saveNotice" class="save-notice">Erfolgreich gespeichert!</div>
+            <div class="pack-category">🏍️ Motorrad & Technik</div>
+            <div class="pack-item"><input type="checkbox" id="p1" onchange="savePacking()"><label for="p1">Motorrad</label></div>
+            <div class="pack-item"><input type="checkbox" id="p2" onchange="savePacking()"><label for="p2">Zweitschlüssel & Papiere / Typenschein</label></div>
+            <div class="pack-item"><input type="checkbox" id="p3" onchange="savePacking()"><label for="p3">Reifenwärmer & Verlängerungskabel</label></div>
+            <div class="pack-item"><input type="checkbox" id="p4" onchange="savePacking()"><label for="p4">Reifendruckprüfer & Luftpumpe / Kompressor</label></div>
+            <div class="pack-item"><input type="checkbox" id="p5" onchange="savePacking()"><label for="p5">Ersatzreifen / Regenreifen</label></div>
+            <div class="pack-item"><input type="checkbox" id="p6" onchange="savePacking()"><label for="p6">Montierhebel & Felgenschoner (falls nötig)</label></div>
+            <div class="pack-item"><input type="checkbox" id="p7" onchange="savePacking()"><label for="p7">Tankkanister (Benzin)</label></div>
+            <div class="pack-item"><input type="checkbox" id="p8" onchange="savePacking()"><label for="p8">Ersatzübersetzung & Kettenfett</label></div>
+
+            <div class="pack-category">🛠️ Werkzeug & Boxenzubehör</div>
+            <div class="pack-item"><input type="checkbox" id="p9" onchange="savePacking()"><label for="p9">Werkzeugkasten (Schlüssel, Nüsse, Zangen)</label></div>
+            <div class="pack-item"><input type="checkbox" id="p10" onchange="savePacking()"><label for="p10">Drehmomentschlüssel</label></div>
+            <div class="pack-item"><input type="checkbox" id="p11" onchange="savePacking()"><label for="p11">Montierständer (Vorne & Hinten)</label></div>
+            <div class="pack-item"><input type="checkbox" id="p12" onchange="savePacking()"><label for="p12">Pavillon / Zelt & Gewichte</label></div>
+            <div class="pack-item"><input type="checkbox" id="p13" onchange="savePacking()"><label for="p13">Campingstühle & Tisch</label></div>
+            <div class="pack-item"><input type="checkbox" id="p14" onchange="savePacking()"><label for="p14">Kabelbinder, Panzerband (Gaffa), Bremsenreiniger</label></div>
+            <div class="pack-item"><input type="checkbox" id="p15" onchange="savePacking()"><label for="p15">Ersatzteile (Hebel, Fußrasten, Schrauben)</label></div>
+
+            <div class="pack-category">🧑‍วม Bekleidung & Ausrüstung</div>
+            <div class="pack-item"><input type="checkbox" id="p16" onchange="savePacking()"><label for="p16">Lederkombi</label></div>
+            <div class="pack-item"><input type="checkbox" id="p17" onchange="savePacking()"><label for="p17">Helm & Visier (klar / verspiegelt)</label></div>
+            <div class="pack-item"><input type="checkbox" id="p18" onchange="savePacking()"><label for="p18">Stiefel & Handschuhe</label></div>
+            <div class="pack-item"><input type="checkbox" id="p19" onchange="savePacking()"><label for="p19">Rückenprotektor / Airbag-Weste</label></div>
+            <div class="pack-item"><input type="checkbox" id="p20" onchange="savePacking()"><label for="p20">Funktionsunterwäsche</label></div>
+            <div class="pack-item"><input type="checkbox" id="p21" onchange="savePacking()"><label for="p21">Ohrstöpsel</label></div>
+
+            <div class="pack-category">🍎 Verpflegung & Sonstiges</div>
+            <div class="pack-item"><input type="checkbox" id="p22" onchange="savePacking()"><label for="p22">Ausweis, Führerschein, Nennbestätigung</label></div>
+            <div class="pack-item"><input type="checkbox" id="p23" onchange="savePacking()"><label for="p23">Geld / Bankomatkarte</label></div>
+            <div class="pack-item"><input type="checkbox" id="p24" onchange="savePacking()"><label for="p24">Genug Wasser & Isotonische Getränke</label></div>
+            <div class="pack-item"><input type="checkbox" id="p25" onchange="savePacking()"><label for="p25">Snacks / Müsliriegel / Essen</label></div>
+            <div class="pack-item"><input type="checkbox" id="p26" onchange="savePacking()"><label for="p26">Smartphone-Ladekabel & Powerbank</label></div>
+            <div class="pack-item"><input type="checkbox" id="p27" onchange="savePacking()"><label for="p27">Schmerzmittel / persönliche Medikation</label></div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -163,26 +305,45 @@
         grobnik: 18
     };
 
+    function switchPage(page) {
+        document.getElementById('pageApp').classList.remove('active');
+        document.getElementById('pagePack').classList.remove('active');
+        document.getElementById('tabAppBtn').classList.remove('active');
+        document.getElementById('tabPackBtn').classList.remove('active');
+
+        if (page === 'app') {
+            document.getElementById('pageApp').classList.add('active');
+            document.getElementById('tabAppBtn').classList.add('active');
+        } else {
+            document.getElementById('pagePack').classList.add('active');
+            document.getElementById('tabPackBtn').classList.add('active');
+        }
+    }
+
     function renderApp() {
         const trackKey = document.getElementById('trackSelect').value;
         const totalCurves = tracks[trackKey];
         const container = document.getElementById('curvesContainer');
         container.innerHTML = '';
 
-        // Start / Ziel entry
-        container.innerHTML += createCurveHTML('start', 'Start / Ziel');
+        container.innerHTML += createCurveHTML('start', 'Start / Ziel', false);
 
         for (let i = 1; i <= totalCurves; i++) {
-            container.innerHTML += createCurveHTML(i, `Kurve ${i}`);
+            container.innerHTML += createCurveHTML(i, `Kurve ${i}`, true);
         }
 
         loadData();
+        loadPacking();
     }
 
-    function createCurveHTML(id, title) {
+    function createCurveHTML(id, title, showDir) {
+        let dirField = showDir ? `<input type="text" id="dir_${id}" class="direction-input" placeholder="L/R" maxlength="3">` : '';
         return `
             <div class="curve-card">
-                <div class="curve-header">${title}</div>
+                <div class="curve-header-row">
+                    <div class="curve-header">${title}</div>
+                    ${dirField}
+                </div>
                 <div class="grid-2">
                     <div>
                         <label style="font-size:0.75rem">Bremspunkt / Referenz</label>
@@ -210,20 +371,22 @@
         const totalCurves = tracks[trackKey];
         const data = {};
 
-        // Save general setup
-        data['tirePressure'] = document.getElementById('tirePressure').value;
+        data['tireFront'] = document.getElementById('tireFront').value;
+        data['tireRear'] = document.getElementById('tireRear').value;
         data['outsideTemp'] = document.getElementById('outsideTemp').value;
+        data['gripNotes'] = document.getElementById('gripNotes').value;
         data['gearing'] = document.getElementById('gearing').value;
         data['rebound'] = document.getElementById('rebound').value;
         data['compression'] = document.getElementById('compression').value;
         data['preload'] = document.getElementById('preload').value;
+        data['lapTimes'] = document.getElementById('lapTimes').value;
 
-        // Save Start/Ziel
         data['brake_start'] = document.getElementById('brake_start').value;
         data['gear_start'] = document.getElementById('gear_start').value;
         data['notes_start'] = document.getElementById('notes_start').value;
 
         for (let i = 1; i <= totalCurves; i++) {
+            data[`dir_${i}`] = document.getElementById(`dir_${i}`).value;
             data[`brake_${i}`] = document.getElementById(`brake_${i}`).value;
             data[`gear_${i}`] = document.getElementById(`gear_${i}`).value;
             data[`notes_${i}`] = document.getElementById(`notes_${i}`).value;
@@ -238,25 +401,47 @@
 
     function loadData() {
         const trackKey = document.getElementById('trackSelect').value;
-        const saved = localStorage.getItem('trackday_' + trackKey);
         
-        document.getElementById('tirePressure').value = '';
+        document.getElementById('tireFront').value = '';
+        document.getElementById('tireRear').value = '';
         document.getElementById('outsideTemp').value = '';
+        document.getElementById('gripNotes').value = '';
         document.getElementById('gearing').value = '';
         document.getElementById('rebound').value = '';
         document.getElementById('compression').value = '';
         document.getElementById('preload').value = '';
+        document.getElementById('lapTimes').value = '';
 
+        if(document.getElementById('brake_start')) {
+            document.getElementById('brake_start').value = '';
+            document.getElementById('gear_start').value = '';
+            document.getElementById('notes_start').value = '';
+        }
+
+        const totalCurves = tracks[trackKey];
+        for (let i = 1; i <= totalCurves; i++) {
+            if(document.getElementById(`dir_${i}`)) {
+                document.getElementById(`dir_${i}`).value = '';
+                document.getElementById(`brake_${i}`).value = '';
+                document.getElementById(`gear_${i}`).value = '';
+                document.getElementById(`notes_${i}`).value = '';
+            }
+        }
+
+        const saved = localStorage.getItem('trackday_' + trackKey);
         if (!saved) return;
 
         const data = JSON.parse(saved);
         
-        document.getElementById('tirePressure').value = data['tirePressure'] || '';
+        document.getElementById('tireFront').value = data['tireFront'] || '';
+        document.getElementById('tireRear').value = data['tireRear'] || '';
         document.getElementById('outsideTemp').value = data['outsideTemp'] || '';
+        document.getElementById('gripNotes').value = data['gripNotes'] || '';
         document.getElementById('gearing').value = data['gearing'] || '';
         document.getElementById('rebound').value = data['rebound'] || '';
         document.getElementById('compression').value = data['compression'] || '';
         document.getElementById('preload').value = data['preload'] || '';
+        document.getElementById('lapTimes').value = data['lapTimes'] || '';
 
         if(document.getElementById('brake_start')) {
             document.getElementById('brake_start').value = data['brake_start'] || '';
@@ -264,17 +449,59 @@
             document.getElementById('notes_start').value = data['notes_start'] || '';
         }
 
-        const totalCurves = tracks[trackKey];
         for (let i = 1; i <= totalCurves; i++) {
-            if(document.getElementById(`brake_${i}`)) {
-                document.getElementById(`brake_${i}`).value = data[`brake_${i}`] || '';
+            if(document.getElementById(`dir_${i}`)) {
+                document.getElementById(`dir_${i}`).value = data[`dir_${i}`] || '';
+                document.getElementById(`brake_${i}` ).value = data[`brake_${i}`] || '';
                 document.getElementById(`gear_${i}`).value = data[`gear_${i}`] || '';
                 document.getElementById(`notes_${i}`).value = data[`notes_${i}`] || '';
             }
         }
     }
 
-    // Init on load
+    function savePacking() {
+        const packData = {};
+        for (let i = 1; i <= 27; i++) {
+            const chk = document.getElementById('p' + i);
+            if (chk) {
+                packData['p' + i] = chk.checked;
+            }
+        }
+        localStorage.setItem('trackday_packing', JSON.stringify(packData));
+    }
+
+    function loadPacking() {
+        const saved = localStorage.getItem('trackday_packing');
+        if (!saved) return;
+        const packData = JSON.parse(saved);
+        for (let i = 1; i <= 27; i++) {
+            const chk = document.getElementById('p' + i);
+            if (chk && packData['p' + i] !== undefined) {
+                chk.checked = packData['p' + i];
+            }
+        }
+    }
+
+    function exportData() {
+        const trackKey = document.getElementById('trackSelect').value;
+        const saved = localStorage.getItem('trackday_' + trackKey);
+        
+        if (!saved) {
+            alert('Keine gespeicherten Daten für diese Strecke vorhanden!');
+            return;
+        }
+
+        if (navigator.share) {
+            navigator.share({
+                title: 'Trackday Setup - ' + trackKey,
+                text: 'Meine Daten für ' + trackKey + ':\n\n' + saved
+            }).catch(() => {});
+        } else {
+            navigator.clipboard.writeText(saved);
+            alert('Daten wurden in die Zwischenablage kopiert!');
+        }
+    }
+
     renderApp();
 </script>
 
