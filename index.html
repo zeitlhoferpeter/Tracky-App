@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UpperRacing</title>
     <link rel="manifest" href="manifest.json">
+    <!-- Tesseract.js für die Texterkennung (OCR) von Screenshots -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         :root {
             --bg-color: #f3f4f6;
@@ -39,20 +41,21 @@
         /* Navigation zwischen den Seiten */
         .nav-tabs {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             margin-bottom: 15px;
         }
         .tab-btn {
             flex: 1;
-            padding: 10px;
+            padding: 8px 4px;
             background: #e5e7eb;
             color: var(--text);
             border: none;
             border-radius: 6px;
             font-weight: bold;
             cursor: pointer;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             margin-top: 0;
+            text-align: center;
         }
         .tab-btn.active {
             background: var(--primary);
@@ -220,7 +223,6 @@
         .page-content.active {
             display: block;
         }
-        /* Bildvorschau für Reifenbild */
         .img-preview {
             max-width: 100%;
             max-height: 150px;
@@ -229,6 +231,19 @@
             display: none;
             border: 1px solid var(--border);
         }
+        .import-box {
+            background: #eff6ff;
+            border: 1px dashed var(--primary);
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+        #ocrStatus {
+            font-size: 0.8rem;
+            color: var(--primary);
+            margin-top: 4px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -236,12 +251,13 @@
 <div class="container">
     <header>
         <h1>UpperRacing</h1>
-        <p style="margin:5px 0 0; font-size:0.8rem; color:#93c5fd;">Protokoll, Setup & Packliste</p>
+        <p style="margin:5px 0 0; font-size:0.8rem; color:#93c5fd;">Protokoll, Setup & Rundenzeiten</p>
     </header>
 
-    <!-- Navigation zwischen den Seiten -->
+    <!-- Navigation zwischen den Seiten / Tabs -->
     <div class="nav-tabs">
-        <button id="tabAppBtn" class="tab-btn active" onclick="switchPage('app')">🏁 Strecken & Setup</button>
+        <button id="tabAppBtn" class="tab-btn active" onclick="switchPage('app')">🏁 Setup</button>
+        <button id="tabLapsBtn" class="tab-btn" onclick="switchPage('laps')">⏱️ Rundenzeiten</button>
         <button id="tabPackBtn" class="tab-btn" onclick="switchPage('pack')">🎒 Packliste</button>
     </div>
 
@@ -316,11 +332,6 @@
                 <textarea id="quickFeedback" rows="2" placeholder="Z.B. Vorderrad stempelt beim harten Anbremsen in T1..."></textarea>
             </div>
 
-            <label style="font-size:0.75rem; font-weight:bold; color:var(--primary); margin-top:5px; display:block;">Rundenzeiten / Stints</label>
-            <div>
-                <textarea id="lapTimes" rows="2" placeholder="Runde 1: 2:05.1&#10;Runde 2: 2:04.3..."></textarea>
-            </div>
-
             <label style="font-size:0.75rem; font-weight:bold; color:var(--primary); margin-top:10px; display:block;">Reifenbild / Verschleiß (Foto hochladen)</label>
             <input type="file" id="tireImageInput" accept="image/*" onchange="handleImageUpload(event)">
             <img id="tireImagePreview" class="img-preview" alt="Reifenbild Vorschau">
@@ -333,7 +344,31 @@
         <div id="saveNotice" class="save-notice">Erfolgreich gespeichert!</div>
     </div>
 
-    <!-- SEITE 2: PACKLISTE -->
+    <!-- SEITE 2: RUNDENZEITEN & RACE MONITOR -->
+    <div id="pageLaps" class="page-content">
+        <div class="setup-box">
+            <h3>⏱️ Rundenzeiten & Stints</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0;">Trage hier deine Runden ein oder nutze den automatischen Race Monitor Screenshot-Import.</p>
+
+            <label style="font-size:0.75rem; font-weight:bold; color:var(--primary); display:block;">Manuelle Rundenzeiten / Stint-Protokoll</label>
+            <div>
+                <textarea id="lapTimes" rows="6" placeholder="Runde 1: 2:05.1&#10;Runde 2: 2:04.3&#10;Runde 3: 2:03.9..."></textarea>
+            </div>
+
+            <!-- RACE MONITOR IMPORT BEREICH -->
+            <div class="import-box">
+                <label style="font-size:0.75rem; font-weight:bold; color:var(--primary); display:block;">📊 Race Monitor Automatik-Import</label>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom: 5px;">Screenshot der App hochladen (scannt automatisch nach Rundenzeiten und fügt sie oben ein):</div>
+                <input type="file" id="raceMonitorScreenshot" accept="image/*" onchange="importRaceMonitorImage(event)">
+                <div id="ocrStatus"></div>
+            </div>
+
+            <button onclick="saveData()">Zeiten Speichern</button>
+            <div id="saveNoticeLaps" class="save-notice">Zeiten erfolgreich gespeichert!</div>
+        </div>
+    </div>
+
+    <!-- SEITE 3: PACKLISTE -->
     <div id="pagePack" class="page-content">
         <div class="pack-box">
             <h3>Packliste für den Trackday</h3>
@@ -392,7 +427,7 @@
         slovakia:     ["", "", "", "", "", "", "", "", "", "", "", "", "", ""],
         brünn:        ["", "", "", "", "", "", "", "", "", "", "", "", "", ""],
         most:         ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-        grobnik:      ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+        grobnik:      ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
     };
 
     const tracks = {
@@ -408,13 +443,18 @@
 
     function switchPage(page) {
         document.getElementById('pageApp').classList.remove('active');
+        document.getElementById('pageLaps').classList.remove('active');
         document.getElementById('pagePack').classList.remove('active');
         document.getElementById('tabAppBtn').classList.remove('active');
+        document.getElementById('tabLapsBtn').classList.remove('active');
         document.getElementById('tabPackBtn').classList.remove('active');
 
         if (page === 'app') {
             document.getElementById('pageApp').classList.add('active');
             document.getElementById('tabAppBtn').classList.add('active');
+        } else if (page === 'laps') {
+            document.getElementById('pageLaps').classList.add('active');
+            document.getElementById('tabLapsBtn').classList.add('active');
         } else {
             document.getElementById('pagePack').classList.add('active');
             document.getElementById('tabPackBtn').classList.add('active');
@@ -492,6 +532,43 @@
         reader.readAsDataURL(file);
     }
 
+    // Race Monitor Screenshot Import via OCR (Tesseract.js)
+    function importRaceMonitorImage(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const statusDiv = document.getElementById('ocrStatus');
+        statusDiv.innerText = "Analysiere Screenshot... Bitte warten.";
+
+        Tesseract.recognize(
+            file,
+            'eng',
+            { logger: m => console.log(m) }
+        ).then(({ data: { text } }) => {
+            statusDiv.innerText = "Auswertung erfolgreich!";
+            
+            // Regex um Rundenzeiten (z.B. 2:05.123 oder 1:45.4) zu finden
+            const timeRegex = /\b\d{1,2}:\d{2}\.\d{1,3}\b/g;
+            const foundTimes = text.match(timeRegex);
+
+            if (foundTimes && foundTimes.length > 0) {
+                let formattedList = "";
+                foundTimes.forEach((t, index) => {
+                    formattedList += `Runde ${index + 1}: ${t}\n`;
+                });
+
+                const lapBox = document.getElementById('lapTimes');
+                lapBox.value = formattedList.trim();
+                setTimeout(() => statusDiv.innerText = "", 3000);
+            } else {
+                statusDiv.innerText = "Keine Rundenzeiten im Bild gefunden. Bitte manuell prüfen.";
+            }
+        }).catch(err => {
+            console.error(err);
+            statusDiv.innerText = "Fehler bei der Texterkennung.";
+        });
+    }
+
     function saveData() {
         const trackKey = document.getElementById('trackSelect').value;
         const totalCurves = tracks[trackKey];
@@ -523,8 +600,15 @@
         localStorage.setItem('trackday_' + trackKey, JSON.stringify(data));
         
         const notice = document.getElementById('saveNotice');
-        notice.style.display = 'block';
-        setTimeout(() => notice.style.display = 'none', 2000);
+        if(notice) {
+            notice.style.display = 'block';
+            setTimeout(() => notice.style.display = 'none', 2000);
+        }
+        const noticeLaps = document.getElementById('saveNoticeLaps');
+        if(noticeLaps) {
+            noticeLaps.style.display = 'block';
+            setTimeout(() => noticeLaps.style.display = 'none', 2000);
+        }
     }
 
     function loadData() {
