@@ -4,7 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UpperRacing</title>
+
+    <!-- App-Modus Meta-Tags (für echtes App-Gefühl ohne Browser-Leisten) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="UpperRacing">
+
+    <!-- Favicon & Icons -->
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3214/3214738.png" type="image/png">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3214/3214738.png">
+
+    <!-- Web App Manifest -->
     <link rel="manifest" href='data:application/manifest+json,{"name":"UpperRacing","short_name":"UpperRacing","start_url":".","display":"standalone","background_color":"#f3f4f6","theme_color":"#2563eb","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3214/3214738.png","sizes":"512x512","type":"image/png"}]}'>
+
     <style>
         :root {
             --bg-color: #f3f4f6;
@@ -23,6 +35,16 @@
             color: var(--text);
             margin: 0;
             padding: 10px;
+            /* App-Gefühl Optimierungen */
+            -webkit-user-select: none;
+            user-select: none;
+            overscroll-behavior-y: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Erlaubt Text markieren/tippen in Eingabefeldern */
+        input, textarea, select {
+            -webkit-user-select: text;
+            user-select: text;
         }
         .container { max-width: 650px; margin: 0 auto; }
         header {
@@ -438,7 +460,7 @@
         updateAllTimeBestDisplay();
     }
 
-    // --- NEUE KURVEN LOGIK ---
+    // --- KURVEN LOGIK ---
     function renderCurvesStructure() {
         const trackKey = document.getElementById('trackSelect').value;
         const totalCurves = tracks[trackKey];
