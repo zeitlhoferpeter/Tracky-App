@@ -55,7 +55,7 @@
             display: block;
         }
 
-        /* STYLES AUS DEM SETUP (Unverändert) */
+        /* STYLES AUS DEM SETUP */
         h3 { color: #1d4ed8; font-size: 18px; }
         .form-group { margin-bottom: 15px; }
         .row { display: flex; gap: 10px; }
@@ -85,19 +85,82 @@
         #success-message { background: #16a34a; }
         #info-message { background: #2563eb; }
 
-        /* NEU: Packlisten Styling */
+        /* PACKLISTEN STYLING */
+        .category-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+        .category-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 8px;
+            border-bottom: 2px solid #cbd5e1;
+            padding-bottom: 4px;
+        }
         .packing-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 8px 0;
+            justify-content: space-between;
+            padding: 6px 0;
             border-bottom: 1px solid #f1f5f9;
-            font-size: 16px;
+            font-size: 15px;
+        }
+        .packing-item-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
         }
         .packing-item input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             cursor: pointer;
+        }
+        .delete-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            font-size: 12px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .delete-btn:hover {
+            background: #b91c1c;
+        }
+        .add-item-row {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .add-item-row input {
+            padding: 6px 10px;
+            font-size: 14px;
+        }
+        .add-item-btn {
+            background: #16a34a;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            font-size: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .add-item-btn:hover {
+            background: #15803d;
+        }
+        .save-status {
+            font-size: 12px;
+            color: #64748b;
+            text-align: right;
+            margin-bottom: 15px;
+            font-style: italic;
         }
     </style>
 </head>
@@ -113,7 +176,7 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- REITER 1: SETUP (Dein fertiger Code)       -->
+    <!-- REITER 1: SETUP                            -->
     <!-- ========================================== -->
     <div id="tab-setup" class="tab-content active">
         <div class="form-group">
@@ -185,22 +248,20 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- REITER 2: PACKLISTE (Neuer Baustein)       -->
+    <!-- REITER 2: PACKLISTE                        -->
     <!-- ========================================== -->
     <div id="tab-packing" class="tab-content">
         <h3>🎒 Trackday Packliste</h3>
-        <p style="font-size: 14px; color: #666;">Häkchen setzen, was eingepackt ist. Speichert sich automatisch!</p>
+        <div id="last-saved-time" class="save-status">Automatisch gespeichert: -</div>
         
-        <div id="packing-list-container">
-            <!-- Wird dynamisch oder statisch per JS geladen -->
+        <div id="packing-categories-container">
+            <!-- Wird dynamisch geladen -->
         </div>
     </div>
 </div>
 
 <script>
-    /* ========================================== */
-    /* GLOBALER REITER-WECHSEL-CONTROLLER        */
-    /* ========================================== */
+    /* REITER-WECHSEL */
     function switchTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -211,14 +272,11 @@
         } else if (tabName === 'packing') {
             document.getElementById('tab-packing').classList.add('active');
             document.querySelectorAll('.tab-btn')[1].classList.add('active');
-            renderPackingList(); // Packliste anzeigen, wenn Reiter geöffnet wird
+            renderPackingList();
         }
     }
 
-
-    /* ========================================== */
-    /* MODUL 1: SETUP LOGIK (Dein Code, intakt)     */
-    /* ========================================== */
+    /* MODUL 1: SETUP LOGIK */
     let appState = {
         selectedBikeId: null,
         selectedTrack: 'pannoniaring',
@@ -350,7 +408,7 @@
         if (!appState.selectedBikeId) return;
 
         const key = getSetupKey();
-        appState.setups[Key = key] = {
+        appState.setups[key] = {
             front: document.getElementById('pressure-front').value,
             rear: document.getElementById('pressure-rear').value,
             gearFront: document.getElementById('gear-front').value,
@@ -372,50 +430,186 @@
 
 
     /* ========================================== */
-    /* MODUL 2: PACKLISTEN LOGIK (Hier bauen wir aus)*/
+    /* MODUL 2: ERWEITERTE PACKLISTEN LOGIK       */
     /* ========================================== */
-    const defaultPackingItems = [
-        "Motorrad & Zentralständer",
-        "Reifenwärmer & Verlängerungskabel",
-        "Luftdruckprüfer & Pumpe",
-        "Ersatz-Kraftstoff (Benzinkanister)",
-        "Kombination / Lederkombi, Helm, Handschuhe, Stiefel",
-        "Werkzeugkoffer & Klebeband (Panzertape)",
-        "Ersatzteile (Bremsbeläge, Hebel, Ritzel)"
-    ];
+    
+    // Standard-Kategorien mit festen Voreinstellungen
+    const defaultPackingData = {
+        "motorrad": {
+            title: "🏍️ Motorrad & Technik",
+            items: [
+                { id: "m1", text: "Motorrad & Zentralständer / Montageständer", default: true },
+                { id: "m2", text: "Reifenwärmer & Verlängerungskabel", default: true },
+                { id: "m3", text: "Luftdruckprüfer & Pumpe / Kompressor", default: true },
+                { id: "m4", text: "Ersatz-Kraftstoff (Benzinkanister & Rüssel)", default: true },
+                { id: "m5", text: "Ersatzteile (Hebel, Bremsbeläge, Ritzel/Kettenrad)", default: true }
+            ]
+        },
+        "box": {
+            title: "⛺ Fahrerlager & Box",
+            items: [
+                { id: "b1", text: "Fahrerlagerzelt (Pavillon) & Gewichte", default: true },
+                { id: "b2", text: "Werkzeugkasten & Panzertape / Kabelbinder", default: true },
+                { id: "b3", text: "Campingstühle & Tisch", default: true },
+                { id: "b4", text: "Kabeltrommel & Mehrfachstecker", default: true }
+            ]
+        },
+        "fahrer": {
+            title: "🪖 Fahrer & Ausrüstung",
+            items: [
+                { id: "f1", text: "Lederkombi, Helm, Handschuhe, Stiefel", default: true },
+                { id: "f2", text: "Rückenprotektor & Funktionsunterwäsche", default: true },
+                { id: "f3", text: "Zweites Paar Handschuhe / Visier (klar/getönt)", default: true },
+                { id: "f4", text: "Ohrstöpsel & Regenkombi", default: true }
+            ]
+        },
+        "essen": {
+            title: "🍎 Essen & Trinken",
+            items: [
+                { id: "e1", text: "Ausreichend Wasser & Isotonische Getränke", default: true },
+                { id: "e2", text: "Energieriegel / Bananen / Traubenzucker", default: true },
+                { id: "e3", text: "Mittagsverpflegung / Snacks", default: true }
+            ]
+        }
+    };
 
     function renderPackingList() {
-        const container = document.getElementById('packing-list-container');
-        // Wenn schon gerendert, nicht neu aufbauen, damit Haken nicht verloren gehen
-        if (container.children.length > 0) return;
+        const container = document.getElementById('packing-categories-container');
+        container.innerHTML = ''; // Neu aufbauen, damit dynamische Änderungen sofort greifen
 
-        // Gespeicherte Haken aus dem Browser laden
-        const savedPacking = JSON.parse(localStorage.getItem('ur_packing') || '{}');
+        // Gespeicherte Daten laden (Checked-Status und benutzerdefinierte Items)
+        const savedData = JSON.parse(localStorage.getItem('ur_packing_data') || '{}');
+        const customItems = JSON.parse(localStorage.getItem('ur_packing_custom') || '{}');
+        const lastSaved = localStorage.getItem('ur_packing_timestamp') || '-';
 
-        defaultPackingItems.forEach((itemText, index) => {
-            const isChecked = savedPacking[index] ? 'checked' : '';
+        document.getElementById('last-saved-time').textContent = `Zuletzt gespeichert: ${lastSaved}`;
 
-            const div = document.createElement('div');
-            div.className = 'packing-item';
-            div.innerHTML = `
-                <input type="checkbox" id="pack-${index}" ${isChecked} onchange="savePackingState()">
-                <label for="pack-${index}" style="cursor: pointer; font-weight: normal; font-size: 15px;">${itemText}</label>
+        Object.keys(defaultPackingData).forEach(catKey => {
+            const cat = defaultPackingData[catKey];
+            
+            // Box für Kategorie erstellen
+            const box = document.createElement('div');
+            box.className = 'category-box';
+            
+            let html = `<div class="category-title">${cat.title}</div>`;
+
+            // Standard-Items einfügen
+            cat.items.forEach(item => {
+                const isChecked = savedData[item.id] ? 'checked' : '';
+                html += `
+                    <div class="packing-item">
+                        <div class="packing-item-left">
+                            <input type="checkbox" id="${item.id}" ${isChecked} onchange="savePackingData()">
+                            <label for="${item.id}" style="cursor: pointer; font-weight: normal; margin-bottom: 0;">${item.text}</label>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Benutzerdefinierte Items für diese Kategorie einfügen
+            const catCustom = customItems[catKey] || [];
+            catCustom.forEach((customItem, index) => {
+                const isChecked = savedData[customItem.id] ? 'checked' : '';
+                html += `
+                    <div class="packing-item">
+                        <div class="packing-item-left">
+                            <input type="checkbox" id="${customItem.id}" ${isChecked} onchange="savePackingData()">
+                            <label for="${customItem.id}" style="cursor: pointer; font-weight: normal; margin-bottom: 0;">${customItem.text}</label>
+                        </div>
+                        <button class="delete-btn" onclick="deleteCustomItem('${catKey}', ${index})">Löschen</button>
+                    </div>
+                `;
+            });
+
+            // Eingabefeld zum Hinzufügen neuer Artikel in dieser Kategorie
+            html += `
+                <div class="add-item-row">
+                    <input type="text" id="new-item-${catKey}" placeholder="Neuen Artikel hinzufügen...">
+                    <button class="add-item-btn" onclick="addCustomItem('${catKey}')">Hinzufügen</button>
+                </div>
             `;
-            container.appendChild(div);
+
+            box.innerHTML = html;
+            container.appendChild(box);
         });
     }
 
-    function savePackingState() {
-        const packingState = {};
-        defaultPackingItems.forEach((_, index) => {
-            const checkbox = document.getElementById(`pack-${index}`);
-            if (checkbox && checkbox.checked) {
-                packingState[index] = true;
-            }
-        });
-        localStorage.setItem('ur_packing', JSON.stringify(packingState));
+    function addCustomItem(catKey) {
+        const input = document.getElementById(`new-item-${catKey}`);
+        const text = input.value.trim();
+        if (!text) return;
+
+        let customItems = JSON.parse(localStorage.getItem('ur_packing_custom') || '{}');
+        if (!customItems[catKey]) {
+            customItems[catKey] = [];
+        }
+
+        const newItem = {
+            id: 'custom_' + Date.now() + '_' + Math.floor(Math.random()*1000),
+            text: text
+        };
+
+        customItems[catKey].push(newItem);
+        localStorage.setItem('ur_packing_custom', JSON.stringify(customItems));
+
+        updateTimestamp();
+        renderPackingList();
     }
 
+    function deleteCustomItem(catKey, index) {
+        // Sicherheitsabfrage vor dem Löschen
+        if (!confirm("Mist du diesen Artikel wirklich aus der Packliste löschen?")) {
+            return;
+        }
+
+        let customItems = JSON.parse(localStorage.getItem('ur_packing_custom') || '{}');
+        if (customItems[catKey]) {
+            customItems[catKey].splice(index, 1);
+            localStorage.setItem('ur_packing_custom', JSON.stringify(customItems));
+        }
+
+        updateTimestamp();
+        renderPackingList();
+    }
+
+    function savePackingData() {
+        const savedData = {};
+        
+        // Alle Standard-Items prüfen
+        Object.keys(defaultPackingData).forEach(catKey => {
+            defaultPackingData[catKey].items.forEach(item => {
+                const cb = document.getElementById(item.id);
+                if (cb && cb.checked) {
+                    savedData[item.id] = true;
+                }
+            });
+        });
+
+        // Alle Custom-Items prüfen
+        const customItems = JSON.parse(localStorage.getItem('ur_packing_custom') || '{}');
+        Object.keys(customItems).forEach(catKey => {
+            customItems[catKey].forEach(item => {
+                const cb = document.getElementById(item.id);
+                if (cb && cb.checked) {
+                    savedData[item.id] = true;
+                }
+            });
+        });
+
+        localStorage.setItem('ur_packing_data', JSON.stringify(savedData));
+        updateTimestamp();
+    }
+
+    function updateTimestamp() {
+        const now = new Date();
+        const timeString = now.toLocaleDateString('de-DE') + ', ' + now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' Uhr';
+        localStorage.setItem('ur_packing_timestamp', timeString);
+        
+        const timeDisplay = document.getElementById('last-saved-time');
+        if (timeDisplay) {
+            timeDisplay.textContent = `Automatisch gespeichert: ${timeString}`;
+        }
+    }
 
     // App beim Start initialisieren
     loadData();
