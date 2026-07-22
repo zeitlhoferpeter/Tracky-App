@@ -586,7 +586,11 @@
 
     function getStorageKey() {
         const track = document.getElementById('trackSelect').value;
-        const session = document.getElementById('sessionSelect').value || getFormattedTimestamp();
+        const sessionSelect = document.getElementById('sessionSelect');
+        let session = sessionSelect ? sessionSelect.value : "";
+        if (!session) {
+            session = getFormattedTimestamp();
+        }
         return `upperracing_${track}_${session}`;
     }
 
@@ -666,11 +670,10 @@
     }
 
     function saveData() {
-        const now = new Date();
         const sessionSelect = document.getElementById('sessionSelect');
         
         if (!sessionSelect.value) {
-            const newSessionName = getFormattedTimestamp(now);
+            const newSessionName = getFormattedTimestamp();
             const opt = document.createElement('option');
             opt.value = newSessionName;
             opt.innerText = newSessionName;
@@ -678,8 +681,8 @@
             sessionSelect.value = newSessionName;
         }
 
-        const track = document.getElementById('trackSelect').value;
         const key = getStorageKey();
+        const track = document.getElementById('trackSelect').value;
         const data = {
             tireFront: document.getElementById('tireFront').value,
             tireRear: document.getElementById('tireRear').value,
@@ -907,7 +910,6 @@
         scanAndEvaluateAllTimeBest();
     }
 
-    // Scannt alle Sessions der aktuellen Strecke und ermittelt den All-Time-Best datumsübergreifend
     function scanAndEvaluateAllTimeBest() {
         const track = document.getElementById('trackSelect').value;
         const savedKeys = Object.keys(localStorage).filter(k => k.startsWith(`upperracing_${track}_`));
