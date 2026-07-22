@@ -618,6 +618,7 @@
     function onTrackChange() {
         renderCurvesStructure();
         updateSessionDropdown();
+        updateAllTimeBestDisplay(); // Aktualisiert die All-Time-Bestzeit passend zur neuen Strecke
     }
 
     function onSessionChange() {
@@ -723,7 +724,37 @@
     function loadDataForTrack() {
         const key = getStorageKey();
         const saved = localStorage.getItem(key);
-        if (!saved) return;
+        
+        // Felder standardmäßig leeren, falls für diesen Session-Eintrag noch nichts da ist
+        document.getElementById('tireFront').value = '';
+        document.getElementById('tireRear').value = '';
+        document.getElementById('outsideTemp').value = '';
+        document.getElementById('gripNotes').value = '';
+        document.getElementById('gearing').value = '';
+        document.getElementById('rebound').value = '';
+        document.getElementById('compression').value = '';
+        document.getElementById('preload').value = '';
+        document.getElementById('quickFeedback').value = '';
+        document.getElementById('lapTimes').value = '';
+        deleteTireImage();
+
+        if (!saved) {
+            // Kurvenfelder zurücksetzen, wenn keine Daten existieren
+            const trackKey = document.getElementById('trackSelect').value;
+            const totalCurves = tracks[trackKey];
+            for (let i = 1; i <= totalCurves; i++) {
+                if (document.getElementById(`light_val_${i}`)) {
+                    setTrafficLight(i, '');
+                    document.getElementById(`brake_${i}`).value = '';
+                    document.getElementById(`gear_${i}`).value = '';
+                    document.getElementById(`notes_${i}`).value = '';
+                    document.getElementById(`turnin_${i}`).value = '';
+                    document.getElementById(`throttle_${i}`).value = '';
+                }
+            }
+            return;
+        }
+
         try {
             const data = JSON.parse(saved);
             document.getElementById('tireFront').value = data.tireFront || '';
@@ -741,8 +772,6 @@
                 storedImageBase64 = data.tireImage;
                 document.getElementById('tireImagePreview').src = storedImageBase64;
                 document.getElementById('tireImageContainer').style.display = 'block';
-            } else {
-                deleteTireImage();
             }
 
             if (data.curves) {
@@ -1021,7 +1050,7 @@
     }
 
     function loadPacking() {
-        const dateKey = document.getElementById('packDateSelect').value || 'default';
+        const dateKey = document.getElementById('packDateSelect'].value || 'default';
         const saved = localStorage.getItem(`upperracing_pack_${dateKey}`);
         const checkboxes = document.querySelectorAll('#pagePack input[type="checkbox"]');
         checkboxes.forEach(cb => cb.checked = false);
