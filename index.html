@@ -13,7 +13,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 600px;
+            max-width: 650px;
             margin: 0 auto;
             background: #1e1e1e;
             padding: 20px;
@@ -24,10 +24,18 @@
         .form-group {
             margin-bottom: 15px;
         }
+        .row {
+            display: flex;
+            gap: 10px;
+        }
+        .col {
+            flex: 1;
+        }
         label {
             display: block;
             margin-bottom: 5px;
-            font-size: 14px;
+            font-size: 13px;
+            color: #bbb;
         }
         input, select, textarea {
             width: 100%;
@@ -57,6 +65,15 @@
             border-top: 1px solid #444;
             margin: 20px 0;
         }
+        .sub-header {
+            font-size: 15px;
+            font-weight: bold;
+            color: #ff3b30;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+        }
         #success-message {
             background: #28a745;
             color: white;
@@ -83,9 +100,9 @@
 
     <div class="form-group">
         <h3>Oder neues Motorrad hinzufügen</h3>
-        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-            <input type="text" id="bike-brand" placeholder="Marke (z.B. Yamaha)">
-            <input type="text" id="bike-model" placeholder="Modell (z.B. R1)">
+        <div class="row" style="margin-bottom: 10px;">
+            <div class="col"><input type="text" id="bike-brand" placeholder="Marke (z.B. Yamaha)"></div>
+            <div class="col"><input type="text" id="bike-model" placeholder="Modell (z.B. R1)"></div>
         </div>
         <input type="text" id="bike-year" placeholder="Baujahr (z.B. 2022)" style="margin-bottom: 10px;">
         <button id="add-bike-btn">Motorrad speichern</button>
@@ -97,19 +114,62 @@
     <div id="setup-section" style="display: none;">
         <h3>2. Setup für das aktuelle Bike</h3>
         
-        <div class="form-group">
-            <label>Reifendruck Vorne (bar)</label>
-            <input type="text" id="pressure-front" placeholder="z.B. 2.1">
+        <!-- Reifendruck -->
+        <div class="sub-header">🛞 Reifendruck (bar)</div>
+        <div class="row">
+            <div class="form-group col">
+                <label>Vorne</label>
+                <input type="text" id="pressure-front" placeholder="z.B. 2.1">
+            </div>
+            <div class="form-group col">
+                <label>Hinten</label>
+                <input type="text" id="pressure-rear" placeholder="z.B. 1.7">
+            </div>
         </div>
 
-        <div class="form-group">
-            <label>Reifendruck Hinten (bar)</label>
-            <input type="text" id="pressure-rear" placeholder="z.B. 1.7">
+        <!-- Übersetzung -->
+        <div class="sub-header">⚙️ Übersetzung</div>
+        <div class="row">
+            <div class="form-group col">
+                <label>Ritzel Vorne</label>
+                <input type="text" id="gear-front" placeholder="z.B. 15">
+            </div>
+            <div class="form-group col">
+                <label>Kettenrad Hinten</label>
+                <input type="text" id="gear-rear" placeholder="z.B. 42">
+            </div>
         </div>
 
+        <!-- Gabel (Vorne) -->
+        <div class="sub-header">🔧 Fahrwerk Gabel (Vorne)</div>
+        <div class="row">
+            <div class="form-group col">
+                <label>Zugstufe (clicks)</label>
+                <input type="text" id="fork-rebound" placeholder="z.B. 10 auf">
+            </div>
+            <div class="form-group col">
+                <label>Druckstufe (clicks)</label>
+                <input type="text" id="fork-compression" placeholder="z.B. 12 auf">
+            </div>
+        </div>
+
+        <!-- Federbein (Hinten) -->
+        <div class="sub-header">🔧 Fahrwerk Federbein (Hinten)</div>
+        <div class="row">
+            <div class="form-group col">
+                <label>Zugstufe (clicks)</label>
+                <input type="text" id="shock-rebound" placeholder="z.B. 14 auf">
+            </div>
+            <div class="form-group col">
+                <label>Druckstufe (High/Low)</label>
+                <input type="text" id="shock-compression" placeholder="z.B. 1.5 Umdrehungen">
+            </div>
+        </div>
+
+        <!-- Notizen -->
+        <div class="sub-header">📝 Notizen / Feedback</div>
         <div class="form-group">
-            <label>Notizen / Feedback</label>
-            <textarea id="setup-notes" rows="3" placeholder="Wie lief der Turn?"></textarea>
+            <textarea id="setup-notes" rows="3" placeholder="Wie lief der Turn? Grip, Fahrverhalten etc."></textarea>
         </div>
 
         <button id="save-setup-btn">Setup speichern</button>
@@ -118,14 +178,12 @@
 </div>
 
 <script>
-    // Zentraler App-Zustand
     let appState = {
         selectedBikeId: null,
         bikes: [],
         setups: {}
     };
 
-    // Daten beim Start aus dem Browser-Speicher laden
     function loadData() {
         const savedBikes = localStorage.getItem('ur_bikes');
         const savedSetups = localStorage.getItem('ur_setups');
@@ -134,13 +192,11 @@
         if (savedSetups) appState.setups = JSON.parse(savedSetups);
     }
 
-    // Daten im Browser-Speicher sichern
     function saveData() {
         localStorage.setItem('ur_bikes', JSON.stringify(appState.bikes));
         localStorage.setItem('ur_setups', JSON.stringify(appState.setups));
     }
 
-    // Dropdown-Liste der Motorräder aktualisieren
     function renderBikes() {
         const select = document.getElementById('bike-select');
         select.innerHTML = '<option value="">-- Bitte Motorrad wählen --</option>';
@@ -155,7 +211,6 @@
             select.appendChild(option);
         });
 
-        // Setup-Bereich nur anzeigen, wenn ein Bike gewählt ist
         const setupSection = document.getElementById('setup-section');
         if (appState.selectedBikeId) {
             setupSection.style.display = 'block';
@@ -165,17 +220,26 @@
         }
     }
 
-    // Setup für das ausgewählte Bike laden
     function loadSetup() {
-        const setup = appState.setups[appState.selectedBikeId] || { front: '', rear: '', notes: '' };
+        const setup = appState.setups[appState.selectedBikeId] || {
+            front: '', rear: '',
+            gearFront: '', gearRear: '',
+            forkRebound: '', forkCompression: '',
+            shockRebound: '', shockCompression: '',
+            notes: ''
+        };
+        
         document.getElementById('pressure-front').value = setup.front;
         document.getElementById('pressure-rear').value = setup.rear;
+        document.getElementById('gear-front').value = setup.gearFront;
+        document.getElementById('gear-rear').value = setup.gearRear;
+        document.getElementById('fork-rebound').value = setup.forkRebound;
+        document.getElementById('fork-compression').value = setup.forkCompression;
+        document.getElementById('shock-rebound').value = setup.shockRebound;
+        document.getElementById('shock-compression').value = setup.shockCompression;
         document.getElementById('setup-notes').value = setup.notes;
     }
 
-    // --- EVENT LISTENER (Klicks und Änderungen verarbeiten) ---
-
-    // 1. Neues Motorrad hinzufügen
     document.getElementById('add-bike-btn').addEventListener('click', () => {
         const brand = document.getElementById('bike-brand').value.trim();
         const model = document.getElementById('bike-model').value.trim();
@@ -194,35 +258,37 @@
         };
 
         appState.bikes.push(newBike);
-        appState.selectedBikeId = newBike.id; // Direkt auswählen
+        appState.selectedBikeId = newBike.id;
         saveData();
         renderBikes();
 
-        // Eingabefelder leeren
         document.getElementById('bike-brand').value = '';
         document.getElementById('bike-model').value = '';
         document.getElementById('bike-year').value = '';
     });
 
-    // 2. Anderes Motorrad im Dropdown ausgewählt
     document.getElementById('bike-select').addEventListener('change', (e) => {
         appState.selectedBikeId = e.target.value;
         renderBikes();
     });
 
-    // 3. Setup speichern
     document.getElementById('save-setup-btn').addEventListener('click', () => {
         if (!appState.selectedBikeId) return;
 
         appState.setups[appState.selectedBikeId] = {
             front: document.getElementById('pressure-front').value,
             rear: document.getElementById('pressure-rear').value,
+            gearFront: document.getElementById('gear-front').value,
+            gearRear: document.getElementById('gear-rear').value,
+            forkRebound: document.getElementById('fork-rebound').value,
+            forkCompression: document.getElementById('fork-compression').value,
+            shockRebound: document.getElementById('shock-rebound').value,
+            shockCompression: document.getElementById('shock-compression').value,
             notes: document.getElementById('setup-notes').value
         };
 
         saveData();
 
-        // Kurze Erfolgsmeldung einblenden
         const msg = document.getElementById('success-message');
         msg.style.display = 'block';
         setTimeout(() => {
@@ -230,7 +296,6 @@
         }, 2000);
     });
 
-    // Initialisierung beim ersten Laden der Seite
     loadData();
     renderBikes();
 </script>
