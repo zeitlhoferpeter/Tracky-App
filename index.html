@@ -288,7 +288,7 @@
         <div class="setup-box">
             <div class="alltime-container">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                    <span class="alltime-title" style="margin:0;">🏆 All-Time-Best</span>
+                    <span class="alltime-title" style="margin:0;">🏆 All-Time-Best (Strecken-Rekord)</span>
                     <button type="button" class="btn-small-danger" onclick="confirmClearAllTimeBest()">🗑️ Rekord löschen</button>
                 </div>
                 <div class="alltime-box">
@@ -618,7 +618,7 @@
     function onTrackChange() {
         renderCurvesStructure();
         updateSessionDropdown();
-        updateAllTimeBestDisplay(); // Aktualisiert die All-Time-Bestzeit passend zur neuen Strecke
+        updateAllTimeBestDisplay();
     }
 
     function onSessionChange() {
@@ -667,23 +667,18 @@
 
     function saveData() {
         const now = new Date();
-        const newSessionName = getFormattedTimestamp(now);
-        
-        const track = document.getElementById('trackSelect').value;
         const sessionSelect = document.getElementById('sessionSelect');
         
-        let exists = false;
-        for (let opt of sessionSelect.options) {
-            if (opt.value === newSessionName) exists = true;
-        }
-        if (!exists) {
+        if (!sessionSelect.value) {
+            const newSessionName = getFormattedTimestamp(now);
             const opt = document.createElement('option');
             opt.value = newSessionName;
             opt.innerText = newSessionName;
             sessionSelect.appendChild(opt);
+            sessionSelect.value = newSessionName;
         }
-        sessionSelect.value = newSessionName;
 
+        const track = document.getElementById('trackSelect').value;
         const key = getStorageKey();
         const data = {
             tireFront: document.getElementById('tireFront').value,
@@ -715,7 +710,10 @@
         data.curves = curvesData;
 
         localStorage.setItem(key, JSON.stringify(data));
-        checkAllTimeBest(document.getElementById('lapTimes').value);
+        
+        // Aktualisiere All-Time-Best datumsübergreifend für diese Strecke
+        scanAndEvaluateAllTimeBest();
+
         showNotice('saveNotice', 'Erfolgreich gespeichert!');
         showNotice('saveNoticeCurves', 'Kurven erfolgreich gespeichert!');
         showNotice('saveNoticeLaps', 'Zeiten erfolgreich gespeichert!');
@@ -725,7 +723,6 @@
         const key = getStorageKey();
         const saved = localStorage.getItem(key);
         
-        // Felder standardmäßig leeren, falls für diesen Session-Eintrag noch nichts da ist
         document.getElementById('tireFront').value = '';
         document.getElementById('tireRear').value = '';
         document.getElementById('outsideTemp').value = '';
@@ -738,23 +735,21 @@
         document.getElementById('lapTimes').value = '';
         deleteTireImage();
 
-        if (!saved) {
-            // Kurvenfelder zurücksetzen, wenn keine Daten existieren
-            const trackKey = document.getElementById('trackSelect').value;
-            const totalCurves = tracks[trackKey];
-            for (let i = 1; i <= totalCurves; i++) {
-                if (document.getElementById(`light_val_${i}`)) {
-                    setTrafficLight(i, '');
-                    document.getElementById(`brake_${i}`).value = '';
-                    document.getElementById(`gear_${i}`).value = '';
-                    document.getElementById(`notes_${i}`).value = '';
-                    document.getElementById(`turnin_${i}`).value = '';
-                    document.getElementById(`throttle_${i}`).value = '';
-                }
+        const track = document.getElementById('trackSelect').value;
+        const totalCurves = tracks[track];
+        for (let i = 1; i <= totalCurves; i++) {
+            if (document.getElementById(`light_val_${i}`)) {
+                setTrafficLight(i, '');
+                if (document.getElementById(`dir_${i}`)) document.getElementById(`dir_${i}`).value = trackDirections[track][i-1] || '';
+                document.getElementById(`brake_${i}`).value = '';
+                document.getElementById(`gear_${i}`).value = '';
+                document.getElementById(`notes_${i}`).value = '';
+                document.getElementById(`turnin_${i}`).value = '';
+                document.getElementById(`throttle_${i}`).value = '';
             }
-            return;
         }
 
+        if (!saved) return;
         try {
             const data = JSON.parse(saved);
             document.getElementById('tireFront').value = data.tireFront || '';
@@ -835,6 +830,7 @@
         const key = getStorageKey();
         localStorage.removeItem(key);
         updateSessionDropdown();
+        scanAndEvaluateAllTimeBest();
     }
 
     function showNotice(id, text) {
@@ -876,12 +872,14 @@
         const box = document.getElementById('lapAnalysis');
         if (!text.trim()) {
             box.style.display = 'none';
+            scanAndEvaluateAllTimeBest();
             return;
         }
 
         const matches = text.match(/\d+:\d{2}\.\d+/g);
         if (!matches || matches.length === 0) {
             box.style.display = 'none';
+            scanAndEvaluateAllTimeBest();
             return;
         }
 
@@ -906,37 +904,46 @@
         box.style.display = 'block';
         box.innerHTML = `<strong>Analyse (${timesInSeconds.length} Runden):</strong><br>⚡ Schnellste Runde: <strong>${best.raw}</strong><br>📊 Durchschnitt: <strong>${formattedAvg}</strong>`;
         
-        checkAllTimeBest(text);
+        scanAndEvaluateAllTimeBest();
     }
 
-    function checkAllTimeBest(text) {
-        const matches = text.match(/\d+:\d{2}\.\d+/g);
-        if (!matches) return;
-        let bestObj = null;
-        matches.forEach(t => {
-            const parts = t.split(':');
-            const min = parseInt(parts[0]);
-            const secParts = parts[1].split('.');
-            const total = min * 60 + parseInt(secParts[0]) + parseInt(secParts[1].padEnd(3, '0')) / 1000;
-            if (!bestObj || total < bestObj.total) {
-                bestObj = { raw: t, total };
-            }
+    // Scannt alle Sessions der aktuellen Strecke und ermittelt den All-Time-Best datumsübergreifend
+    function scanAndEvaluateAllTimeBest() {
+        const track = document.getElementById('trackSelect').value;
+        const savedKeys = Object.keys(localStorage).filter(k => k.startsWith(`upperracing_${track}_`));
+        
+        let absoluteBest = null;
+
+        savedKeys.forEach(k => {
+            try {
+                const sessionData = JSON.parse(localStorage.getItem(k));
+                if (sessionData && sessionData.lapTimes) {
+                    const matches = sessionData.lapTimes.match(/\d+:\d{2}\.\d+/g);
+                    if (matches) {
+                        matches.forEach(t => {
+                            const parts = t.split(':');
+                            const min = parseInt(parts[0]);
+                            const secParts = parts[1].split('.');
+                            const total = min * 60 + parseInt(secParts[0]) + parseInt(secParts[1].padEnd(3, '0')) / 1000;
+                            
+                            const sessionDateLabel = k.replace(`upperracing_${track}_`, '');
+
+                            if (!absoluteBest || total < absoluteBest.total) {
+                                absoluteBest = { raw: t, total, date: sessionDateLabel };
+                            }
+                        });
+                    }
+                }
+            } catch(e) {}
         });
 
-        if (bestObj) {
-            const track = document.getElementById('trackSelect').value;
-            const currentBestStr = localStorage.getItem(`alltime_${track}`);
-            let saveNew = true;
-            if (currentBestStr) {
-                const cur = JSON.parse(currentBestStr);
-                if (bestObj.total >= cur.total) saveNew = false;
-            }
-            if (saveNew) {
-                const record = { raw: bestObj.raw, total: bestObj.total, date: new Date().toLocaleDateString() };
-                localStorage.setItem(`alltime_${track}`, JSON.stringify(record));
-                updateAllTimeBestDisplay();
-            }
+        const allTimeKey = `alltime_${track}`;
+        if (absoluteBest) {
+            localStorage.setItem(allTimeKey, JSON.stringify(absoluteBest));
+        } else {
+            localStorage.removeItem(allTimeKey);
         }
+        updateAllTimeBestDisplay();
     }
 
     function updateAllTimeBestDisplay() {
@@ -955,9 +962,19 @@
     }
 
     function confirmClearAllTimeBest() {
-        if (confirm("All-Time-Bestzeit für diese Strecke wirklich löschen?")) {
+        if (confirm("All-Time-Bestzeit für diese Strecke datumsübergreifend wirklich löschen?")) {
             const track = document.getElementById('trackSelect').value;
+            const savedKeys = Object.keys(localStorage).filter(k => k.startsWith(`upperracing_${track}_`));
+            savedKeys.forEach(k => {
+                try {
+                    let d = JSON.parse(localStorage.getItem(k));
+                    d.lapTimes = '';
+                    localStorage.setItem(k, JSON.stringify(d));
+                } catch(e) {}
+            });
             localStorage.removeItem(`alltime_${track}`);
+            document.getElementById('lapTimes').value = '';
+            analyzeLaps();
             updateAllTimeBestDisplay();
         }
     }
@@ -1050,7 +1067,7 @@
     }
 
     function loadPacking() {
-        const dateKey = document.getElementById('packDateSelect'].value || 'default';
+        const dateKey = document.getElementById('packDateSelect').value || 'default';
         const saved = localStorage.getItem(`upperracing_pack_${dateKey}`);
         const checkboxes = document.querySelectorAll('#pagePack input[type="checkbox"]');
         checkboxes.forEach(cb => cb.checked = false);
