@@ -1,145 +1,239 @@
-// Zentraler App-Zustand (State)
-const appState = {
-    selectedBikeId: null,
-    selectedTrack: 'pannoniaring',
-    bikes: [], // Liste aller gespeicherten Motorräder
-    setups: {} // Gespeicherte Setups, verknüpft nach BikeId + Track
-};
-
-// Beim Laden der Seite initialisieren
-document.addEventListener('DOMContentLoaded', () => {
-    loadDataFromStorage();
-    initBikeUI();
-});
-
-// --- DATEN LADEN & SPEICHERN (LocalStorage) ---
-function loadDataFromStorage() {
-    const savedBikes = localStorage.getItem('upperracing_bikes');
-    const savedSetups = localStorage.getItem('upperracing_setups');
-
-    if (savedBikes) appState.bikes = JSON.parse(savedBikes);
-    if (savedSetups) appState.setups = JSON.parse(savedSetups);
-}
-
-function saveToStorage() {
-    localStorage.setItem('upperracing_bikes', JSON.stringify(appState.bikes));
-    localStorage.setItem('upperracing_setups', JSON.stringify(appState.setups));
-}
-
-// --- FAHRZEUG-LOGIK ---
-function initBikeUI() {
-    // Hier kannst du die HTML-Elemente verknüpfen (Beispiel-IDs, passe sie einfach an dein HTML an)
-    const bikeSelect = document.getElementById('bike-select');
-    const addBikeBtn = document.getElementById('add-bike-btn');
-
-    // Dropdown aktualisieren
-    renderBikeDropdown();
-
-    // Event: Anderes Motorrad ausgewählt
-    if (bikeSelect) {
-        bikeSelect.addEventListener('change', (e) => {
-            appState.selectedBikeId = e.target.value;
-            loadSetupForCurrentSelection();
-        });
-    }
-
-    // Event: Neues Motorrad hinzufügen (z.B. per Modal oder Eingabefeldern)
-    if (addBikeBtn) {
-        addbikeBtn.addEventListener('click', () => {
-            // Beispiel-Werte aus deinen Input-Feldern auslesen
-            const brand = document.getElementById('bike-brand-input').value;
-            const model = document.getElementById('bike-model-input').value;
-            const year = document.getElementById('bike-year-input').value;
-
-            if (!brand || !model) {
-                alert('Bitte Marke und Modell angeben!');
-                return;
-            }
-
-            const newBike = {
-                id: 'bike_' + Date.now(),
-                brand: brand,
-                model: model,
-                year: year
-            };
-
-            appState.bikes.push(newBike);
-            appState.selectedBikeId = newBike.id;
-            saveToStorage();
-            renderBikeDropdown();
-            loadSetupForCurrentSelection();
-        });
-    }
-}
-
-function renderBikeDropdown() {
-    const bikeSelect = document.getElementById('bike-select');
-    if (!bikeSelect) return;
-
-    bikeSelect.innerHTML = '<option value="">-- Motorrad wählen --</option>';
-    
-    appState.bikes.forEach(bike => {
-        const option = document.createElement('option');
-        option.value = bike.id;
-        option.textContent = `${bike.brand} ${bike.model} (${bike.year || 'k.A.'})`;
-        if (bike.id === appState.selectedBikeId) {
-            option.selected = true;
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UpperRacing - Fahrzeug & Setup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
         }
-        bikeSelect.appendChild(option);
-    });
-}
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        h2, h3 { color: #ff3b30; }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #ff3b30;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #e03229;
+        }
+        hr {
+            border: 0;
+            border-top: 1px solid #444;
+            margin: 20px 0;
+        }
+        #success-message {
+            background: #28a745;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            border-radius: 4px;
+            margin-top: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
 
-// --- SETUP-LOGIK ---
-function loadSetupForCurrentSelection() {
-    if (!appState.selectedBikeId) return;
+<div class="container">
+    <h2>UpperRacing 🏍️</h2>
+    
+    <!-- FAHRZEUG AUSWAHL & ERSTELLUNG -->
+    <div class="form-group">
+        <h3>1. Motorrad wählen</h3>
+        <select id="bike-select">
+            <option value="">-- Bitte Motorrad wählen --</option>
+        </select>
+    </div>
 
-    // Eindeutiger Schlüssel für die Kombination aus Bike und Strecke
-    const setupKey = `${appState.selectedBikeId}_${appState.selectedTrack}`;
-    const currentSetup = appState.setups[setupKey] || {};
+    <div class="form-group">
+        <h3>Oder neues Motorrad hinzufügen</h3>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <input type="text" id="bike-brand" placeholder="Marke (z.B. Yamaha)">
+            <input type="text" id="bike-model" placeholder="Modell (z.B. R1)">
+        </div>
+        <input type="text" id="bike-year" placeholder="Baujahr (z.B. 2022)" style="margin-bottom: 10px;">
+        <button id="add-bike-btn">Motorrad speichern</button>
+    </div>
 
-    // Felder im HTML mit den gespeicherten Werten füllen (Beispiele)
-    setInputValue('reifendruck-v', currentSetup.reifendruckV);
-    setInputValue('reifendruck-h', currentSetup.reifendruckH);
-    setInputValue('notizen-turn', currentSetup.notizen);
-}
+    <hr>
 
-function saveCurrentSetup() {
-    if (!appState.selectedBikeId) {
-        alert('Bitte zuerst ein Motorrad auswählen!');
-        return;
-    }
+    <!-- SETUP BEREICH -->
+    <div id="setup-section" style="display: none;">
+        <h3>2. Setup für das aktuelle Bike</h3>
+        
+        <div class="form-group">
+            <label>Reifendruck Vorne (bar)</label>
+            <input type="text" id="pressure-front" placeholder="z.B. 2.1">
+        </div>
 
-    const setupKey = `${appState.selectedBikeId}_${appState.selectedTrack}`;
+        <div class="form-group">
+            <label>Reifendruck Hinten (bar)</label>
+            <input type="text" id="pressure-rear" placeholder="z.B. 1.7">
+        </div>
 
-    // Werte aus den HTML-Feldern einsammeln
-    appState.setups[setupKey] = {
-        reifendruckV: getInputValue('reifendruck-v'),
-        reifendruckH: getInputValue('reifendruck-h'),
-        notizen: getInputValue('notizen-turn'),
-        updatedAt: new Date().toISOString()
+        <div class="form-group">
+            <label>Notizen / Feedback</label>
+            <textarea id="setup-notes" rows="3" placeholder="Wie lief der Turn?"></textarea>
+        </div>
+
+        <button id="save-setup-btn">Setup speichern</button>
+        <div id="success-message">Erfolgreich gespeichert!</div>
+    </div>
+</div>
+
+<script>
+    // Zentraler App-Zustand
+    let appState = {
+        selectedBikeId: null,
+        bikes: [],
+        setups: {}
     };
 
-    saveToStorage();
-    
-    // Visuelles Feedback (z.B. "Erfolgreich gespeichert!" einblenden)
-    showSaveSuccessMessage();
-}
-
-// Hilfsfunktionen für Inputs
-function setInputValue(id, value) {
-    const el = document.getElementById(id);
-    if (el) el.value = value || '';
-}
-
-function getInputValue(id) {
-    const el = document.getElementById(id);
-    return el ? el.value : '';
-}
-
-function showSaveSuccessMessage() {
-    const msg = document.getElementById('success-message');
-    if (msg) {
-        msg.style.display = 'block';
-        setTimeout(() => { msg.style.display = 'none'; }, 2000);
+    // Daten beim Start aus dem Browser-Speicher laden
+    function loadData() {
+        const savedBikes = localStorage.getItem('ur_bikes');
+        const savedSetups = localStorage.getItem('ur_setups');
+        
+        if (savedBikes) appState.bikes = JSON.parse(savedBikes);
+        if (savedSetups) appState.setups = JSON.parse(savedSetups);
     }
-}
+
+    // Daten im Browser-Speicher sichern
+    function saveData() {
+        localStorage.setItem('ur_bikes', JSON.stringify(appState.bikes));
+        localStorage.setItem('ur_setups', JSON.stringify(appState.setups));
+    }
+
+    // Dropdown-Liste der Motorräder aktualisieren
+    function renderBikes() {
+        const select = document.getElementById('bike-select');
+        select.innerHTML = '<option value="">-- Bitte Motorrad wählen --</option>';
+
+        appState.bikes.forEach(bike => {
+            const option = document.createElement('option');
+            option.value = bike.id;
+            option.textContent = `${bike.brand} ${bike.model} (${bike.year})`;
+            if (bike.id === appState.selectedBikeId) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+
+        // Setup-Bereich nur anzeigen, wenn ein Bike gewählt ist
+        const setupSection = document.getElementById('setup-section');
+        if (appState.selectedBikeId) {
+            setupSection.style.display = 'block';
+            loadSetup();
+        } else {
+            setupSection.style.display = 'none';
+        }
+    }
+
+    // Setup für das ausgewählte Bike laden
+    function loadSetup() {
+        const setup = appState.setups[appState.selectedBikeId] || { front: '', rear: '', notes: '' };
+        document.getElementById('pressure-front').value = setup.front;
+        document.getElementById('pressure-rear').value = setup.rear;
+        document.getElementById('setup-notes').value = setup.notes;
+    }
+
+    // --- EVENT LISTENER (Klicks und Änderungen verarbeiten) ---
+
+    // 1. Neues Motorrad hinzufügen
+    document.getElementById('add-bike-btn').addEventListener('click', () => {
+        const brand = document.getElementById('bike-brand').value.trim();
+        const model = document.getElementById('bike-model').value.trim();
+        const year = document.getElementById('bike-year').value.trim();
+
+        if (!brand || !model) {
+            alert('Bitte mindestens Marke und Modell eingeben!');
+            return;
+        }
+
+        const newBike = {
+            id: 'bike_' + Date.now(),
+            brand: brand,
+            model: model,
+            year: year || 'k.A.'
+        };
+
+        appState.bikes.push(newBike);
+        appState.selectedBikeId = newBike.id; // Direkt auswählen
+        saveData();
+        renderBikes();
+
+        // Eingabefelder leeren
+        document.getElementById('bike-brand').value = '';
+        document.getElementById('bike-model').value = '';
+        document.getElementById('bike-year').value = '';
+    });
+
+    // 2. Anderes Motorrad im Dropdown ausgewählt
+    document.getElementById('bike-select').addEventListener('change', (e) => {
+        appState.selectedBikeId = e.target.value;
+        renderBikes();
+    });
+
+    // 3. Setup speichern
+    document.getElementById('save-setup-btn').addEventListener('click', () => {
+        if (!appState.selectedBikeId) return;
+
+        appState.setups[appState.selectedBikeId] = {
+            front: document.getElementById('pressure-front').value,
+            rear: document.getElementById('pressure-rear').value,
+            notes: document.getElementById('setup-notes').value
+        };
+
+        saveData();
+
+        // Kurze Erfolgsmeldung einblenden
+        const msg = document.getElementById('success-message');
+        msg.style.display = 'block';
+        setTimeout(() => {
+            msg.style.display = 'none';
+        }, 2000);
+    });
+
+    // Initialisierung beim ersten Laden der Seite
+    loadData();
+    renderBikes();
+</script>
+
+</body>
+</html>
