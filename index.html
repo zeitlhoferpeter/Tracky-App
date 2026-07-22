@@ -7,20 +7,19 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f2f5; /* Helles Grau als Umgebung */
-            color: #111111;            /* Sehr dunkler Text für hohen Kontrast */
+            background-color: #f0f2f5;
+            color: #111111;
             margin: 0;
             padding: 20px;
         }
         .container {
             max-width: 650px;
             margin: 0 auto;
-            background: #ffffff;       /* Reines Weiß für die Hauptkarte */
+            background: #ffffff;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        /* Titel zentriert */
         h2 {
             text-align: center;
             color: #111111;
@@ -28,7 +27,6 @@
             margin-bottom: 25px;
             letter-spacing: 1px;
         }
-        /* Sektions-Überschriften */
         h3 { 
             color: #1d4ed8; 
             font-size: 18px;
@@ -53,9 +51,9 @@
         input, select, textarea {
             width: 100%;
             padding: 10px;
-            background: #f9fafb;          /* Ganz leichtes Grau für Eingabefelder */
-            border: 1px solid #cbd5e1;     /* Gut sichtbarer Rahmen */
-            color: #111111;                /* Schwarze Schrift in den Inputs */
+            background: #f9fafb;
+            border: 1px solid #cbd5e1;
+            color: #111111;
             border-radius: 4px;
             box-sizing: border-box;
             font-size: 15px;
@@ -66,7 +64,7 @@
             background: #ffffff;
         }
         button {
-            background: #2563eb;           /* Kräftiges Blau für Buttons */
+            background: #2563eb;
             color: white;
             border: none;
             padding: 12px 20px;
@@ -94,7 +92,7 @@
             padding-bottom: 5px;
         }
         #success-message {
-            background: #16a34a;           /* Saftiges Grün */
+            background: #16a34a;
             color: white;
             padding: 10px;
             text-align: center;
@@ -110,11 +108,22 @@
 <div class="container">
     <h2>UpperRacing 🏍️</h2>
     
-    <!-- FAHRZEUG AUSWAHL & ERSTELLUNG -->
+    <!-- FAHRZEUG & STRECKE -->
     <div class="form-group">
         <h3>1. Motorrad wählen</h3>
         <select id="bike-select">
             <option value="">-- Bitte Motorrad wählen --</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <h3>2. Rennstrecke wählen</h3>
+        <select id="track-select">
+            <option value="pannoniaring">Pannoniaring</option>
+            <option value="slovakiaring">Slovakiaring</option>
+            <option value="bruenn">Automotodrom Brno / Brünn</option>
+            <option value="most">Autodrom Most</option>
+            <option value="grobnik">Automotodrom Grobnik / Rijeka</option>
         </select>
     </div>
 
@@ -132,7 +141,7 @@
 
     <!-- SETUP BEREICH -->
     <div id="setup-section" style="display: none;">
-        <h3>2. Setup für das aktuelle Bike</h3>
+        <h3>3. Setup für gewähltes Bike & Strecke</h3>
         
         <!-- Reifendruck -->
         <div class="sub-header">🛞 Reifendruck (bar)</div>
@@ -197,7 +206,7 @@
         <!-- Notizen -->
         <div class="sub-header">📝 Notizen / Feedback</div>
         <div class="form-group">
-            <textarea id="setup-notes" rows="3" placeholder="Wie lief der Turn? Grip, Fahrverhalten etc."></textarea>
+            <textarea id="setup-notes" rows="3" placeholder="Wie lief der Turn auf dieser Strecke? Grip etc."></textarea>
         </div>
 
         <button id="save-setup-btn">Setup speichern</button>
@@ -208,6 +217,7 @@
 <script>
     let appState = {
         selectedBikeId: null,
+        selectedTrack: 'pannoniaring',
         bikes: [],
         setups: {}
     };
@@ -248,8 +258,15 @@
         }
     }
 
+    function getSetupKey() {
+        return `${appState.selectedBikeId}_${appState.selectedTrack}`;
+    }
+
     function loadSetup() {
-        const setup = appState.setups[appState.selectedBikeId] || {
+        if (!appState.selectedBikeId) return;
+
+        const key = getSetupKey();
+        const setup = appState.setups[key] || {
             front: '', rear: '',
             gearFront: '', gearRear: '',
             forkPreload: '', forkRebound: '', forkCompression: '',
@@ -302,10 +319,17 @@
         renderBikes();
     });
 
+    // Event: Strecke gewechselt -> passendes Setup laden
+    document.getElementById('track-select').addEventListener('change', (e) => {
+        appState.selectedTrack = e.target.value;
+        loadSetup();
+    });
+
     document.getElementById('save-setup-btn').addEventListener('click', () => {
         if (!appState.selectedBikeId) return;
 
-        appState.setups[appState.selectedBikeId] = {
+        const key = getSetupKey();
+        appState.setups[key] = {
             front: document.getElementById('pressure-front').value,
             rear: document.getElementById('pressure-rear').value,
             gearFront: document.getElementById('gear-front').value,
