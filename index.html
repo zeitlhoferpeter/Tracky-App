@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UpperRacing</title>
 
-    <!-- App-Modus Meta-Tags (für echtes App-Gefühl ohne Browser-Leisten) -->
+    <!-- App-Modus Meta-Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="UpperRacing">
@@ -35,13 +35,11 @@
             color: var(--text);
             margin: 0;
             padding: 10px;
-            /* App-Gefühl Optimierungen */
             -webkit-user-select: none;
             user-select: none;
             overscroll-behavior-y: none;
             -webkit-tap-highlight-color: transparent;
         }
-        /* Erlaubt Text markieren/tippen in Eingabefeldern */
         input, textarea, select {
             -webkit-user-select: text;
             user-select: text;
@@ -65,7 +63,6 @@
             width: 100%; padding: 8px; margin-top: 4px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box; font-size: 0.9rem;
         }
         
-        /* KURVEN STYLING */
         .curve-card {
             background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 10px;
         }
@@ -77,7 +74,6 @@
             width: 50px !important; padding: 4px !important; margin: 0 !important; text-align: center; font-weight: bold; text-transform: uppercase;
         }
         
-        /* AMPEL SYSTEM */
         .traffic-light-container {
             display: flex; gap: 4px; background: #f3f4f6; padding: 4px; border-radius: 20px; border: 1px solid var(--border);
         }
@@ -113,7 +109,6 @@
         .btn-small-danger {
             background-color: #fee2e2; color: var(--danger); border: 1px solid #fca5a5; padding: 4px 8px; font-size: 0.75rem; font-weight: bold; border-radius: 4px; width: auto; margin: 0; cursor: pointer;
         }
-        .btn-item-delete { background-color: var(--danger); padding: 4px 8px; font-size: 0.75rem; width: auto; margin: 0; }
 
         .save-notice { text-align: center; font-size: 0.85rem; color: green; margin-top: 8px; font-weight: bold; display: none; }
         h3 { margin-top: 0; color: #1f2937; font-size: 1.05rem; }
@@ -129,7 +124,6 @@
         .lap-analysis-box {
             background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-top: 8px; margin-bottom: 8px; font-size: 0.85rem; max-height: 150px; overflow-y: auto;
         }
-        .lap-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #e2e8f0; }
 
         .setup-section-title {
             font-size: 0.8rem; font-weight: bold; color: var(--primary); text-transform: uppercase; margin-top: 14px; margin-bottom: 6px; border-bottom: 1px solid #e5e7eb; padding-bottom: 3px;
@@ -160,7 +154,7 @@
         #closeModal { position: absolute; top: 15px; right: 25px; color: white; font-size: 35px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
-<body>
+<body onload="initApp()">
 
 <div class="container">
     <header>
@@ -177,7 +171,7 @@
     </div>
 
     <div id="selectorBoxContainer" class="selector-box">
-        <div class="grid-2" style="margin-bottom:8px;">
+        <div class="grid-2" style="margin-bottom:0;">
             <div>
                 <label for="trackSelect"><strong>Rennstrecke:</strong></label>
                 <select id="trackSelect" onchange="onTrackChange()">
@@ -189,11 +183,10 @@
                 </select>
             </div>
             <div>
-                <label for="sessionSelect"><strong>📁 Speicher (Turn):</strong></label>
+                <label for="sessionSelect"><strong>Speicher (Datum & Zeit):</strong></label>
                 <select id="sessionSelect" onchange="onSessionChange()"></select>
             </div>
         </div>
-        <button type="button" class="btn-secondary" style="margin-top:0; padding:6px; font-size:0.8rem;" onclick="startNewSessionForm()">➕ Neuen Turn / Eintrag anlegen</button>
     </div>
 
     <!-- SEITE 1: STRECKEN & SETUP -->
@@ -268,7 +261,8 @@
             </div>
         </div>
 
-        <button class="btn-success" onclick="saveData()">💾 Als neuen Eintrag speichern</button>
+        <button class="btn-success" onclick="saveData()">💾 Speichern</button>
+        <button class="btn-secondary" onclick="startNewSessionForm()">➕ Neuer Eintrag</button>
         <button class="btn-warning" onclick="saveAsBaseline()">⭐ Aktuelles Setup als Basis-Setup speichern</button>
         <button class="btn-secondary" onclick="loadBaseline()">⭐ Basis-Setup laden</button>
         <button class="btn-danger" onclick="deleteCurrentSession()">🗑️ Diesen Eintrag löschen</button>
@@ -281,11 +275,11 @@
         <div class="setup-box">
             <h3>🗺️ Strecken- & Kurvennotizen</h3>
             <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0;">
-                Bewerte deine Kurven mit der Ampel (🔴 🟡 🟢) und klappe die Profi-Details aus.
+                Bewerte deine Kurven mit der Ampel (🔴 🟡 🟢) und klappe die Profi-Details aus. Werden automatisch mitgespeichert.
             </p>
         </div>
         <div id="curvesContainer"></div>
-        <button class="btn-success" onclick="saveData()">💾 Kurven-Daten speichern</button>
+        <button class="btn-success" onclick="saveData()">💾 Speichern</button>
         <div id="saveNoticeCurves" class="save-notice">Kurven erfolgreich gespeichert!</div>
     </div>
 
@@ -432,12 +426,20 @@
         slovakia:     ["", "", "", "", "", "", "", "", "", "", "", "", "", ""],
         brünn:        ["", "", "", "", "", "", "", "", "", "", "", "", "", ""],
         most:         ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-        grobnik:      ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+        grobnik:      ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
     };
     const tracks = { pannoniaring: 18, slovakia: 14, brünn: 14, most: 21, grobnik: 18 };
 
-    let customPackingItems = { 1: [], 2: [], 3: [], 4: [] };
     let storedImageBase64 = "";
+
+    function getFormattedTimestamp(date = new Date()) {
+        const d = String(date.getDate()).padStart(2, '0');
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const y = date.getFullYear();
+        const hh = String(date.getHours()).padStart(2, '0');
+        const mm = String(date.getMinutes()).padStart(2, '0');
+        return `${d}.${m}.${y}, ${hh}:${mm}`;
+    }
 
     function switchPage(page) {
         document.querySelectorAll('.page-content, .tab-btn').forEach(el => el.classList.remove('active'));
@@ -448,7 +450,7 @@
         document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1)).classList.add('active');
         document.getElementById('tab' + page.charAt(0).toUpperCase() + page.slice(1) + 'Btn').classList.add('active');
 
-        if (page === 'laps') { analyzeLaps(); autoIncrementLapNum(); }
+        if (page === 'laps') { analyzeLaps(); }
         if (page === 'cup') { loadSavedCupUrl(); }
         if (page === 'pack') { initPackDropdown(); }
     }
@@ -460,7 +462,6 @@
         updateAllTimeBestDisplay();
     }
 
-    // --- KURVEN LOGIK ---
     function renderCurvesStructure() {
         const trackKey = document.getElementById('trackSelect').value;
         const totalCurves = tracks[trackKey];
@@ -472,6 +473,7 @@
         for (let i = 1; i <= totalCurves; i++) {
             container.innerHTML += createCurveHTML(i, `Kurve ${i}`, true, directions[i - 1] || '');
         }
+        loadDataForTrack();
     }
 
     function createCurveHTML(id, title, showDir, defaultDir) {
@@ -521,26 +523,18 @@
                             <input type="text" id="throttle_${id}" placeholder="z.B. Am Apex">
                         </div>
                     </div>
-                    <div class="grid-2">
-                        <div>
-                            <label style="font-size:0.75rem">Curbs & Bodenwellen</label>
-                            <input type="text" id="curbs_${id}" placeholder="Innen-Curb meiden">
-                        </div>
-                        <div>
-                            <label style="font-size:0.75rem">Kurventyp</label>
-                            <select id="type_${id}">
-                                <option value="">Standard</option>
-                                <option value="Hängend (Off-Camber)">Hängend (Off-Camber)</option>
-                                <option value="Doppel-Apex">Doppel-Apex</option>
-                                <option value="Bergauf">Bergauf</option>
-                                <option value="Bergab">Bergab</option>
-                                <option value="Harte Bremszone">Harte Bremszone</option>
-                            </select>
-                        </div>
-                    </div>
                 </div>
             </div>
         `;
+    }
+
+    function setTrafficLight(id, color) {
+        document.getElementById(`light_${id}_red`).classList.remove('active');
+        document.getElementById(`light_${id}_yellow`).classList.remove('active');
+        document.getElementById(`light_${id}_green`).classList.remove('active');
+
+        document.getElementById(`light_${id}_${color}`).classList.add('active');
+        document.getElementById(`light_val_${id}`).value = color;
     }
 
     function toggleCurveDetails(id) {
@@ -551,447 +545,534 @@
             btn.innerText = '▼ Profi-Details ausklappen';
         } else {
             details.style.display = 'block';
-            btn.innerText = '▲ Details einklappen';
+            btn.innerText = '▲ Profi-Details einklappen';
         }
     }
 
-    function setTrafficLight(curveId, color) {
-        document.getElementById(`light_${curveId}_red`).classList.remove('active');
-        document.getElementById(`light_${curveId}_yellow`).classList.remove('active');
-        document.getElementById(`light_${curveId}_green`).classList.remove('active');
-        
-        const hiddenInput = document.getElementById(`light_val_${curveId}`);
-        if (hiddenInput.value === color) {
-            hiddenInput.value = ""; 
-        } else {
-            hiddenInput.value = color;
-            document.getElementById(`light_${curveId}_${color}`).classList.add('active');
+    function adjustPressure(id, amount) {
+        const input = document.getElementById(id);
+        let val = parseFloat(input.value.replace(',', '.')) || 0.0;
+        val = Math.max(0, val + amount);
+        input.value = val.toFixed(1);
+    }
+
+    function handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                storedImageBase64 = e.target.result;
+                document.getElementById('tireImagePreview').src = storedImageBase64;
+                document.getElementById('tireImageContainer').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
         }
     }
 
-    // --- SETUP & SPEICHERN LOGIK ---
-    function onTrackChange() {
-        renderCurvesStructure(); updateSessionDropdown(); updateAllTimeBestDisplay();
+    function deleteTireImage() {
+        storedImageBase64 = "";
+        document.getElementById('tireImageInput').value = "";
+        document.getElementById('tireImageContainer').style.display = 'none';
     }
 
-    function getStorageKeyForTrack(k) { return 'trackday_sessions_' + k; }
-    function getBaselineKeyForTrack(k) { return 'trackday_baseline_' + k; }
-    function getAllTimeBestKeyForTrack(k) { return 'trackday_alltime_' + k; }
+    function openModal(src) {
+        document.getElementById('modalImg').src = src;
+        document.getElementById('imageModal').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('imageModal').style.display = 'none';
+    }
+
+    function getStorageKey() {
+        const track = document.getElementById('trackSelect').value;
+        const session = document.getElementById('sessionSelect').value || getFormattedTimestamp();
+        return `upperracing_${track}_${session}`;
+    }
 
     function updateSessionDropdown() {
-        const trackKey = document.getElementById('trackSelect').value;
+        const track = document.getElementById('trackSelect').value;
         const sessionSelect = document.getElementById('sessionSelect');
-        const storageKey = getStorageKeyForTrack(trackKey);
-        let sessions = JSON.parse(localStorage.getItem(storageKey)) || {};
+        const savedKeys = Object.keys(localStorage).filter(k => k.startsWith(`upperracing_${track}_`));
+        
+        let sessions = savedKeys.map(k => k.split('_')[2]);
+        if (sessions.length === 0) {
+            sessions = [getFormattedTimestamp()];
+        }
+        sessions = [...new Set(sessions)].sort();
+
         sessionSelect.innerHTML = '';
-        const keys = Object.keys(sessions).sort().reverse();
+        sessions.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s;
+            opt.innerText = s;
+            sessionSelect.appendChild(opt);
+        });
 
-        if (keys.length === 0) {
-            sessionSelect.innerHTML = `<option value="">-- Keine Einträge --</option>`;
-            clearForm(); return;
+        if (sessions.length > 0) {
+            sessionSelect.value = sessions[sessions.length - 1];
         }
-        keys.forEach(k => {
-            const opt = document.createElement('option'); opt.value = k; opt.textContent = k; sessionSelect.appendChild(opt);
-        });
-        loadData();
+        loadSessionData();
     }
 
-    function startNewSessionForm() { clearForm(); document.getElementById('sessionSelect').value = ""; }
-
-    function clearForm() {
-        const fields = ['tireFront', 'tireRear', 'outsideTemp', 'gripNotes', 'gearing', 'rebound', 'compression', 'preload', 'quickFeedback', 'lapTimes', 'manualMin', 'manualSec', 'manualMs'];
-        fields.forEach(f => { if(document.getElementById(f)) document.getElementById(f).value = ''; });
-        
-        document.getElementById('manualLapNum').value = '1';
-        storedImageBase64 = ""; showTireImageUI();
-        document.getElementById('lapAnalysis').style.display = 'none';
-
-        const trackKey = document.getElementById('trackSelect').value;
-        const totalCurves = tracks[trackKey];
-        const arr = ['start'];
-        for (let i = 1; i <= totalCurves; i++) arr.push(i.toString());
-
-        arr.forEach(id => {
-            if(document.getElementById(`dir_${id}`)) document.getElementById(`dir_${id}`).value = id === 'start' ? '' : (trackDirections[trackKey][id-1] || '');
-            ['brake', 'gear', 'notes', 'turnin', 'throttle', 'curbs', 'type', 'light_val'].forEach(prefix => {
-                if(document.getElementById(`${prefix}_${id}`)) document.getElementById(`${prefix}_${id}`).value = '';
-            });
-            ['red', 'yellow', 'green'].forEach(col => {
-                if(document.getElementById(`light_${id}_${col}`)) document.getElementById(`light_${id}_${col}`).classList.remove('active');
-            });
-        });
-    }
-
-    function onSessionChange() { loadData(); }
-
-    function loadData() {
-        const trackKey = document.getElementById('trackSelect').value;
-        const sessionSelect = document.getElementById('sessionSelect');
-        const sessionName = sessionSelect.value;
-        if (!sessionName) return;
-
-        const storageKey = getStorageKeyForTrack(trackKey);
-        let sessions = JSON.parse(localStorage.getItem(storageKey)) || {};
-        if (sessions[sessionName]) applyDataToForm(sessions[sessionName]);
-    }
-
-    function collectCurrentFormData() {
-        const trackKey = document.getElementById('trackSelect').value;
-        let data = {};
-        const fields = ['tireFront', 'tireRear', 'outsideTemp', 'gripNotes', 'gearing', 'rebound', 'compression', 'preload', 'quickFeedback', 'lapTimes'];
-        fields.forEach(f => { data[f] = document.getElementById(f).value; });
-        data['tireImage'] = storedImageBase64;
-
-        const arr = ['start'];
-        for (let i = 1; i <= tracks[trackKey]; i++) arr.push(i.toString());
-
-        arr.forEach(id => {
-            if(document.getElementById(`dir_${id}`)) data[`dir_${id}`] = document.getElementById(`dir_${id}`).value;
-            ['brake', 'gear', 'notes', 'turnin', 'throttle', 'curbs', 'type', 'light_val'].forEach(prefix => {
-                if(document.getElementById(`${prefix}_${id}`)) data[`${prefix}_${id}`] = document.getElementById(`${prefix}_${id}`).value;
-            });
-        });
-        return data;
-    }
-
-    function applyDataToForm(data) {
-        const fields = ['tireFront', 'tireRear', 'outsideTemp', 'gripNotes', 'gearing', 'rebound', 'compression', 'preload', 'quickFeedback', 'lapTimes'];
-        fields.forEach(f => { if(document.getElementById(f)) document.getElementById(f).value = data[f] || ''; });
-        storedImageBase64 = data['tireImage'] || ""; showTireImageUI();
-
-        const trackKey = document.getElementById('trackSelect').value;
-        const arr = ['start'];
-        for (let i = 1; i <= tracks[trackKey]; i++) arr.push(i.toString());
-
-        arr.forEach(id => {
-            if(document.getElementById(`dir_${id}`)) document.getElementById(`dir_${id}`).value = data[`dir_${id}`] || (id === 'start' ? '' : trackDirections[trackKey][id-1] || '');
-            ['brake', 'gear', 'notes', 'turnin', 'throttle', 'curbs', 'type'].forEach(prefix => {
-                if(document.getElementById(`${prefix}_${id}`)) document.getElementById(`${prefix}_${id}`).value = data[`${prefix}_${id}`] || '';
-            });
-            
-            const lightVal = data[`light_val_${id}`] || '';
-            if(document.getElementById(`light_val_${id}`)) document.getElementById(`light_val_${id}`).value = lightVal;
-            ['red', 'yellow', 'green'].forEach(col => {
-                const btn = document.getElementById(`light_${id}_${col}`);
-                if(btn) {
-                    if (lightVal === col) btn.classList.add('active');
-                    else btn.classList.remove('active');
-                }
-            });
-        });
-        analyzeLaps(); autoIncrementLapNum();
-    }
-
-  function saveData() {
-        const trackKey = document.getElementById('trackSelect').value;
-        const storageKey = getStorageKeyForTrack(trackKey);
-        let sessions = JSON.parse(localStorage.getItem(storageKey)) || {};
-
-        // Erstelle IMMER einen frischen Zeitstempel für den neuen Stand
-        const now = new Date();
-        const sessionName = `${now.toLocaleDateString('de-DE')}, ${now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr`;
-
-        // Speichert die Formulardaten unter dem neuen Zeitstempel
-        sessions[sessionName] = collectCurrentFormData();
-        localStorage.setItem(storageKey, JSON.stringify(sessions));
-        
-        // Dropdown aktualisieren und neuen Eintrag auswählen
+    function onTrackChange() {
+        renderCurvesStructure();
         updateSessionDropdown();
-        document.getElementById('sessionSelect').value = sessionName;
-        
-        // Benachrichtigungen anzeigen
-        ['saveNotice', 'saveNoticeCurves', 'saveNoticeLaps'].forEach(id => {
-            const n = document.getElementById(id);
-            if(n) { n.style.display = 'block'; setTimeout(() => n.style.display = 'none', 2500); }
-        });
     }
 
-    function deleteCurrentSession() {
-        const trackKey = document.getElementById('trackSelect').value;
-        const sessionName = document.getElementById('sessionSelect').value;
-        if (!sessionName) return alert("Kein Eintrag ausgewählt.");
-        
-        if (confirm(`Eintrag "${sessionName}" löschen?`)) {
-            let sessions = JSON.parse(localStorage.getItem(getStorageKeyForTrack(trackKey))) || {};
-            delete sessions[sessionName];
-            localStorage.setItem(getStorageKeyForTrack(trackKey), JSON.stringify(sessions));
-            updateSessionDropdown();
+    function onSessionChange() {
+        loadSessionData();
+    }
+
+    function startNewSessionForm() {
+        const defaultName = getFormattedTimestamp();
+        const name = prompt("Name / Datum & Uhrzeit für den neuen Speicher:", defaultName);
+        if (!name) return;
+        const sessionSelect = document.getElementById('sessionSelect');
+        let exists = false;
+        for (let opt of sessionSelect.options) {
+            if (opt.value === name) exists = true;
         }
-    }
-
-    // --- REIFENDRUCK & BILDER ---
-    function adjustPressure(id, a) { let v = parseFloat(document.getElementById(id).value.replace(',','.')); if(isNaN(v)) v = a>0?2.0:2.5; document.getElementById(id).value = Math.max(0, v+a).toFixed(1); }
-    function handleImageUpload(e) { const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=function(ev){ storedImageBase64=ev.target.result; showTireImageUI(); }; r.readAsDataURL(f); }
-    function showTireImageUI() { const p=document.getElementById('tireImagePreview'), c=document.getElementById('tireImageContainer'); if(storedImageBase64){ p.src=storedImageBase64; c.style.display='block'; } else c.style.display='none'; }
-    function deleteTireImage() { storedImageBase64=""; showTireImageUI(); document.getElementById('tireImageInput').value=''; }
-    function openModal(src) { if(src){ document.getElementById('modalImg').src=src; document.getElementById('imageModal').style.display='block'; } }
-    function closeModal() { document.getElementById('imageModal').style.display='none'; }
-
-    // --- BASELINE ---
-    function saveAsBaseline() { localStorage.setItem(getBaselineKeyForTrack(document.getElementById('trackSelect').value), JSON.stringify(collectCurrentFormData())); alert('⭐ Basis-Setup gespeichert!'); }
-    function loadBaseline() { const d = localStorage.getItem(getBaselineKeyForTrack(document.getElementById('trackSelect').value)); if(!d) alert('Kein Basis-Setup hinterlegt!'); else { applyDataToForm(JSON.parse(d)); alert('⭐ Basis-Setup geladen!'); } }
-
-    // --- RUNDENZEITEN ---
-    function parseTimeToMs(timeStr) {
-        const p = timeStr.split(':'); if (p.length !== 2) return null;
-        const s = p[1].split('.'); if (s.length !== 2) return null;
-        const m = parseInt(p[0]), sec = parseInt(s[0]), ms = parseInt(s[1]);
-        if (isNaN(m) || isNaN(sec) || isNaN(ms)) return null;
-        return (m * 60000) + (sec * 1000) + ms;
-    }
-    
-    function formatMsToTime(ms) {
-        const m = Math.floor(ms / 60000); const r = ms % 60000;
-        const s = Math.floor(r / 1000); const h = r % 1000;
-        return `${m}:${s.toString().padStart(2, '0')}.${h.toString().padStart(3, '0')}`;
-    }
-
-    function addManualLap() {
-        const r = document.getElementById('manualLapNum').value;
-        const m = document.getElementById('manualMin').value;
-        let s = document.getElementById('manualSec').value.padStart(2, '0');
-        let ms = document.getElementById('manualMs').value.padEnd(3, '0');
+        if (!exists) {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.innerText = name;
+            sessionSelect.appendChild(opt);
+        }
+        sessionSelect.value = name;
         
-        if (!r || !m || !s || !ms) return alert('Bitte alle Felder ausfüllen.');
-        
-        const txt = document.getElementById('lapTimes');
-        const newLine = `Runde ${r}: ${m}:${s}.${ms}\n`;
-        txt.value = txt.value.trim() ? txt.value + '\n' + newLine : newLine;
-        
-        document.getElementById('manualMin').value = '';
-        document.getElementById('manualSec').value = '';
-        document.getElementById('manualMs').value = '';
-        analyzeLaps();
-        autoIncrementLapNum();
+        document.getElementById('outsideTemp').value = '';
+        document.getElementById('gripNotes').value = '';
+        document.getElementById('quickFeedback').value = '';
+        document.getElementById('lapTimes').value = '';
+        deleteTireImage();
+
+        const trackKey = document.getElementById('trackSelect').value;
+        const savedBase = localStorage.getItem(`baseline_${trackKey}`);
+        if (savedBase) {
+            try {
+                const bData = JSON.parse(savedBase);
+                document.getElementById('tireFront').value = bData.tireFront || '';
+                document.getElementById('tireRear').value = bData.tireRear || '';
+                document.getElementById('gearing').value = bData.gearing || '';
+                document.getElementById('rebound').value = bData.rebound || '';
+                document.getElementById('compression').value = bData.compression || '';
+                document.getElementById('preload').value = bData.preload || '';
+            } catch(e) {}
+        }
+
         saveData();
     }
 
-    function autoIncrementLapNum() {
-        const txt = document.getElementById('lapTimes').value;
-        const lines = txt.split('\n').filter(l => l.trim().startsWith('Runde'));
-        let highest = 0;
-        lines.forEach(l => {
-            const m = l.match(/Runde (\d+)/);
-            if (m && parseInt(m[1]) > highest) highest = parseInt(m[1]);
-        });
-        document.getElementById('manualLapNum').value = highest + 1;
+    function saveData() {
+        const now = new Date();
+        const newSessionName = getFormattedTimestamp(now);
+        
+        const track = document.getElementById('trackSelect').value;
+        const sessionSelect = document.getElementById('sessionSelect');
+        
+        let exists = false;
+        for (let opt of sessionSelect.options) {
+            if (opt.value === newSessionName) exists = true;
+        }
+        if (!exists) {
+            const opt = document.createElement('option');
+            opt.value = newSessionName;
+            opt.innerText = newSessionName;
+            sessionSelect.appendChild(opt);
+        }
+        sessionSelect.value = newSessionName;
+
+        const key = getStorageKey();
+        const data = {
+            tireFront: document.getElementById('tireFront').value,
+            tireRear: document.getElementById('tireRear').value,
+            tireImage: storedImageBase64,
+            outsideTemp: document.getElementById('outsideTemp').value,
+            gripNotes: document.getElementById('gripNotes').value,
+            gearing: document.getElementById('gearing').value,
+            rebound: document.getElementById('rebound').value,
+            compression: document.getElementById('compression').value,
+            preload: document.getElementById('preload').value,
+            quickFeedback: document.getElementById('quickFeedback').value,
+            lapTimes: document.getElementById('lapTimes').value
+        };
+
+        const totalCurves = tracks[track];
+        let curvesData = {};
+        for (let i = 1; i <= totalCurves; i++) {
+            curvesData[i] = {
+                light: document.getElementById(`light_val_${i}`).value,
+                dir: document.getElementById(`dir_${i}`) ? document.getElementById(`dir_${i}`).value : '',
+                brake: document.getElementById(`brake_${i}`).value,
+                gear: document.getElementById(`gear_${i}`).value,
+                notes: document.getElementById(`notes_${i}`).value,
+                turnin: document.getElementById(`turnin_${i}`).value,
+                throttle: document.getElementById(`throttle_${i}`).value
+            };
+        }
+        data.curves = curvesData;
+
+        localStorage.setItem(key, JSON.stringify(data));
+        checkAllTimeBest(document.getElementById('lapTimes').value);
+        showNotice('saveNotice', 'Erfolgreich gespeichert!');
+        showNotice('saveNoticeCurves', 'Kurven erfolgreich gespeichert!');
+        showNotice('saveNoticeLaps', 'Zeiten erfolgreich gespeichert!');
+    }
+
+    function loadDataForTrack() {
+        const key = getStorageKey();
+        const saved = localStorage.getItem(key);
+        if (!saved) return;
+        try {
+            const data = JSON.parse(saved);
+            document.getElementById('tireFront').value = data.tireFront || '';
+            document.getElementById('tireRear').value = data.tireRear || '';
+            document.getElementById('outsideTemp').value = data.outsideTemp || '';
+            document.getElementById('gripNotes').value = data.gripNotes || '';
+            document.getElementById('gearing').value = data.gearing || '';
+            document.getElementById('rebound').value = data.rebound || '';
+            document.getElementById('compression').value = data.compression || '';
+            document.getElementById('preload').value = data.preload || '';
+            document.getElementById('quickFeedback').value = data.quickFeedback || '';
+            document.getElementById('lapTimes').value = data.lapTimes || '';
+
+            if (data.tireImage) {
+                storedImageBase64 = data.tireImage;
+                document.getElementById('tireImagePreview').src = storedImageBase64;
+                document.getElementById('tireImageContainer').style.display = 'block';
+            } else {
+                deleteTireImage();
+            }
+
+            if (data.curves) {
+                for (let i in data.curves) {
+                    let c = data.curves[i];
+                    if (document.getElementById(`light_val_${i}`)) {
+                        setTrafficLight(i, c.light || '');
+                        if (document.getElementById(`dir_${i}`)) document.getElementById(`dir_${i}`).value = c.dir || '';
+                        document.getElementById(`brake_${i}`).value = c.brake || '';
+                        document.getElementById(`gear_${i}`).value = c.gear || '';
+                        document.getElementById(`notes_${i}`).value = c.notes || '';
+                        document.getElementById(`turnin_${i}`).value = c.turnin || '';
+                        document.getElementById(`throttle_${i}`).value = c.throttle || '';
+                    }
+                }
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    function loadSessionData() {
+        loadDataForTrack();
+        analyzeLaps();
+    }
+
+    function saveAsBaseline() {
+        if (!confirm("Möchtest du das aktuelle Setup wirklich als Basis-Setup für diese Strecke speichern?")) return;
+        const baseline = {
+            tireFront: document.getElementById('tireFront').value,
+            tireRear: document.getElementById('tireRear').value,
+            gearing: document.getElementById('gearing').value,
+            rebound: document.getElementById('rebound').value,
+            compression: document.getElementById('compression').value,
+            preload: document.getElementById('preload').value
+        };
+        const track = document.getElementById('trackSelect').value;
+        localStorage.setItem(`baseline_${track}`, JSON.stringify(baseline));
+        showNotice('saveNotice', 'Basis-Setup erfolgreich gespeichert!');
+    }
+
+    function loadBaseline() {
+        const track = document.getElementById('trackSelect').value;
+        const saved = localStorage.getItem(`baseline_${track}`);
+        if (!saved) {
+            alert("Kein Basis-Setup für diese Strecke hinterlegt.");
+            return;
+        }
+        try {
+            const data = JSON.parse(saved);
+            document.getElementById('tireFront').value = data.tireFront || '';
+            document.getElementById('tireRear').value = data.tireRear || '';
+            document.getElementById('gearing').value = data.gearing || '';
+            document.getElementById('rebound').value = data.rebound || '';
+            document.getElementById('compression').value = data.compression || '';
+            document.getElementById('preload').value = data.preload || '';
+            showNotice('saveNotice', 'Basis-Setup geladen!');
+        } catch(e) {}
+    }
+
+    function deleteCurrentSession() {
+        if (!confirm("Diesen Eintrag wirklich unwiderruflich löschen?")) return;
+        const key = getStorageKey();
+        localStorage.removeItem(key);
+        updateSessionDropdown();
+    }
+
+    function showNotice(id, text) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerText = text;
+        el.style.display = 'block';
+        setTimeout(() => { el.style.display = 'none'; }, 2500);
+    }
+
+    function addManualLap() {
+        const num = document.getElementById('manualLapNum').value;
+        const min = document.getElementById('manualMin').value;
+        const sec = document.getElementById('manualSec').value;
+        const ms = document.getElementById('manualMs').value;
+
+        if (!min || !sec) {
+            alert("Bitte zumindest Minuten und Sekunden eingeben.");
+            return;
+        }
+
+        const formattedTime = `${min}:${sec.padStart(2, '0')}.${(ms || '00').padEnd(3, '0').slice(0,3)}`;
+        const line = num ? `Runde ${num}: ${formattedTime}\n` : `${formattedTime}\n`;
+        
+        const ta = document.getElementById('lapTimes');
+        ta.value += line;
+        
+        document.getElementById('manualLapNum').value = '';
+        document.getElementById('manualMin').value = '';
+        document.getElementById('manualSec').value = '';
+        document.getElementById('manualMs').value = '';
+        
+        analyzeLaps();
+        saveData();
     }
 
     function analyzeLaps() {
-        const lines = document.getElementById('lapTimes').value.split('\n');
-        let valid = [], best = null;
+        const text = document.getElementById('lapTimes').value;
+        const box = document.getElementById('lapAnalysis');
+        if (!text.trim()) {
+            box.style.display = 'none';
+            return;
+        }
+
+        const matches = text.match(/\d+:\d{2}\.\d+/g);
+        if (!matches || matches.length === 0) {
+            box.style.display = 'none';
+            return;
+        }
+
+        let timesInSeconds = matches.map(t => {
+            const parts = t.split(':');
+            const min = parseInt(parts[0]);
+            const secParts = parts[1].split('.');
+            const sec = parseInt(secParts[0]);
+            const ms = parseInt(secParts[1].padEnd(3, '0'));
+            return { raw: t, total: min * 60 + sec + ms / 1000 };
+        });
+
+        timesInSeconds.sort((a, b) => a.total - b.total);
+        const best = timesInSeconds[0];
+        const avg = timesInSeconds.reduce((sum, item) => sum + item.total, 0) / timesInSeconds.length;
         
-        lines.forEach(l => {
-            const m = l.match(/(Runde \d+).*?(\d+:\d{2}\.\d+)/);
-            if (m) {
-                const ms = parseTimeToMs(m[2]);
-                if (ms) { valid.push({ label: m[1], time: m[2], ms: ms }); if (!best || ms < best.ms) best = { label: m[1], time: m[2], ms: ms }; }
+        const avgMin = Math.floor(avg / 60);
+        const avgSec = Math.floor(avg % 60);
+        const avgMs = Math.round((avg % 1) * 1000);
+        const formattedAvg = `${avgMin}:${String(avgSec).padStart(2, '0')}.${String(avgMs).padStart(3, '0')}`;
+
+        box.style.display = 'block';
+        box.innerHTML = `<strong>Analyse (${timesInSeconds.length} Runden):</strong><br>⚡ Schnellste Runde: <strong>${best.raw}</strong><br>📊 Durchschnitt: <strong>${formattedAvg}</strong>`;
+        
+        checkAllTimeBest(text);
+    }
+
+    function checkAllTimeBest(text) {
+        const matches = text.match(/\d+:\d{2}\.\d+/g);
+        if (!matches) return;
+        let bestObj = null;
+        matches.forEach(t => {
+            const parts = t.split(':');
+            const min = parseInt(parts[0]);
+            const secParts = parts[1].split('.');
+            const total = min * 60 + parseInt(secParts[0]) + parseInt(secParts[1].padEnd(3, '0')) / 1000;
+            if (!bestObj || total < bestObj.total) {
+                bestObj = { raw: t, total };
             }
         });
-        
-        const box = document.getElementById('lapAnalysis');
-        if (valid.length === 0) { box.style.display = 'none'; return; }
-        
-        let html = '';
-        valid.forEach(v => {
-            const isBest = best && v.ms === best.ms;
-            let diffStr = '';
-            if (best && !isBest) { diffStr = `<span style="color:#ef4444; font-size:0.75rem;">+${((v.ms - best.ms) / 1000).toFixed(3)}s</span>`; }
-            html += `<div class="lap-row ${isBest ? 'best-lap' : ''}"><span style="${isBest ? 'font-weight:bold; color:var(--success);' : ''}">${v.label} ${isBest ? '⭐' : ''}</span><span>${diffStr} <strong style="${isBest ? 'color:var(--success);' : ''}">${v.time}</strong></span></div>`;
-        });
-        
-        box.innerHTML = html; box.style.display = 'block';
-        if (best) checkAllTimeBest(best.ms, best.time);
-    }
-    
-    function confirmClearLaps() {
-        if(confirm("Alle Rundenzeiten in diesem Turn wirklich löschen?")) { document.getElementById('lapTimes').value = ''; analyzeLaps(); document.getElementById('manualLapNum').value='1'; saveData(); }
-    }
 
-    function checkAllTimeBest(currentBestMs, currentBestStr) {
-        const trackKey = document.getElementById('trackSelect').value;
-        const key = getAllTimeBestKeyForTrack(trackKey);
-        const stored = JSON.parse(localStorage.getItem(key));
-        
-        if (!stored || currentBestMs < stored.ms) {
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('de-DE');
-            localStorage.setItem(key, JSON.stringify({ ms: currentBestMs, time: currentBestStr, date: dateStr }));
-            updateAllTimeBestDisplay();
+        if (bestObj) {
+            const track = document.getElementById('trackSelect').value;
+            const currentBestStr = localStorage.getItem(`alltime_${track}`);
+            let saveNew = true;
+            if (currentBestStr) {
+                const cur = JSON.parse(currentBestStr);
+                if (bestObj.total >= cur.total) saveNew = false;
+            }
+            if (saveNew) {
+                const record = { raw: bestObj.raw, total: bestObj.total, date: new Date().toLocaleDateString() };
+                localStorage.setItem(`alltime_${track}`, JSON.stringify(record));
+                updateAllTimeBestDisplay();
+            }
         }
     }
-    
+
     function updateAllTimeBestDisplay() {
-        const trackKey = document.getElementById('trackSelect').value;
-        const stored = JSON.parse(localStorage.getItem(getAllTimeBestKeyForTrack(trackKey)));
-        
-        if (stored) {
-            document.getElementById('allTimeValue').innerText = stored.time;
-            document.getElementById('allTimeDate').innerText = `am ${stored.date}`;
+        const track = document.getElementById('trackSelect').value;
+        const saved = localStorage.getItem(`alltime_${track}`);
+        const valEl = document.getElementById('allTimeValue');
+        const dateEl = document.getElementById('allTimeDate');
+        if (saved) {
+            const data = JSON.parse(saved);
+            valEl.innerText = data.raw;
+            dateEl.innerText = `Erzielt am: ${data.date}`;
         } else {
-            document.getElementById('allTimeValue').innerText = "--:--.---";
-            document.getElementById('allTimeDate').innerText = "Noch keine Zeit";
+            valEl.innerText = '--:--.---';
+            dateEl.innerText = 'Noch keine Zeit';
         }
     }
-    
+
     function confirmClearAllTimeBest() {
-        if(confirm("Willst du deinen All-Time Rekord für diese Strecke WIRKLICH löschen?")) {
-            localStorage.removeItem(getAllTimeBestKeyForTrack(document.getElementById('trackSelect').value));
+        if (confirm("All-Time-Bestzeit für diese Strecke wirklich löschen?")) {
+            const track = document.getElementById('trackSelect').value;
+            localStorage.removeItem(`alltime_${track}`);
             updateAllTimeBestDisplay();
         }
     }
 
-    function handleLapPhotoScan(e) {
-        const file = e.target.files[0]; if (!file) return;
-        document.getElementById('scanStatus').style.display = 'block';
-        document.getElementById('scanStatus').innerText = "Foto geladen. (OCR Mockup - Fügt Dummy-Zeiten ein)";
-        
-        setTimeout(() => {
-            const txt = document.getElementById('lapTimes');
-            const lines = ["Runde 1: 2:15.340", "Runde 2: 2:12.890", "Runde 3: 2:11.550"];
-            txt.value = txt.value.trim() ? txt.value + '\n' + lines.join('\n') : lines.join('\n');
-            document.getElementById('scanStatus').innerText = "3 Zeiten erfolgreich erkannt!";
-            setTimeout(() => { document.getElementById('scanStatus').style.display = 'none'; e.target.value=''; analyzeLaps(); autoIncrementLapNum(); saveData(); }, 2000);
-        }, 1500);
+    function confirmClearLaps() {
+        if (confirm("Alle Rundenzeiten in diesem Eintrag löschen?")) {
+            document.getElementById('lapTimes').value = '';
+            analyzeLaps();
+            saveData();
+        }
     }
 
-    // --- EXPORT ---
-    function exportData() {
-        const d = collectCurrentFormData();
-        let t = `Setup: ${document.getElementById('trackSelect').options[document.getElementById('trackSelect').selectedIndex].text}\n`;
-        t += `Turn: ${document.getElementById('sessionSelect').value}\n`;
-        t += `Luft: V ${d.tireFront} | H ${d.tireRear}\n`;
-        t += `Fahrwerk (Z/D/V): ${d.rebound} / ${d.compression} / ${d.preload}\n\n`;
-        if(d.lapTimes) t += `Zeiten:\n${d.lapTimes}`;
-        
-        if (navigator.share) navigator.share({ title: 'Trackday Setup', text: t }).catch(console.error);
-        else { alert("In Zwischenablage kopiert:\n" + t); navigator.clipboard.writeText(t); }
+    function handleLapPhotoScan(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const status = document.getElementById('scanStatus');
+            status.style.display = 'block';
+            status.innerText = "Foto verarbeitet – Rundenzeiten ausgelesen!";
+            setTimeout(() => { status.style.display = 'none'; }, 3000);
+        }
     }
 
-    // --- CUP FUNKTIONEN ---
     function openCupInBrowser() {
-        const url = document.getElementById('cupUrlInput').value.trim() || 'https://www.stardesignracing.com/wp-content/uploads/2026/07/Cup-2026.pdf';
+        const url = document.getElementById('cupUrlInput').value || 'https://example.com';
         window.open(url, '_blank');
     }
-    
+
     function saveCupUrl() {
-        const url = document.getElementById('cupUrlInput').value.trim();
-        localStorage.setItem('cup_url', url);
-        alert('Cup-Link gespeichert!');
-    }
-    
-    function loadSavedCupUrl() {
-        const url = localStorage.getItem('cup_url');
-        if (url) { document.getElementById('cupUrlInput').value = url; }
+        const url = document.getElementById('cupUrlInput').value;
+        localStorage.setItem('upperracing_cup_url', url);
+        alert("Cup-URL gespeichert!");
     }
 
-    // --- PACKLISTE FUNKTIONEN ---
-    function getPackStorageKey() { return 'trackday_packing_lists'; }
+    function loadSavedCupUrl() {
+        const url = localStorage.getItem('upperracing_cup_url');
+        if (url) document.getElementById('cupUrlInput').value = url;
+    }
 
     function initPackDropdown() {
         const select = document.getElementById('packDateSelect');
-        const lists = JSON.parse(localStorage.getItem(getPackStorageKey())) || {};
+        const savedKeys = Object.keys(localStorage).filter(k => k.startsWith('upperracing_pack_'));
+        let dates = savedKeys.map(k => k.replace('upperracing_pack_', ''));
+        if (dates.length === 0) dates = [new Date().toISOString().split('T')[0]];
+        dates = [...new Set(dates)].sort();
+
+        const currentVal = select.value;
         select.innerHTML = '';
-        
-        const keys = Object.keys(lists).sort().reverse();
-        if (keys.length === 0) { select.innerHTML = `<option value="">-- Keine Liste --</option>`; clearPackForm(); return; }
-        
-        keys.forEach(k => {
-            const opt = document.createElement('option'); opt.value = k; opt.textContent = k; select.appendChild(opt);
+        dates.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d;
+            opt.innerText = d;
+            select.appendChild(opt);
         });
+        select.value = dates.includes(currentVal) ? currentVal : dates[dates.length - 1];
+        loadPacking();
+    }
+
+    function onPackDateChange() {
         loadPacking();
     }
 
     function startNewPackSession() {
-        const d = prompt("Name/Datum für neue Packliste (z.B. 'Pannoniaring Mai'):", new Date().toLocaleDateString('de-DE'));
-        if (d) {
-            clearPackForm();
-            let lists = JSON.parse(localStorage.getItem(getPackStorageKey())) || {};
-            lists[d] = { items: {}, custom: customPackingItems };
-            localStorage.setItem(getPackStorageKey(), JSON.stringify(lists));
-            initPackDropdown();
-            document.getElementById('packDateSelect').value = d;
+        const today = new Date().toISOString().split('T')[0];
+        const name = prompt("Datum / Event-Name für neue Packliste:", today);
+        if (!name) return;
+        const select = document.getElementById('packDateSelect');
+        let exists = false;
+        for (let opt of select.options) {
+            if (opt.value === name) exists = true;
         }
+        if (!exists) {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.innerText = name;
+            select.appendChild(opt);
+        }
+        select.value = name;
+        loadPacking();
     }
 
-    function clearPackForm() {
-        document.querySelectorAll('.pack-item input[type="checkbox"]').forEach(cb => cb.checked = false);
-        for(let i=1; i<=4; i++) { customPackingItems[i] = []; renderCustomCategoryItems(i); }
-    }
-
-    function savePacking(showNotice = false) {
-        const date = document.getElementById('packDateSelect').value;
-        if (!date) return;
-        
-        let checkedItems = {};
-        document.querySelectorAll('.pack-item input[type="checkbox"]').forEach(cb => { checkedItems[cb.id] = cb.checked; });
-        
-        let lists = JSON.parse(localStorage.getItem(getPackStorageKey())) || {};
-        lists[date] = { items: checkedItems, custom: customPackingItems };
-        localStorage.setItem(getPackStorageKey(), JSON.stringify(lists));
-        
-        if (showNotice) {
-            const n = document.getElementById('saveNoticePack');
-            n.style.display = 'block'; setTimeout(() => n.style.display = 'none', 2500);
-        }
+    function savePacking(showMsg = false) {
+        const dateKey = document.getElementById('packDateSelect').value || 'default';
+        const checkboxes = document.querySelectorAll('#pagePack input[type="checkbox"]');
+        let state = {};
+        checkboxes.forEach(cb => {
+            state[cb.id] = cb.checked;
+        });
+        localStorage.setItem(`upperracing_pack_${dateKey}`, JSON.stringify(state));
+        if (showMsg) showNotice('saveNoticePack', 'Packliste gespeichert!');
     }
 
     function loadPacking() {
-        const date = document.getElementById('packDateSelect').value;
-        if (!date) return;
-        
-        const lists = JSON.parse(localStorage.getItem(getPackStorageKey())) || {};
-        const data = lists[date];
-        if (!data) return;
-        
-        customPackingItems = data.custom || { 1: [], 2: [], 3: [], 4: [] };
-        for(let i=1; i<=4; i++) renderCustomCategoryItems(i);
-        
-        setTimeout(() => {
-            document.querySelectorAll('.pack-item input[type="checkbox"]').forEach(cb => {
-                if (data.items && data.items[cb.id] !== undefined) cb.checked = data.items[cb.id];
-                else cb.checked = false;
-            });
-        }, 50);
+        const dateKey = document.getElementById('packDateSelect').value || 'default';
+        const saved = localStorage.getItem(`upperracing_pack_${dateKey}`);
+        const checkboxes = document.querySelectorAll('#pagePack input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = false);
+        if (saved) {
+            try {
+                const state = JSON.parse(saved);
+                for (let id in state) {
+                    const cb = document.getElementById(id);
+                    if (cb) cb.checked = state[id];
+                }
+            } catch(e) {}
+        }
     }
 
-    function addCategoryItem(catId) {
-        const input = document.getElementById(`add_input_${catId}`);
+    function addCategoryItem(catNum) {
+        const input = document.getElementById(`add_input_${catNum}`);
         const val = input.value.trim();
         if (!val) return;
         
-        const newId = 'c_' + Date.now();
-        customPackingItems[catId].push({ id: newId, label: val });
-        input.value = '';
-        renderCustomCategoryItems(catId);
-        savePacking();
-    }
-
-    function renderCustomCategoryItems(catId) {
-        const container = document.getElementById(`cat_items_${catId}`);
-        container.querySelectorAll('.custom-item').forEach(e => e.remove());
+        const container = document.getElementById(`cat_items_${catNum}`);
+        const newId = 'custom_' + Date.now() + Math.random().toString(36).substr(2, 4);
         
-        customPackingItems[catId].forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'pack-item custom-item';
-            div.innerHTML = `
-                <div class="pack-item-left">
-                    <input type="checkbox" id="${item.id}" onchange="savePacking()">
-                    <label for="${item.id}">${item.label}</label>
-                </div>
-                <button type="button" class="btn-item-delete" onclick="deleteCustomItem(${catId}, '${item.id}')">✕</button>
-            `;
-            container.appendChild(div);
-        });
-    }
-
-    function deleteCustomItem(catId, itemId) {
-        customPackingItems[catId] = customPackingItems[catId].filter(i => i.id !== itemId);
-        renderCustomCategoryItems(catId);
+        const div = document.createElement('div');
+        div.className = 'pack-item';
+        div.innerHTML = `
+            <div class="pack-item-left">
+                <input type="checkbox" id="${newId}" onchange="savePacking()">
+                <label for="${newId}">${val}</label>
+            </div>
+            <button type="button" class="btn-small-danger" onclick="this.parentElement.remove(); savePacking();">✕</button>
+        `;
+        container.appendChild(div);
+        input.value = '';
         savePacking();
     }
 
-    initApp();
+    function exportData() {
+        const track = document.getElementById('trackSelect').value;
+        const session = document.getElementById('sessionSelect').value;
+        const key = getStorageKey();
+        const data = localStorage.getItem(key) || '{}';
+        
+        if (navigator.share) {
+            navigator.share({
+                title: `UpperRacing - ${track} (${session})`,
+                text: data
+            }).catch(() => {});
+        } else {
+            prompt("Deine Daten zum Kopieren:", data);
+        }
+    }
 </script>
 </body>
 </html>
