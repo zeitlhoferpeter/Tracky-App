@@ -142,6 +142,10 @@
 
         <!-- Gabel (Vorne) -->
         <div class="sub-header">🔧 Fahrwerk Gabel (Vorne)</div>
+        <div class="form-group">
+            <label>Federvorspannung (Ringe / mm)</label>
+            <input type="text" id="fork-preload" placeholder="z.B. 5 Ringen sichtbar / 12mm">
+        </div>
         <div class="row">
             <div class="form-group col">
                 <label>Zugstufe (clicks)</label>
@@ -155,6 +159,10 @@
 
         <!-- Federbein (Hinten) -->
         <div class="sub-header">🔧 Fahrwerk Federbein (Hinten)</div>
+        <div class="form-group">
+            <label>Federvorspannung (Gewinde / mm)</label>
+            <input type="text" id="shock-preload" placeholder="z.B. 10mm Gewinde frei">
+        </div>
         <div class="row">
             <div class="form-group col">
                 <label>Zugstufe (clicks)</label>
@@ -224,8 +232,8 @@
         const setup = appState.setups[appState.selectedBikeId] || {
             front: '', rear: '',
             gearFront: '', gearRear: '',
-            forkRebound: '', forkCompression: '',
-            shockRebound: '', shockCompression: '',
+            forkPreload: '', forkRebound: '', forkCompression: '',
+            shockPreload: '', shockRebound: '', shockCompression: '',
             notes: ''
         };
         
@@ -233,8 +241,10 @@
         document.getElementById('pressure-rear').value = setup.rear;
         document.getElementById('gear-front').value = setup.gearFront;
         document.getElementById('gear-rear').value = setup.gearRear;
+        document.getElementById('fork-preload').value = setup.forkPreload;
         document.getElementById('fork-rebound').value = setup.forkRebound;
         document.getElementById('fork-compression').value = setup.forkCompression;
+        document.getElementById('shock-preload').value = setup.shockPreload;
         document.getElementById('shock-rebound').value = setup.shockRebound;
         document.getElementById('shock-compression').value = setup.shockCompression;
         document.getElementById('setup-notes').value = setup.notes;
@@ -280,8 +290,10 @@
             rear: document.getElementById('pressure-rear').value,
             gearFront: document.getElementById('gear-front').value,
             gearRear: document.getElementById('gear-rear').value,
+            forkPreload: document.getElementById('fork-preload').value,
             forkRebound: document.getElementById('fork-rebound').value,
             forkCompression: document.getElementById('fork-compression').value,
+            shockPreload: document.getElementById('shock-preload').value,
             shockRebound: document.getElementById('shock-rebound').value,
             shockCompression: document.getElementById('shock-compression').value,
             notes: document.getElementById('setup-notes').value
