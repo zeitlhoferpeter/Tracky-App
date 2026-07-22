@@ -91,8 +91,7 @@
             border-bottom: 1px solid #e2e8f0;
             padding-bottom: 5px;
         }
-        #success-message {
-            background: #16a34a;
+        #success-message, #info-message {
             color: white;
             padding: 10px;
             text-align: center;
@@ -101,6 +100,8 @@
             display: none;
             font-weight: bold;
         }
+        #success-message { background: #16a34a; }
+        #info-message { background: #2563eb; }
     </style>
 </head>
 <body>
@@ -211,6 +212,7 @@
 
         <button id="save-setup-btn">Setup speichern</button>
         <div id="success-message">Erfolgreich gespeichert!</div>
+        <div id="info-message">Gewähltes Setup geladen!</div>
     </div>
 </div>
 
@@ -225,14 +227,19 @@
     function loadData() {
         const savedBikes = localStorage.getItem('ur_bikes');
         const savedSetups = localStorage.getItem('ur_setups');
+        const savedLastBike = localStorage.getItem('ur_last_bike');
         
         if (savedBikes) appState.bikes = JSON.parse(savedBikes);
         if (savedSetups) appState.setups = JSON.parse(savedSetups);
+        if (savedLastBike) appState.selectedBikeId = savedLastBike;
     }
 
     function saveData() {
         localStorage.setItem('ur_bikes', JSON.stringify(appState.bikes));
         localStorage.setItem('ur_setups', JSON.stringify(appState.setups));
+        if (appState.selectedBikeId) {
+            localStorage.setItem('ur_last_bike', appState.selectedBikeId);
+        }
     }
 
     function renderBikes() {
@@ -287,6 +294,15 @@
         document.getElementById('setup-notes').value = setup.notes;
     }
 
+    function showInfoMessage(text) {
+        const msg = document.getElementById('info-message');
+        msg.textContent = text;
+        msg.style.display = 'block';
+        setTimeout(() => {
+            msg.style.display = 'none';
+        }, 1500);
+    }
+
     document.getElementById('add-bike-btn').addEventListener('click', () => {
         const brand = document.getElementById('bike-brand').value.trim();
         const model = document.getElementById('bike-model').value.trim();
@@ -308,6 +324,7 @@
         appState.selectedBikeId = newBike.id;
         saveData();
         renderBikes();
+        showInfoMessage('Neues Motorrad hinzugefügt & ausgewählt!');
 
         document.getElementById('bike-brand').value = '';
         document.getElementById('bike-model').value = '';
@@ -316,13 +333,17 @@
 
     document.getElementById('bike-select').addEventListener('change', (e) => {
         appState.selectedBikeId = e.target.value;
+        saveData();
         renderBikes();
+        if (appState.selectedBikeId) {
+            showInfoMessage('Motorrad gewechselt – Setup geladen!');
+        }
     });
 
-    // Event: Strecke gewechselt -> passendes Setup laden
     document.getElementById('track-select').addEventListener('change', (e) => {
         appState.selectedTrack = e.target.value;
         loadSetup();
+        showInfoMessage('Strecke gewechselt – Setup geladen!');
     });
 
     document.getElementById('save-setup-btn').addEventListener('click', () => {
