@@ -682,23 +682,24 @@
         analyzeLaps(); autoIncrementLapNum();
     }
 
-    function saveData() {
+  function saveData() {
         const trackKey = document.getElementById('trackSelect').value;
         const storageKey = getStorageKeyForTrack(trackKey);
         let sessions = JSON.parse(localStorage.getItem(storageKey)) || {};
 
-        let sessionName = document.getElementById('sessionSelect').value;
-        if(!sessionName) {
-            const now = new Date();
-            sessionName = `${now.toLocaleDateString('de-DE')}, ${now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr`;
-        }
+        // Erstelle IMMER einen frischen Zeitstempel für den neuen Stand
+        const now = new Date();
+        const sessionName = `${now.toLocaleDateString('de-DE')}, ${now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr`;
 
+        // Speichert die Formulardaten unter dem neuen Zeitstempel
         sessions[sessionName] = collectCurrentFormData();
         localStorage.setItem(storageKey, JSON.stringify(sessions));
         
+        // Dropdown aktualisieren und neuen Eintrag auswählen
         updateSessionDropdown();
         document.getElementById('sessionSelect').value = sessionName;
         
+        // Benachrichtigungen anzeigen
         ['saveNotice', 'saveNoticeCurves', 'saveNoticeLaps'].forEach(id => {
             const n = document.getElementById(id);
             if(n) { n.style.display = 'block'; setTimeout(() => n.style.display = 'none', 2500); }
