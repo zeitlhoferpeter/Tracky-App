@@ -7,30 +7,31 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
+            background-color: #f0f2f5; /* Helles Grau als Umgebung */
+            color: #111111;            /* Sehr dunkler Text für hohen Kontrast */
             margin: 0;
             padding: 20px;
         }
         .container {
             max-width: 650px;
             margin: 0 auto;
-            background: #1e1e1e;
+            background: #ffffff;       /* Reines Weiß für die Hauptkarte */
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        /* Titel in die Mitte zentriert */
+        /* Titel zentriert */
         h2 {
             text-align: center;
-            color: #ffffff;
+            color: #111111;
             font-size: 26px;
             margin-bottom: 25px;
             letter-spacing: 1px;
         }
-        /* Überschriften der Sektionen (Farbe angepasst statt Rot) */
+        /* Sektions-Überschriften */
         h3 { 
-            color: #3b82f6; 
+            color: #1d4ed8; 
+            font-size: 18px;
         }
         .form-group {
             margin-bottom: 15px;
@@ -46,19 +47,26 @@
             display: block;
             margin-bottom: 5px;
             font-size: 13px;
-            color: #bbb;
+            font-weight: bold;
+            color: #333333;
         }
         input, select, textarea {
             width: 100%;
             padding: 10px;
-            background: #2a2a2a;
-            border: 1px solid #444;
-            color: #fff;
+            background: #f9fafb;          /* Ganz leichtes Grau für Eingabefelder */
+            border: 1px solid #cbd5e1;     /* Gut sichtbarer Rahmen */
+            color: #111111;                /* Schwarze Schrift in den Inputs */
             border-radius: 4px;
             box-sizing: border-box;
+            font-size: 15px;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            background: #ffffff;
         }
         button {
-            background: #3b82f6; /* Modernes Blau statt Rot */
+            background: #2563eb;           /* Kräftiges Blau für Buttons */
             color: white;
             border: none;
             padding: 12px 20px;
@@ -69,30 +77,31 @@
             font-weight: bold;
         }
         button:hover {
-            background: #2563eb;
+            background: #1d4ed8;
         }
         hr {
             border: 0;
-            border-top: 1px solid #444;
+            border-top: 1px solid #e2e8f0;
             margin: 20px 0;
         }
         .sub-header {
             font-size: 15px;
             font-weight: bold;
-            color: #3b82f6; /* Auch hier auf Blau angepasst */
+            color: #1d4ed8;
             margin-top: 15px;
             margin-bottom: 10px;
-            border-bottom: 1px solid #333;
+            border-bottom: 1px solid #e2e8f0;
             padding-bottom: 5px;
         }
         #success-message {
-            background: #28a745;
+            background: #16a34a;           /* Saftiges Grün */
             color: white;
             padding: 10px;
             text-align: center;
             border-radius: 4px;
             margin-top: 15px;
             display: none;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -220,7 +229,6 @@
         const select = document.getElementById('bike-select');
         select.innerHTML = '<option value="">-- Bitte Motorrad wählen --</option>';
 
-        appState.bikes. geforEach = appState.bikes.forEach; // shortcut check
         appState.bikes.forEach(bike => {
             const option = document.createElement('option');
             option.value = bike.id;
