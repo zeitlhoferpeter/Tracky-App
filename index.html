@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UpperRacing - Fahrzeug & Setup</title>
+    <title>UpperRacing - Trackday App</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -24,199 +24,201 @@
             text-align: center;
             color: #111111;
             font-size: 26px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             letter-spacing: 1px;
         }
-        h3 { 
-            color: #1d4ed8; 
-            font-size: 18px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .row {
+        /* REITER / NAVIGATION */
+        .tab-nav {
             display: flex;
             gap: 10px;
+            margin-bottom: 20px;
         }
-        .col {
+        .tab-btn {
             flex: 1;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 13px;
-            font-weight: bold;
-            color: #333333;
-        }
-        input, select, textarea {
-            width: 100%;
-            padding: 10px;
-            background: #f9fafb;
-            border: 1px solid #cbd5e1;
-            color: #111111;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 15px;
-        }
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #2563eb;
-            background: #ffffff;
-        }
-        button {
-            background: #2563eb;
-            color: white;
+            background: #e2e8f0;
+            color: #333;
             border: none;
-            padding: 12px 20px;
-            font-size: 16px;
+            padding: 10px;
+            font-size: 15px;
+            font-weight: bold;
             border-radius: 4px;
             cursor: pointer;
-            width: 100%;
-            font-weight: bold;
         }
-        button:hover {
-            background: #1d4ed8;
+        .tab-btn.active {
+            background: #2563eb;
+            color: white;
         }
-        hr {
-            border: 0;
-            border-top: 1px solid #e2e8f0;
-            margin: 20px 0;
+        .tab-content {
+            display: none;
         }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* STYLES AUS DEM SETUP (Unverändert) */
+        h3 { color: #1d4ed8; font-size: 18px; }
+        .form-group { margin-bottom: 15px; }
+        .row { display: flex; gap: 10px; }
+        .col { flex: 1; }
+        label { display: block; margin-bottom: 5px; font-size: 13px; font-weight: bold; color: #333333; }
+        input, select, textarea {
+            width: 100%; padding: 10px; background: #f9fafb;
+            border: 1px solid #cbd5e1; color: #111111;
+            border-radius: 4px; box-sizing: border-box; font-size: 15px;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #2563eb; background: #ffffff; }
+        .action-btn {
+            background: #2563eb; color: white; border: none;
+            padding: 12px 20px; font-size: 16px; border-radius: 4px;
+            cursor: pointer; width: 100%; font-weight: bold;
+        }
+        .action-btn:hover { background: #1d4ed8; }
+        hr { border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0; }
         .sub-header {
-            font-size: 15px;
-            font-weight: bold;
-            color: #1d4ed8;
-            margin-top: 15px;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 5px;
+            font-size: 15px; font-weight: bold; color: #1d4ed8;
+            margin-top: 15px; margin-bottom: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;
         }
         #success-message, #info-message {
-            color: white;
-            padding: 10px;
-            text-align: center;
-            border-radius: 4px;
-            margin-top: 15px;
-            display: none;
-            font-weight: bold;
+            color: white; padding: 10px; text-align: center;
+            border-radius: 4px; margin-top: 15px; display: none; font-weight: bold;
         }
         #success-message { background: #16a34a; }
         #info-message { background: #2563eb; }
+
+        /* NEU: Packlisten Styling */
+        .packing-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 16px;
+        }
+        .packing-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h2>UpperRacing 🏍️</h2>
-    
-    <!-- FAHRZEUG & STRECKE -->
-    <div class="form-group">
-        <h3>1. Motorrad wählen</h3>
-        <select id="bike-select">
-            <option value="">-- Bitte Motorrad wählen --</option>
-        </select>
+
+    <!-- REITER-NAVIGATION -->
+    <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('setup')">🛠️ Setup & Bike</button>
+        <button class="tab-btn" onclick="switchTab('packing')">🎒 Packliste</button>
     </div>
 
-    <div class="form-group">
-        <h3>2. Rennstrecke wählen</h3>
-        <select id="track-select">
-            <option value="pannoniaring">Pannoniaring</option>
-            <option value="slovakiaring">Slovakiaring</option>
-            <option value="bruenn">Automotodrom Brno / Brünn</option>
-            <option value="most">Autodrom Most</option>
-            <option value="grobnik">Automotodrom Grobnik / Rijeka</option>
-        </select>
-    </div>
-
-    <div class="form-group">
-        <h3>Oder neues Motorrad hinzufügen</h3>
-        <div class="row" style="margin-bottom: 10px;">
-            <div class="col"><input type="text" id="bike-brand" placeholder="Marke (z.B. Yamaha)"></div>
-            <div class="col"><input type="text" id="bike-model" placeholder="Modell (z.B. R1)"></div>
+    <!-- ========================================== -->
+    <!-- REITER 1: SETUP (Dein fertiger Code)       -->
+    <!-- ========================================== -->
+    <div id="tab-setup" class="tab-content active">
+        <div class="form-group">
+            <h3>1. Motorrad wählen</h3>
+            <select id="bike-select">
+                <option value="">-- Bitte Motorrad wählen --</option>
+            </select>
         </div>
-        <input type="text" id="bike-year" placeholder="Baujahr (z.B. 2022)" style="margin-bottom: 10px;">
-        <button id="add-bike-btn">Motorrad speichern</button>
+
+        <div class="form-group">
+            <h3>2. Rennstrecke wählen</h3>
+            <select id="track-select">
+                <option value="pannoniaring">Pannoniaring</option>
+                <option value="slovakiaring">Slovakiaring</option>
+                <option value="bruenn">Automotodrom Brno / Brünn</option>
+                <option value="most">Autodrom Most</option>
+                <option value="grobnik">Automotodrom Grobnik / Rijeka</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <h3>Oder neues Motorrad hinzufügen</h3>
+            <div class="row" style="margin-bottom: 10px;">
+                <div class="col"><input type="text" id="bike-brand" placeholder="Marke (z.B. Yamaha)"></div>
+                <div class="col"><input type="text" id="bike-model" placeholder="Modell (z.B. R1)"></div>
+            </div>
+            <input type="text" id="bike-year" placeholder="Baujahr (z.B. 2022)" style="margin-bottom: 10px;">
+            <button class="action-btn" id="add-bike-btn">Motorrad speichern</button>
+        </div>
+
+        <hr>
+
+        <div id="setup-section" style="display: none;">
+            <h3>3. Setup für gewähltes Bike & Strecke</h3>
+            
+            <div class="sub-header">🛞 Reifendruck (bar)</div>
+            <div class="row">
+                <div class="form-group col"><label>Vorne</label><input type="text" id="pressure-front" placeholder="z.B. 2.1"></div>
+                <div class="form-group col"><label>Hinten</label><input type="text" id="pressure-rear" placeholder="z.B. 1.7"></div>
+            </div>
+
+            <div class="sub-header">⚙️ Übersetzung</div>
+            <div class="row">
+                <div class="form-group col"><label>Ritzel Vorne</label><input type="text" id="gear-front" placeholder="z.B. 15"></div>
+                <div class="form-group col"><label>Kettenrad Hinten</label><input type="text" id="gear-rear" placeholder="z.B. 42"></div>
+            </div>
+
+            <div class="sub-header">🔧 Fahrwerk Gabel (Vorne)</div>
+            <div class="form-group"><label>Federvorspannung (Ringe / mm)</label><input type="text" id="fork-preload" placeholder="z.B. 5 Ringen sichtbar / 12mm"></div>
+            <div class="row">
+                <div class="form-group col"><label>Zugstufe (clicks)</label><input type="text" id="fork-rebound" placeholder="z.B. 10 auf"></div>
+                <div class="form-group col"><label>Druckstufe (clicks)</label><input type="text" id="fork-compression" placeholder="z.B. 12 auf"></div>
+            </div>
+
+            <div class="sub-header">🔧 Fahrwerk Federbein (Hinten)</div>
+            <div class="form-group"><label>Federvorspannung (Gewinde / mm)</label><input type="text" id="shock-preload" placeholder="z.B. 10mm Gewinde frei"></div>
+            <div class="row">
+                <div class="form-group col"><label>Zugstufe (clicks)</label><input type="text" id="shock-rebound" placeholder="z.B. 14 auf"></div>
+                <div class="form-group col"><label>Druckstufe (High/Low)</label><input type="text" id="shock-compression" placeholder="z.B. 1.5 Umdrehungen"></div>
+            </div>
+
+            <div class="sub-header">📝 Notizen / Feedback</div>
+            <div class="form-group"><textarea id="setup-notes" rows="3" placeholder="Wie lief der Turn auf dieser Strecke? Grip etc."></textarea></div>
+
+            <button class="action-btn" id="save-setup-btn">Setup speichern</button>
+            <div id="success-message">Erfolgreich gespeichert!</div>
+            <div id="info-message">Gewähltes Setup geladen!</div>
+        </div>
     </div>
 
-    <hr>
-
-    <!-- SETUP BEREICH -->
-    <div id="setup-section" style="display: none;">
-        <h3>3. Setup für gewähltes Bike & Strecke</h3>
+    <!-- ========================================== -->
+    <!-- REITER 2: PACKLISTE (Neuer Baustein)       -->
+    <!-- ========================================== -->
+    <div id="tab-packing" class="tab-content">
+        <h3>🎒 Trackday Packliste</h3>
+        <p style="font-size: 14px; color: #666;">Häkchen setzen, was eingepackt ist. Speichert sich automatisch!</p>
         
-        <!-- Reifendruck -->
-        <div class="sub-header">🛞 Reifendruck (bar)</div>
-        <div class="row">
-            <div class="form-group col">
-                <label>Vorne</label>
-                <input type="text" id="pressure-front" placeholder="z.B. 2.1">
-            </div>
-            <div class="form-group col">
-                <label>Hinten</label>
-                <input type="text" id="pressure-rear" placeholder="z.B. 1.7">
-            </div>
+        <div id="packing-list-container">
+            <!-- Wird dynamisch oder statisch per JS geladen -->
         </div>
-
-        <!-- Übersetzung -->
-        <div class="sub-header">⚙️ Übersetzung</div>
-        <div class="row">
-            <div class="form-group col">
-                <label>Ritzel Vorne</label>
-                <input type="text" id="gear-front" placeholder="z.B. 15">
-            </div>
-            <div class="form-group col">
-                <label>Kettenrad Hinten</label>
-                <input type="text" id="gear-rear" placeholder="z.B. 42">
-            </div>
-        </div>
-
-        <!-- Gabel (Vorne) -->
-        <div class="sub-header">🔧 Fahrwerk Gabel (Vorne)</div>
-        <div class="form-group">
-            <label>Federvorspannung (Ringe / mm)</label>
-            <input type="text" id="fork-preload" placeholder="z.B. 5 Ringen sichtbar / 12mm">
-        </div>
-        <div class="row">
-            <div class="form-group col">
-                <label>Zugstufe (clicks)</label>
-                <input type="text" id="fork-rebound" placeholder="z.B. 10 auf">
-            </div>
-            <div class="form-group col">
-                <label>Druckstufe (clicks)</label>
-                <input type="text" id="fork-compression" placeholder="z.B. 12 auf">
-            </div>
-        </div>
-
-        <!-- Federbein (Hinten) -->
-        <div class="sub-header">🔧 Fahrwerk Federbein (Hinten)</div>
-        <div class="form-group">
-            <label>Federvorspannung (Gewinde / mm)</label>
-            <input type="text" id="shock-preload" placeholder="z.B. 10mm Gewinde frei">
-        </div>
-        <div class="row">
-            <div class="form-group col">
-                <label>Zugstufe (clicks)</label>
-                <input type="text" id="shock-rebound" placeholder="z.B. 14 auf">
-            </div>
-            <div class="form-group col">
-                <label>Druckstufe (High/Low)</label>
-                <input type="text" id="shock-compression" placeholder="z.B. 1.5 Umdrehungen">
-            </div>
-        </div>
-
-        <!-- Notizen -->
-        <div class="sub-header">📝 Notizen / Feedback</div>
-        <div class="form-group">
-            <textarea id="setup-notes" rows="3" placeholder="Wie lief der Turn auf dieser Strecke? Grip etc."></textarea>
-        </div>
-
-        <button id="save-setup-btn">Setup speichern</button>
-        <div id="success-message">Erfolgreich gespeichert!</div>
-        <div id="info-message">Gewähltes Setup geladen!</div>
     </div>
 </div>
 
 <script>
+    /* ========================================== */
+    /* GLOBALER REITER-WECHSEL-CONTROLLER        */
+    /* ========================================== */
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+        if (tabName === 'setup') {
+            document.getElementById('tab-setup').classList.add('active');
+            document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        } else if (tabName === 'packing') {
+            document.getElementById('tab-packing').classList.add('active');
+            document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            renderPackingList(); // Packliste anzeigen, wenn Reiter geöffnet wird
+        }
+    }
+
+
+    /* ========================================== */
+    /* MODUL 1: SETUP LOGIK (Dein Code, intakt)     */
+    /* ========================================== */
     let appState = {
         selectedBikeId: null,
         selectedTrack: 'pannoniaring',
@@ -298,9 +300,7 @@
         const msg = document.getElementById('info-message');
         msg.textContent = text;
         msg.style.display = 'block';
-        setTimeout(() => {
-            msg.style.display = 'none';
-        }, 1500);
+        setTimeout(() => { msg.style.display = 'none'; }, 1500);
     }
 
     document.getElementById('add-bike-btn').addEventListener('click', () => {
@@ -350,7 +350,7 @@
         if (!appState.selectedBikeId) return;
 
         const key = getSetupKey();
-        appState.setups[key] = {
+        appState.setups[Key = key] = {
             front: document.getElementById('pressure-front').value,
             rear: document.getElementById('pressure-rear').value,
             gearFront: document.getElementById('gear-front').value,
@@ -365,14 +365,59 @@
         };
 
         saveData();
-
         const msg = document.getElementById('success-message');
         msg.style.display = 'block';
-        setTimeout(() => {
-            msg.style.display = 'none';
-        }, 2000);
+        setTimeout(() => { msg.style.display = 'none'; }, 2000);
     });
 
+
+    /* ========================================== */
+    /* MODUL 2: PACKLISTEN LOGIK (Hier bauen wir aus)*/
+    /* ========================================== */
+    const defaultPackingItems = [
+        "Motorrad & Zentralständer",
+        "Reifenwärmer & Verlängerungskabel",
+        "Luftdruckprüfer & Pumpe",
+        "Ersatz-Kraftstoff (Benzinkanister)",
+        "Kombination / Lederkombi, Helm, Handschuhe, Stiefel",
+        "Werkzeugkoffer & Klebeband (Panzertape)",
+        "Ersatzteile (Bremsbeläge, Hebel, Ritzel)"
+    ];
+
+    function renderPackingList() {
+        const container = document.getElementById('packing-list-container');
+        // Wenn schon gerendert, nicht neu aufbauen, damit Haken nicht verloren gehen
+        if (container.children.length > 0) return;
+
+        // Gespeicherte Haken aus dem Browser laden
+        const savedPacking = JSON.parse(localStorage.getItem('ur_packing') || '{}');
+
+        defaultPackingItems.forEach((itemText, index) => {
+            const isChecked = savedPacking[index] ? 'checked' : '';
+
+            const div = document.createElement('div');
+            div.className = 'packing-item';
+            div.innerHTML = `
+                <input type="checkbox" id="pack-${index}" ${isChecked} onchange="savePackingState()">
+                <label for="pack-${index}" style="cursor: pointer; font-weight: normal; font-size: 15px;">${itemText}</label>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function savePackingState() {
+        const packingState = {};
+        defaultPackingItems.forEach((_, index) => {
+            const checkbox = document.getElementById(`pack-${index}`);
+            if (checkbox && checkbox.checked) {
+                packingState[index] = true;
+            }
+        });
+        localStorage.setItem('ur_packing', JSON.stringify(packingState));
+    }
+
+
+    // App beim Start initialisieren
     loadData();
     renderBikes();
 </script>
