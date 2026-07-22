@@ -1,1126 +1,145 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UpperRacing</title>
+// Zentraler App-Zustand (State)
+const appState = {
+    selectedBikeId: null,
+    selectedTrack: 'pannoniaring',
+    bikes: [], // Liste aller gespeicherten Motorräder
+    setups: {} // Gespeicherte Setups, verknüpft nach BikeId + Track
+};
 
-    <!-- App-Modus Meta-Tags -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="UpperRacing">
+// Beim Laden der Seite initialisieren
+document.addEventListener('DOMContentLoaded', () => {
+    loadDataFromStorage();
+    initBikeUI();
+});
 
-    <!-- Favicon & Icons -->
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3214/3214738.png" type="image/png">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3214/3214738.png">
+// --- DATEN LADEN & SPEICHERN (LocalStorage) ---
+function loadDataFromStorage() {
+    const savedBikes = localStorage.getItem('upperracing_bikes');
+    const savedSetups = localStorage.getItem('upperracing_setups');
 
-    <!-- Web App Manifest -->
-    <link rel="manifest" href='data:application/manifest+json,{"name":"UpperRacing","short_name":"UpperRacing","start_url":".","display":"standalone","background_color":"#f3f4f6","theme_color":"#2563eb","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3214/3214738.png","sizes":"512x512","type":"image/png"}]}'>
+    if (savedBikes) appState.bikes = JSON.parse(savedBikes);
+    if (savedSetups) appState.setups = JSON.parse(savedSetups);
+}
 
-    <style>
-        :root {
-            --bg-color: #f3f4f6;
-            --card-bg: #ffffff;
-            --primary: #2563eb;
-            --text: #111827;
-            --text-muted: #4b5563;
-            --border: #d1d5db;
-            --danger: #dc2626;
-            --success: #16a34a;
-            --warning: #d97706;
+function saveToStorage() {
+    localStorage.setItem('upperracing_bikes', JSON.stringify(appState.bikes));
+    localStorage.setItem('upperracing_setups', JSON.stringify(appState.setups));
+}
+
+// --- FAHRZEUG-LOGIK ---
+function initBikeUI() {
+    // Hier kannst du die HTML-Elemente verknüpfen (Beispiel-IDs, passe sie einfach an dein HTML an)
+    const bikeSelect = document.getElementById('bike-select');
+    const addBikeBtn = document.getElementById('add-bike-btn');
+
+    // Dropdown aktualisieren
+    renderBikeDropdown();
+
+    // Event: Anderes Motorrad ausgewählt
+    if (bikeSelect) {
+        bikeSelect.addEventListener('change', (e) => {
+            appState.selectedBikeId = e.target.value;
+            loadSetupForCurrentSelection();
+        });
+    }
+
+    // Event: Neues Motorrad hinzufügen (z.B. per Modal oder Eingabefeldern)
+    if (addBikeBtn) {
+        addbikeBtn.addEventListener('click', () => {
+            // Beispiel-Werte aus deinen Input-Feldern auslesen
+            const brand = document.getElementById('bike-brand-input').value;
+            const model = document.getElementById('bike-model-input').value;
+            const year = document.getElementById('bike-year-input').value;
+
+            if (!brand || !model) {
+                alert('Bitte Marke und Modell angeben!');
+                return;
+            }
+
+            const newBike = {
+                id: 'bike_' + Date.now(),
+                brand: brand,
+                model: model,
+                year: year
+            };
+
+            appState.bikes.push(newBike);
+            appState.selectedBikeId = newBike.id;
+            saveToStorage();
+            renderBikeDropdown();
+            loadSetupForCurrentSelection();
+        });
+    }
+}
+
+function renderBikeDropdown() {
+    const bikeSelect = document.getElementById('bike-select');
+    if (!bikeSelect) return;
+
+    bikeSelect.innerHTML = '<option value="">-- Motorrad wählen --</option>';
+    
+    appState.bikes.forEach(bike => {
+        const option = document.createElement('option');
+        option.value = bike.id;
+        option.textContent = `${bike.brand} ${bike.model} (${bike.year || 'k.A.'})`;
+        if (bike.id === appState.selectedBikeId) {
+            option.selected = true;
         }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text);
-            margin: 0;
-            padding: 10px;
-            -webkit-user-select: none;
-            user-select: none;
-            overscroll-behavior-y: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-        input, textarea, select {
-            -webkit-user-select: text;
-            user-select: text;
-        }
-        .container { max-width: 650px; margin: 0 auto; }
-        header {
-            background: #111827; color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center;
-        }
-        header h1 { margin: 0; font-size: 1.3rem; }
-        
-        .nav-tabs { display: flex; gap: 4px; margin-bottom: 15px; overflow-x: auto; }
-        .tab-btn {
-            flex: 1; padding: 8px 4px; background: #e5e7eb; color: var(--text); border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.75rem; margin-top: 0; text-align: center; white-space: nowrap;
-        }
-        .tab-btn.active { background: var(--primary); color: white; }
+        bikeSelect.appendChild(option);
+    });
+}
 
-        .selector-box, .setup-box, .pack-box {
-            background: var(--card-bg); padding: 14px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border);
-        }
-        select, input, textarea {
-            width: 100%; padding: 8px; margin-top: 4px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box; font-size: 0.9rem;
-        }
-        
-        .curve-card {
-            background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 10px;
-        }
-        .curve-header-row {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;
-        }
-        .curve-header { font-weight: bold; color: var(--primary); font-size: 1rem; }
-        .direction-input {
-            width: 50px !important; padding: 4px !important; margin: 0 !important; text-align: center; font-weight: bold; text-transform: uppercase;
-        }
-        
-        .traffic-light-container {
-            display: flex; gap: 4px; background: #f3f4f6; padding: 4px; border-radius: 20px; border: 1px solid var(--border);
-        }
-        .tl-btn {
-            width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; background-color: #d1d5db; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; padding: 0; transition: 0.2s;
-        }
-        .tl-btn.red.active { background-color: #ef4444; border-color: #991b1b; box-shadow: 0 0 5px #ef4444; }
-        .tl-btn.yellow.active { background-color: #f59e0b; border-color: #92400e; box-shadow: 0 0 5px #f59e0b; }
-        .tl-btn.green.active { background-color: #10b981; border-color: #065f46; box-shadow: 0 0 5px #10b981; }
+// --- SETUP-LOGIK ---
+function loadSetupForCurrentSelection() {
+    if (!appState.selectedBikeId) return;
 
-        .curve-details { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
-        .btn-toggle-details {
-            background: #f3f4f6; color: var(--text-muted); border: 1px solid var(--border); padding: 6px; width: 100%; border-radius: 4px; font-size: 0.8rem; cursor: pointer; margin-top: 5px; text-align: center; font-weight: bold;
-        }
+    // Eindeutiger Schlüssel für die Kombination aus Bike und Strecke
+    const setupKey = `${appState.selectedBikeId}_${appState.selectedTrack}`;
+    const currentSetup = appState.setups[setupKey] || {};
 
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-        .grid-4 { display: grid; grid-template-columns: 1fr 1.2fr 1.2fr 1.2fr; gap: 6px; }
-        
-        .pressure-group { display: flex; gap: 4px; align-items: center; }
-        .pressure-group input { margin-bottom: 0 !important; }
-        .btn-pressure {
-            background: #e5e7eb; color: var(--text); border: 1px solid var(--border); padding: 8px 10px; width: auto; margin-top: 4px; margin-bottom: 8px; font-size: 0.85rem; border-radius: 4px; font-weight: bold; cursor: pointer;
-        }
+    // Felder im HTML mit den gespeicherten Werten füllen (Beispiele)
+    setInputValue('reifendruck-v', currentSetup.reifendruckV);
+    setInputValue('reifendruck-h', currentSetup.reifendruckH);
+    setInputValue('notizen-turn', currentSetup.notizen);
+}
 
-        button {
-            background-color: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1rem;
-        }
-        .btn-secondary { background-color: #4b5563; margin-top: 5px; }
-        .btn-warning { background-color: var(--warning); margin-top: 5px; }
-        .btn-success { background-color: var(--success); }
-        .btn-danger { background-color: var(--danger); color: white; margin-top: 5px; }
-        .btn-small-danger {
-            background-color: #fee2e2; color: var(--danger); border: 1px solid #fca5a5; padding: 4px 8px; font-size: 0.75rem; font-weight: bold; border-radius: 4px; width: auto; margin: 0; cursor: pointer;
-        }
+function saveCurrentSetup() {
+    if (!appState.selectedBikeId) {
+        alert('Bitte zuerst ein Motorrad auswählen!');
+        return;
+    }
 
-        .save-notice { text-align: center; font-size: 0.85rem; color: green; margin-top: 8px; font-weight: bold; display: none; }
-        h3 { margin-top: 0; color: #1f2937; font-size: 1.05rem; }
+    const setupKey = `${appState.selectedBikeId}_${appState.selectedTrack}`;
 
-        .alltime-container { margin-bottom: 15px; }
-        .alltime-box {
-            background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 2px solid #f59e0b; border-radius: 8px; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center;
-        }
-        .alltime-title { font-size: 0.8rem; font-weight: bold; color: #b45309; text-transform: uppercase; margin-bottom: 6px; display: block; }
-        .alltime-value { font-size: 1.3rem; font-weight: 800; color: #92400e; }
-        .alltime-date { font-size: 0.75rem; color: #78350f; }
-        
-        .lap-analysis-box {
-            background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-top: 8px; margin-bottom: 8px; font-size: 0.85rem; max-height: 150px; overflow-y: auto;
-        }
-
-        .setup-section-title {
-            font-size: 0.8rem; font-weight: bold; color: var(--primary); text-transform: uppercase; margin-top: 14px; margin-bottom: 6px; border-bottom: 1px solid #e5e7eb; padding-bottom: 3px;
-        }
-
-        .pack-category-container { margin-bottom: 15px; }
-        .pack-category {
-            font-weight: bold; color: var(--primary); margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid var(--border); padding-bottom: 3px; display: flex; justify-content: space-between; align-items: center;
-        }
-        .pack-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 0.95rem; padding-left: 4px; }
-        .pack-item-left { display: flex; align-items: center; gap: 10px; flex: 1; }
-        .pack-item input[type="checkbox"] { width: 20px; height: 20px; margin: 0; cursor: pointer; }
-        .category-add-box { display: flex; gap: 6px; margin-top: 6px; margin-bottom: 10px; padding-left: 4px; }
-        .category-add-box input { margin: 0; padding: 6px; font-size: 0.85rem; }
-        .category-add-box button { margin: 0; width: auto; padding: 6px 12px; font-size: 0.8rem; }
-
-        .page-content { display: none; }
-        .page-content.active { display: block; }
-        
-        .img-container { position: relative; margin-top: 5px; display: none; width: fit-content; }
-        .img-preview { max-width: 100%; max-height: 150px; border-radius: 4px; border: 1px solid var(--border); cursor: pointer; display: block; }
-        .delete-img-btn {
-            position: absolute; top: 5px; right: 5px; background: rgba(220, 38, 38, 0.85); color: white; border: none; border-radius: 50%; width: 26px; height: 26px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; margin: 0; padding: 0;
-        }
-        
-        #imageModal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); text-align: center; }
-        #modalImg { max-width: 90%; max-height: 85vh; margin-top: 5vh; border-radius: 6px; }
-        #closeModal { position: absolute; top: 15px; right: 25px; color: white; font-size: 35px; font-weight: bold; cursor: pointer; }
-    </style>
-</head>
-<body onload="initApp()">
-
-<div class="container">
-    <header>
-        <h1>UpperRacing</h1>
-        <p style="margin:5px 0 0; font-size:0.8rem; color:#93c5fd;">Protokoll, Setup & Rundenzeiten</p>
-    </header>
-
-    <div class="nav-tabs">
-        <button id="tabAppBtn" class="tab-btn active" onclick="switchPage('app')">🏁 Setup</button>
-        <button id="tabCurvesBtn" class="tab-btn" onclick="switchPage('curves')">🗺️ Kurven</button>
-        <button id="tabLapsBtn" class="tab-btn" onclick="switchPage('laps')">⏱️ Zeiten</button>
-        <button id="tabCupBtn" class="tab-btn" onclick="switchPage('cup')">🌐 Cup</button>
-        <button id="tabPackBtn" class="tab-btn" onclick="switchPage('pack')">🎒 Packen</button>
-    </div>
-
-    <div id="selectorBoxContainer" class="selector-box">
-        <div class="grid-2" style="margin-bottom:0;">
-            <div>
-                <label for="trackSelect"><strong>Rennstrecke:</strong></label>
-                <select id="trackSelect" onchange="onTrackChange()">
-                    <option value="pannoniaring">Pannoniaring (18 Kurven)</option>
-                    <option value="slovakia">Slovakiaring (14 Kurven)</option>
-                    <option value="brünn">Automotodrom Brno / Brünn (14 Kurven)</option>
-                    <option value="most">Autodrom Most (21 Kurven)</option>
-                    <option value="grobnik">Automotodrom Grobnik / Rijeka (18 Kurven)</option>
-                </select>
-            </div>
-            <div>
-                <label for="sessionSelect"><strong>Speicher (Datum & Zeit):</strong></label>
-                <select id="sessionSelect" onchange="onSessionChange()"></select>
-            </div>
-        </div>
-    </div>
-
-    <!-- SEITE 1: STRECKEN & SETUP -->
-    <div id="pageApp" class="page-content active">
-        <div class="setup-box">
-            <h3>Turn Setup & Fahrwerk</h3>
-            
-            <div class="setup-section-title">🛞 Reifendruck</div>
-            <div class="grid-2">
-                <div>
-                    <label style="font-size:0.75rem">Vorne</label>
-                    <div class="pressure-group">
-                        <input type="text" id="tireFront" placeholder="z.B. 2.1">
-                        <button type="button" class="btn-pressure" onclick="adjustPressure('tireFront', -0.1)">-</button>
-                        <button type="button" class="btn-pressure" onclick="adjustPressure('tireFront', 0.1)">+</button>
-                    </div>
-                </div>
-                <div>
-                    <label style="font-size:0.75rem">Hinten</label>
-                    <div class="pressure-group">
-                        <input type="text" id="tireRear" placeholder="z.B. 1.9">
-                        <button type="button" class="btn-pressure" onclick="adjustPressure('tireRear', -0.1)">-</button>
-                        <button type="button" class="btn-pressure" onclick="adjustPressure('tireRear', 0.1)">+</button>
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <label style="font-size:0.75rem; font-weight:bold; color:var(--text-muted); margin-top:6px; display:block;">Reifenbild / Verschleiß (Foto)</label>
-                <input type="file" id="tireImageInput" accept="image/*" onchange="handleImageUpload(event)">
-                <div id="tireImageContainer" class="img-container">
-                    <img id="tireImagePreview" class="img-preview" alt="Reifenbild Vorschau" onclick="openModal(this.src)">
-                    <button type="button" class="delete-img-btn" onclick="deleteTireImage()" title="Bild löschen">✕</button>
-                </div>
-            </div>
-
-            <div class="setup-section-title">🌡️ Bedingungen & Übersetzung</div>
-            <div class="grid-3">
-                <div>
-                    <label style="font-size:0.75rem">Außen / Asph.</label>
-                    <input type="text" id="outsideTemp" placeholder="24°/35°">
-                </div>
-                <div>
-                    <label style="font-size:0.75rem">Grip & Wetter</label>
-                    <input type="text" id="gripNotes" placeholder="Sonne, super Grip">
-                </div>
-                <div>
-                    <label style="font-size:0.75rem">Übersetzung</label>
-                    <input type="text" id="gearing" placeholder="15/42">
-                </div>
-            </div>
-
-            <div class="setup-section-title">⚙️ Fahrwerkseinstellungen (v / h)</div>
-            <div class="grid-3">
-                <div>
-                    <label style="font-size:0.75rem">Zugstufe</label>
-                    <input type="text" id="rebound" placeholder="8 / 10">
-                </div>
-                <div>
-                    <label style="font-size:0.75rem">Druckstufe</label>
-                    <input type="text" id="compression" placeholder="6 / 8">
-                </div>
-                <div>
-                    <label style="font-size:0.75rem">Vorspannung</label>
-                    <input type="text" id="preload" placeholder="5R / 12mm">
-                </div>
-            </div>
-
-            <div class="setup-section-title">📝 Turn-Feedback / Notizen</div>
-            <div>
-                <textarea id="quickFeedback" rows="3" placeholder="Z.B. Vorderrad stempelt beim harten Anbremsen in T1..."></textarea>
-            </div>
-        </div>
-
-        <button class="btn-success" onclick="saveData()">💾 Speichern</button>
-        <button class="btn-secondary" onclick="startNewSessionForm()">➕ Neuer Eintrag</button>
-        <button class="btn-warning" onclick="saveAsBaseline()">⭐ Aktuelles Setup als Basis-Setup speichern</button>
-        <button class="btn-secondary" onclick="loadBaseline()">⭐ Basis-Setup laden</button>
-        <button class="btn-danger" onclick="deleteCurrentSession()">🗑️ Diesen Eintrag löschen</button>
-        <button class="btn-secondary" onclick="exportData()">Daten Teilen / Exportieren</button>
-        <div id="saveNotice" class="save-notice">Erfolgreich gespeichert!</div>
-    </div>
-
-    <!-- SEITE 2: KURVEN & LINIE -->
-    <div id="pageCurves" class="page-content">
-        <div class="setup-box">
-            <h3>🗺️ Strecken- & Kurvennotizen</h3>
-            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0;">
-                Bewerte deine Kurven mit der Ampel (🔴 🟡 🟢) und klappe die Profi-Details aus. Werden automatisch mitgespeichert.
-            </p>
-        </div>
-        <div id="curvesContainer"></div>
-        <button class="btn-success" onclick="saveData()">💾 Speichern</button>
-        <div id="saveNoticeCurves" class="save-notice">Kurven erfolgreich gespeichert!</div>
-    </div>
-
-    <!-- SEITE 3: RUNDENZEITEN -->
-    <div id="pageLaps" class="page-content">
-        <div class="setup-box">
-            <div class="alltime-container">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                    <span class="alltime-title" style="margin:0;">🏆 All-Time-Best (Strecken-Rekord)</span>
-                    <button type="button" class="btn-small-danger" onclick="confirmClearAllTimeBest()">🗑️ Rekord löschen</button>
-                </div>
-                <div class="alltime-box">
-                    <div>
-                        <div id="allTimeDate" class="alltime-date">Noch keine Zeit</div>
-                    </div>
-                    <div>
-                        <div id="allTimeValue" class="alltime-value">--:--.---</div>
-                    </div>
-                </div>
-            </div>
-
-            <h3>⏱️ Rundenzeiten & Stints</h3>
-            
-            <div style="background: #f0fdf4; border: 1px dashed var(--success); padding: 10px; border-radius: 6px; margin-top:12px;">
-                <label style="font-size:0.8rem; font-weight:bold; color:var(--success); display:block;">📸 Zettel abfotografieren & einlesen</label>
-                <input type="file" accept="image/*" capture="environment" id="lapPhotoInput" onchange="handleLapPhotoScan(event)">
-                <div id="scanStatus" style="font-size: 0.8rem; font-weight: bold; margin-top: 5px; color: var(--success); display: none;">Foto analysiert!</div>
-            </div>
-
-            <div style="background: #fff; border: 1px dashed var(--primary); padding: 10px; border-radius: 6px; margin-top: 10px;">
-                <label style="font-size:0.85rem; font-weight:bold; color:var(--primary); display:block; margin-bottom:6px;">➕ Manuell hinzufügen</label>
-                <div class="grid-4">
-                    <div><label style="font-size:0.7rem; color:var(--text-muted)">Runde</label><input type="number" id="manualLapNum" placeholder="Nr."></div>
-                    <div><label style="font-size:0.7rem; color:var(--text-muted)">Minuten</label><input type="number" id="manualMin" placeholder="2"></div>
-                    <div><label style="font-size:0.7rem; color:var(--text-muted)">Sekunden</label><input type="number" id="manualSec" placeholder="05"></div>
-                    <div><label style="font-size:0.7rem; color:var(--text-muted)">Hundertstel</label><input type="number" id="manualMs" placeholder="10"></div>
-                </div>
-                <button type="button" class="btn-success" style="margin-top:6px;" onclick="addManualLap()">Runde hinzufügen</button>
-            </div>
-
-            <div style="margin-top: 12px;">
-                <label style="font-size:0.75rem; font-weight:bold; color:var(--primary);">Gespeicherte Rundenzeiten (Protokoll)</label>
-                <textarea id="lapTimes" rows="6" oninput="analyzeLaps()"></textarea>
-            </div>
-            <button type="button" class="btn-danger" onclick="confirmClearLaps()">🗑️ Alle Rundenzeiten löschen</button>
-
-            <div id="lapAnalysis" class="lap-analysis-box" style="display:none;"></div>
-
-            <button class="btn-success" onclick="saveData()">💾 Zeiten speichern</button>
-            <div id="saveNoticeLaps" class="save-notice">Zeiten erfolgreich gespeichert!</div>
-        </div>
-    </div>
-
-    <!-- SEITE 4: CUP -->
-    <div id="pageCup" class="page-content">
-        <div class="setup-box">
-            <h3>🌐 Cup-Ergebnisse (PDF)</h3>
-            <button type="button" class="btn-success" style="font-size: 1.1rem; padding: 15px;" onclick="openCupInBrowser()">📄 Cup-PDF öffnen</button>
-            <div style="margin-top:20px;">
-                <label style="font-size:0.75rem; font-weight:bold; color:var(--primary)">PDF-Link anpassen:</label>
-                <div style="display: flex; gap: 8px;">
-                    <input type="url" id="cupUrlInput" placeholder="https://..." style="margin-bottom:0;">
-                    <button type="button" class="btn-secondary" style="margin-top:0; width:auto; padding: 0 15px;" onclick="saveCupUrl()">Speichern</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- SEITE 5: PACKLISTE -->
-    <div id="pagePack" class="page-content">
-        <div class="pack-box">
-            <h3>Packliste</h3>
-            <div style="background: #f8fafc; border: 1px solid var(--border); padding: 10px; border-radius: 6px; margin-bottom: 15px;">
-                <div class="grid-2" style="margin-bottom: 6px;">
-                    <div>
-                        <label for="packDateSelect" style="font-size:0.75rem; font-weight:bold;">📅 Speicher-Datum:</label>
-                        <select id="packDateSelect" onchange="onPackDateChange()"></select>
-                    </div>
-                    <div style="display: flex; align-items: flex-end;">
-                        <button type="button" class="btn-secondary" style="margin-top:0; padding: 8px; font-size: 0.8rem;" onclick="startNewPackSession()">➕ Neues Datum</button>
-                    </div>
-                </div>
-                <button type="button" class="btn-success" style="margin-top: 4px; padding: 8px; font-size: 0.85rem;" onclick="savePacking(true)">💾 Packliste speichern</button>
-                <div id="saveNoticePack" class="save-notice">Erfolgreich gespeichert!</div>
-            </div>
-
-            <!-- Kategorien 1-4 -->
-            <div class="pack-category-container">
-                <div class="pack-category"><span>🏍️ Motorrad & Technik</span></div>
-                <div id="cat_items_1">
-                    <div class="pack-item" data-id="p1"><div class="pack-item-left"><input type="checkbox" id="p1" onchange="savePacking()"><label for="p1">Motorrad</label></div></div>
-                    <div class="pack-item" data-id="p2"><div class="pack-item-left"><input type="checkbox" id="p2" onchange="savePacking()"><label for="p2">Zweitschlüssel & Papiere</label></div></div>
-                    <div class="pack-item" data-id="p3"><div class="pack-item-left"><input type="checkbox" id="p3" onchange="savePacking()"><label for="p3">Reifenwärmer</label></div></div>
-                    <div class="pack-item" data-id="p4"><div class="pack-item-left"><input type="checkbox" id="p4" onchange="savePacking()"><label for="p4">Reifendruckprüfer</label></div></div>
-                    <div class="pack-item" data-id="p5"><div class="pack-item-left"><input type="checkbox" id="p5" onchange="savePacking()"><label for="p5">Ersatzreifen</label></div></div>
-                    <div class="pack-item" data-id="p7"><div class="pack-item-left"><input type="checkbox" id="p7" onchange="savePacking()"><label for="p7">Tankkanister (Benzin)</label></div></div>
-                </div>
-                <div class="category-add-box"><input type="text" id="add_input_1" placeholder="Neues Teil..."><button type="button" onclick="addCategoryItem(1)">Hinzufügen</button></div>
-            </div>
-
-            <div class="pack-category-container">
-                <div class="pack-category"><span>🛠️ Werkzeug</span></div>
-                <div id="cat_items_2">
-                    <div class="pack-item" data-id="p9"><div class="pack-item-left"><input type="checkbox" id="p9" onchange="savePacking()"><label for="p9">Werkzeugkasten</label></div></div>
-                    <div class="pack-item" data-id="p11"><div class="pack-item-left"><input type="checkbox" id="p11" onchange="savePacking()"><label for="p11">Montierständer</label></div></div>
-                    <div class="pack-item" data-id="p12"><div class="pack-item-left"><input type="checkbox" id="p12" onchange="savePacking()"><label for="p12">Pavillon / Zelt</label></div></div>
-                    <div class="pack-item" data-id="p14"><div class="pack-item-left"><input type="checkbox" id="p14" onchange="savePacking()"><label for="p14">Kabelbinder & Panzertape</label></div></div>
-                </div>
-                <div class="category-add-box"><input type="text" id="add_input_2" placeholder="Neues Werkzeug..."><button type="button" onclick="addCategoryItem(2)">Hinzufügen</button></div>
-            </div>
-
-            <div class="pack-category-container">
-                <div class="pack-category"><span>🧑‍วม Bekleidung</span></div>
-                <div id="cat_items_3">
-                    <div class="pack-item" data-id="p16"><div class="pack-item-left"><input type="checkbox" id="p16" onchange="savePacking()"><label for="p16">Lederkombi</label></div></div>
-                    <div class="pack-item" data-id="p17"><div class="pack-item-left"><input type="checkbox" id="p17" onchange="savePacking()"><label for="p17">Helm</label></div></div>
-                    <div class="pack-item" data-id="p18"><div class="pack-item-left"><input type="checkbox" id="p18" onchange="savePacking()"><label for="p18">Stiefel & Handschuhe</label></div></div>
-                    <div class="pack-item" data-id="p19"><div class="pack-item-left"><input type="checkbox" id="p19" onchange="savePacking()"><label for="p19">Rückenprotektor</label></div></div>
-                </div>
-                <div class="category-add-box"><input type="text" id="add_input_3" placeholder="Neues Kleidungsstück..."><button type="button" onclick="addCategoryItem(3)">Hinzufügen</button></div>
-            </div>
-
-            <div class="pack-category-container">
-                <div class="pack-category"><span>🍎 Verpflegung</span></div>
-                <div id="cat_items_4">
-                    <div class="pack-item" data-id="p24"><div class="pack-item-left"><input type="checkbox" id="p24" onchange="savePacking()"><label for="p24">Wasser</label></div></div>
-                    <div class="pack-item" data-id="p25"><div class="pack-item-left"><input type="checkbox" id="p25" onchange="savePacking()"><label for="p25">Snacks</label></div></div>
-                    <div class="pack-item" data-id="p26"><div class="pack-item-left"><input type="checkbox" id="p26" onchange="savePacking()"><label for="p26">Smartphone & Ladekabel</label></div></div>
-                </div>
-                <div class="category-add-box"><input type="text" id="add_input_4" placeholder="Sonstiges..."><button type="button" onclick="addCategoryItem(4)">Hinzufügen</button></div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="imageModal" onclick="closeModal()">
-    <span id="closeModal">&times;</span>
-    <img id="modalImg">
-</div>
-
-<script>
-    const trackDirections = {
-        pannoniaring: ["R", "R", "L", "L", "R", "R", "L", "L", "R", "R", "R", "L", "R", "L", "L", "R", "R", "R"],
-        slovakia:     ["", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-        brünn:        ["", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-        most:         ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-        grobnik:      ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+    // Werte aus den HTML-Feldern einsammeln
+    appState.setups[setupKey] = {
+        reifendruckV: getInputValue('reifendruck-v'),
+        reifendruckH: getInputValue('reifendruck-h'),
+        notizen: getInputValue('notizen-turn'),
+        updatedAt: new Date().toISOString()
     };
-    const tracks = { pannoniaring: 18, slovakia: 14, brünn: 14, most: 21, grobnik: 18 };
 
-    let storedImageBase64 = "";
+    saveToStorage();
+    
+    // Visuelles Feedback (z.B. "Erfolgreich gespeichert!" einblenden)
+    showSaveSuccessMessage();
+}
 
-    function getFormattedTimestamp(date = new Date()) {
-        const d = String(date.getDate()).padStart(2, '0');
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const y = date.getFullYear();
-        const hh = String(date.getHours()).padStart(2, '0');
-        const mm = String(date.getMinutes()).padStart(2, '0');
-        return `${d}.${m}.${y}, ${hh}:${mm}`;
+// Hilfsfunktionen für Inputs
+function setInputValue(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.value = value || '';
+}
+
+function getInputValue(id) {
+    const el = document.getElementById(id);
+    return el ? el.value : '';
+}
+
+function showSaveSuccessMessage() {
+    const msg = document.getElementById('success-message');
+    if (msg) {
+        msg.style.display = 'block';
+        setTimeout(() => { msg.style.display = 'none'; }, 2000);
     }
-
-    function switchPage(page) {
-        document.querySelectorAll('.page-content, .tab-btn').forEach(el => el.classList.remove('active'));
-        
-        const selectorBox = document.getElementById('selectorBoxContainer');
-        selectorBox.style.display = (page === 'cup' || page === 'pack') ? 'none' : 'block';
-
-        document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1)).classList.add('active');
-        document.getElementById('tab' + page.charAt(0).toUpperCase() + page.slice(1) + 'Btn').classList.add('active');
-
-        if (page === 'laps') { analyzeLaps(); }
-        if (page === 'cup') { loadSavedCupUrl(); }
-        if (page === 'pack') { initPackDropdown(); }
-    }
-
-    function initApp() {
-        renderCurvesStructure();
-        updateSessionDropdown();
-        loadSavedCupUrl();
-        updateAllTimeBestDisplay();
-    }
-
-    function renderCurvesStructure() {
-        const trackKey = document.getElementById('trackSelect').value;
-        const totalCurves = tracks[trackKey];
-        const directions = trackDirections[trackKey];
-        const container = document.getElementById('curvesContainer');
-        container.innerHTML = '';
-
-        container.innerHTML += createCurveHTML('start', 'Start / Ziel', false, '');
-        for (let i = 1; i <= totalCurves; i++) {
-            container.innerHTML += createCurveHTML(i, `Kurve ${i}`, true, directions[i - 1] || '');
-        }
-        loadDataForTrack();
-    }
-
-    function createCurveHTML(id, title, showDir, defaultDir) {
-        let dirField = showDir ? `<input type="text" id="dir_${id}" class="direction-input" value="${defaultDir}" placeholder="L/R" maxlength="3">` : '';
-        
-        return `
-            <div class="curve-card">
-                <div class="curve-header-row">
-                    <div class="curve-header">${title}</div>
-                    
-                    <div class="traffic-light-container">
-                        <input type="hidden" id="light_val_${id}" value="">
-                        <button type="button" id="light_${id}_red" class="tl-btn red" onclick="setTrafficLight('${id}', 'red')" title="Verliere Zeit / Unsicher">🔴</button>
-                        <button type="button" id="light_${id}_yellow" class="tl-btn yellow" onclick="setTrafficLight('${id}', 'yellow')" title="Geht so / Luft nach oben">🟡</button>
-                        <button type="button" id="light_${id}_green" class="tl-btn green" onclick="setTrafficLight('${id}', 'green')" title="Perfekt am Limit">🟢</button>
-                    </div>
-
-                    ${dirField}
-                </div>
-                
-                <div class="grid-2">
-                    <div>
-                        <label style="font-size:0.75rem">Bremspunkt</label>
-                        <input type="text" id="brake_${id}" placeholder="z.B. 100m Schild">
-                    </div>
-                    <div>
-                        <label style="font-size:0.75rem">Gang</label>
-                        <input type="text" id="gear_${id}" placeholder="z.B. 3. Gang">
-                    </div>
-                </div>
-
-                <div>
-                    <label style="font-size:0.75rem">Ideallinie / Notizen</label>
-                    <textarea id="notes_${id}" rows="1" placeholder="Spät einlenken..."></textarea>
-                </div>
-
-                <button type="button" class="btn-toggle-details" onclick="toggleCurveDetails('${id}')">▼ Profi-Details ausklappen</button>
-                
-                <div id="details_${id}" class="curve-details">
-                    <div class="grid-2">
-                        <div>
-                            <label style="font-size:0.75rem">Einlenkpunkt (Turn-in)</label>
-                            <input type="text" id="turnin_${id}" placeholder="z.B. Ende Curb links">
-                        </div>
-                        <div>
-                            <label style="font-size:0.75rem">Gasanlegepunkt (Throttle)</label>
-                            <input type="text" id="throttle_${id}" placeholder="z.B. Am Apex">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    function setTrafficLight(id, color) {
-        document.getElementById(`light_${id}_red`).classList.remove('active');
-        document.getElementById(`light_${id}_yellow`).classList.remove('active');
-        document.getElementById(`light_${id}_green`).classList.remove('active');
-
-        document.getElementById(`light_${id}_${color}`).classList.add('active');
-        document.getElementById(`light_val_${id}`).value = color;
-    }
-
-    function toggleCurveDetails(id) {
-        const details = document.getElementById(`details_${id}`);
-        const btn = details.previousElementSibling;
-        if (details.style.display === 'block') {
-            details.style.display = 'none';
-            btn.innerText = '▼ Profi-Details ausklappen';
-        } else {
-            details.style.display = 'block';
-            btn.innerText = '▲ Profi-Details einklappen';
-        }
-    }
-
-    function adjustPressure(id, amount) {
-        const input = document.getElementById(id);
-        let val = parseFloat(input.value.replace(',', '.')) || 0.0;
-        val = Math.max(0, val + amount);
-        input.value = val.toFixed(1);
-    }
-
-    function handleImageUpload(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                storedImageBase64 = e.target.result;
-                document.getElementById('tireImagePreview').src = storedImageBase64;
-                document.getElementById('tireImageContainer').style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        }
-    }
-
-    function deleteTireImage() {
-        storedImageBase64 = "";
-        document.getElementById('tireImageInput').value = "";
-        document.getElementById('tireImageContainer').style.display = 'none';
-    }
-
-    function openModal(src) {
-        document.getElementById('modalImg').src = src;
-        document.getElementById('imageModal').style.display = 'block';
-    }
-
-    function closeModal() {
-        document.getElementById('imageModal').style.display = 'none';
-    }
-
-    function getStorageKey() {
-        const track = document.getElementById('trackSelect').value;
-        const sessionSelect = document.getElementById('sessionSelect');
-        let session = sessionSelect ? sessionSelect.value : "";
-        if (!session) {
-            session = getFormattedTimestamp();
-        }
-        return `upperracing_${track}_${session}`;
-    }
-
-    function updateSessionDropdown() {
-        const track = document.getElementById('trackSelect').value;
-        const sessionSelect = document.getElementById('sessionSelect');
-        const savedKeys = Object.keys(localStorage).filter(k => k.startsWith(`upperracing_${track}_`));
-        
-        let sessions = savedKeys.map(k => k.split('_')[2]);
-        if (sessions.length === 0) {
-            sessions = [getFormattedTimestamp()];
-        }
-        sessions = [...new Set(sessions)].sort();
-
-        sessionSelect.innerHTML = '';
-        sessions.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s;
-            opt.innerText = s;
-            sessionSelect.appendChild(opt);
-        });
-
-        if (sessions.length > 0) {
-            sessionSelect.value = sessions[sessions.length - 1];
-        }
-        loadSessionData();
-    }
-
-    function onTrackChange() {
-        renderCurvesStructure();
-        updateSessionDropdown();
-        updateAllTimeBestDisplay();
-    }
-
-    function onSessionChange() {
-        loadSessionData();
-    }
-
-    function startNewSessionForm() {
-        const defaultName = getFormattedTimestamp();
-        const name = prompt("Name / Datum & Uhrzeit für den neuen Speicher:", defaultName);
-        if (!name) return;
-        const sessionSelect = document.getElementById('sessionSelect');
-        let exists = false;
-        for (let opt of sessionSelect.options) {
-            if (opt.value === name) exists = true;
-        }
-        if (!exists) {
-            const opt = document.createElement('option');
-            opt.value = name;
-            opt.innerText = name;
-            sessionSelect.appendChild(opt);
-        }
-        sessionSelect.value = name;
-        
-        document.getElementById('outsideTemp').value = '';
-        document.getElementById('gripNotes').value = '';
-        document.getElementById('quickFeedback').value = '';
-        document.getElementById('lapTimes').value = '';
-        deleteTireImage();
-
-        const trackKey = document.getElementById('trackSelect').value;
-        const savedBase = localStorage.getItem(`baseline_${trackKey}`);
-        if (savedBase) {
-            try {
-                const bData = JSON.parse(savedBase);
-                document.getElementById('tireFront').value = bData.tireFront || '';
-                document.getElementById('tireRear').value = bData.tireRear || '';
-                document.getElementById('gearing').value = bData.gearing || '';
-                document.getElementById('rebound').value = bData.rebound || '';
-                document.getElementById('compression').value = bData.compression || '';
-                document.getElementById('preload').value = bData.preload || '';
-            } catch(e) {}
-        }
-
-        saveData();
-    }
-
-    function saveData() {
-        const sessionSelect = document.getElementById('sessionSelect');
-        
-        if (!sessionSelect.value) {
-            const newSessionName = getFormattedTimestamp();
-            const opt = document.createElement('option');
-            opt.value = newSessionName;
-            opt.innerText = newSessionName;
-            sessionSelect.appendChild(opt);
-            sessionSelect.value = newSessionName;
-        }
-
-        const key = getStorageKey();
-        const track = document.getElementById('trackSelect').value;
-        const data = {
-            tireFront: document.getElementById('tireFront').value,
-            tireRear: document.getElementById('tireRear').value,
-            tireImage: storedImageBase64,
-            outsideTemp: document.getElementById('outsideTemp').value,
-            gripNotes: document.getElementById('gripNotes').value,
-            gearing: document.getElementById('gearing').value,
-            rebound: document.getElementById('rebound').value,
-            compression: document.getElementById('compression').value,
-            preload: document.getElementById('preload').value,
-            quickFeedback: document.getElementById('quickFeedback').value,
-            lapTimes: document.getElementById('lapTimes').value
-        };
-
-        const totalCurves = tracks[track];
-        let curvesData = {};
-        for (let i = 1; i <= totalCurves; i++) {
-            curvesData[i] = {
-                light: document.getElementById(`light_val_${i}`).value,
-                dir: document.getElementById(`dir_${i}`) ? document.getElementById(`dir_${i}`).value : '',
-                brake: document.getElementById(`brake_${i}`).value,
-                gear: document.getElementById(`gear_${i}`).value,
-                notes: document.getElementById(`notes_${i}`).value,
-                turnin: document.getElementById(`turnin_${i}`).value,
-                throttle: document.getElementById(`throttle_${i}`).value
-            };
-        }
-        data.curves = curvesData;
-
-        localStorage.setItem(key, JSON.stringify(data));
-        
-        // Aktualisiere All-Time-Best datumsübergreifend für diese Strecke
-        scanAndEvaluateAllTimeBest();
-
-        showNotice('saveNotice', 'Erfolgreich gespeichert!');
-        showNotice('saveNoticeCurves', 'Kurven erfolgreich gespeichert!');
-        showNotice('saveNoticeLaps', 'Zeiten erfolgreich gespeichert!');
-    }
-
-    function loadDataForTrack() {
-        const key = getStorageKey();
-        const saved = localStorage.getItem(key);
-        
-        document.getElementById('tireFront').value = '';
-        document.getElementById('tireRear').value = '';
-        document.getElementById('outsideTemp').value = '';
-        document.getElementById('gripNotes').value = '';
-        document.getElementById('gearing').value = '';
-        document.getElementById('rebound').value = '';
-        document.getElementById('compression').value = '';
-        document.getElementById('preload').value = '';
-        document.getElementById('quickFeedback').value = '';
-        document.getElementById('lapTimes').value = '';
-        deleteTireImage();
-
-        const track = document.getElementById('trackSelect').value;
-        const totalCurves = tracks[track];
-        for (let i = 1; i <= totalCurves; i++) {
-            if (document.getElementById(`light_val_${i}`)) {
-                setTrafficLight(i, '');
-                if (document.getElementById(`dir_${i}`)) document.getElementById(`dir_${i}`).value = trackDirections[track][i-1] || '';
-                document.getElementById(`brake_${i}`).value = '';
-                document.getElementById(`gear_${i}`).value = '';
-                document.getElementById(`notes_${i}`).value = '';
-                document.getElementById(`turnin_${i}`).value = '';
-                document.getElementById(`throttle_${i}`).value = '';
-            }
-        }
-
-        if (!saved) return;
-        try {
-            const data = JSON.parse(saved);
-            document.getElementById('tireFront').value = data.tireFront || '';
-            document.getElementById('tireRear').value = data.tireRear || '';
-            document.getElementById('outsideTemp').value = data.outsideTemp || '';
-            document.getElementById('gripNotes').value = data.gripNotes || '';
-            document.getElementById('gearing').value = data.gearing || '';
-            document.getElementById('rebound').value = data.rebound || '';
-            document.getElementById('compression').value = data.compression || '';
-            document.getElementById('preload').value = data.preload || '';
-            document.getElementById('quickFeedback').value = data.quickFeedback || '';
-            document.getElementById('lapTimes').value = data.lapTimes || '';
-
-            if (data.tireImage) {
-                storedImageBase64 = data.tireImage;
-                document.getElementById('tireImagePreview').src = storedImageBase64;
-                document.getElementById('tireImageContainer').style.display = 'block';
-            }
-
-            if (data.curves) {
-                for (let i in data.curves) {
-                    let c = data.curves[i];
-                    if (document.getElementById(`light_val_${i}`)) {
-                        setTrafficLight(i, c.light || '');
-                        if (document.getElementById(`dir_${i}`)) document.getElementById(`dir_${i}`).value = c.dir || '';
-                        document.getElementById(`brake_${i}`).value = c.brake || '';
-                        document.getElementById(`gear_${i}`).value = c.gear || '';
-                        document.getElementById(`notes_${i}`).value = c.notes || '';
-                        document.getElementById(`turnin_${i}`).value = c.turnin || '';
-                        document.getElementById(`throttle_${i}`).value = c.throttle || '';
-                    }
-                }
-            }
-        } catch(e) { console.error(e); }
-    }
-
-    function loadSessionData() {
-        loadDataForTrack();
-        analyzeLaps();
-    }
-
-    function saveAsBaseline() {
-        if (!confirm("Möchtest du das aktuelle Setup wirklich als Basis-Setup für diese Strecke speichern?")) return;
-        const baseline = {
-            tireFront: document.getElementById('tireFront').value,
-            tireRear: document.getElementById('tireRear').value,
-            gearing: document.getElementById('gearing').value,
-            rebound: document.getElementById('rebound').value,
-            compression: document.getElementById('compression').value,
-            preload: document.getElementById('preload').value
-        };
-        const track = document.getElementById('trackSelect').value;
-        localStorage.setItem(`baseline_${track}`, JSON.stringify(baseline));
-        showNotice('saveNotice', 'Basis-Setup erfolgreich gespeichert!');
-    }
-
-    function loadBaseline() {
-        const track = document.getElementById('trackSelect').value;
-        const saved = localStorage.getItem(`baseline_${track}`);
-        if (!saved) {
-            alert("Kein Basis-Setup für diese Strecke hinterlegt.");
-            return;
-        }
-        try {
-            const data = JSON.parse(saved);
-            document.getElementById('tireFront').value = data.tireFront || '';
-            document.getElementById('tireRear').value = data.tireRear || '';
-            document.getElementById('gearing').value = data.gearing || '';
-            document.getElementById('rebound').value = data.rebound || '';
-            document.getElementById('compression').value = data.compression || '';
-            document.getElementById('preload').value = data.preload || '';
-            showNotice('saveNotice', 'Basis-Setup geladen!');
-        } catch(e) {}
-    }
-
-    function deleteCurrentSession() {
-        if (!confirm("Diesen Eintrag wirklich unwiderruflich löschen?")) return;
-        const key = getStorageKey();
-        localStorage.removeItem(key);
-        updateSessionDropdown();
-        scanAndEvaluateAllTimeBest();
-    }
-
-    function showNotice(id, text) {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.innerText = text;
-        el.style.display = 'block';
-        setTimeout(() => { el.style.display = 'none'; }, 2500);
-    }
-
-    function addManualLap() {
-        const num = document.getElementById('manualLapNum').value;
-        const min = document.getElementById('manualMin').value;
-        const sec = document.getElementById('manualSec').value;
-        const ms = document.getElementById('manualMs').value;
-
-        if (!min || !sec) {
-            alert("Bitte zumindest Minuten und Sekunden eingeben.");
-            return;
-        }
-
-        const formattedTime = `${min}:${sec.padStart(2, '0')}.${(ms || '00').padEnd(3, '0').slice(0,3)}`;
-        const line = num ? `Runde ${num}: ${formattedTime}\n` : `${formattedTime}\n`;
-        
-        const ta = document.getElementById('lapTimes');
-        ta.value += line;
-        
-        document.getElementById('manualLapNum').value = '';
-        document.getElementById('manualMin').value = '';
-        document.getElementById('manualSec').value = '';
-        document.getElementById('manualMs').value = '';
-        
-        analyzeLaps();
-        saveData();
-    }
-
-    function analyzeLaps() {
-        const text = document.getElementById('lapTimes').value;
-        const box = document.getElementById('lapAnalysis');
-        if (!text.trim()) {
-            box.style.display = 'none';
-            scanAndEvaluateAllTimeBest();
-            return;
-        }
-
-        const matches = text.match(/\d+:\d{2}\.\d+/g);
-        if (!matches || matches.length === 0) {
-            box.style.display = 'none';
-            scanAndEvaluateAllTimeBest();
-            return;
-        }
-
-        let timesInSeconds = matches.map(t => {
-            const parts = t.split(':');
-            const min = parseInt(parts[0]);
-            const secParts = parts[1].split('.');
-            const sec = parseInt(secParts[0]);
-            const ms = parseInt(secParts[1].padEnd(3, '0'));
-            return { raw: t, total: min * 60 + sec + ms / 1000 };
-        });
-
-        timesInSeconds.sort((a, b) => a.total - b.total);
-        const best = timesInSeconds[0];
-        const avg = timesInSeconds.reduce((sum, item) => sum + item.total, 0) / timesInSeconds.length;
-        
-        const avgMin = Math.floor(avg / 60);
-        const avgSec = Math.floor(avg % 60);
-        const avgMs = Math.round((avg % 1) * 1000);
-        const formattedAvg = `${avgMin}:${String(avgSec).padStart(2, '0')}.${String(avgMs).padStart(3, '0')}`;
-
-        box.style.display = 'block';
-        box.innerHTML = `<strong>Analyse (${timesInSeconds.length} Runden):</strong><br>⚡ Schnellste Runde: <strong>${best.raw}</strong><br>📊 Durchschnitt: <strong>${formattedAvg}</strong>`;
-        
-        scanAndEvaluateAllTimeBest();
-    }
-
-    function scanAndEvaluateAllTimeBest() {
-        const track = document.getElementById('trackSelect').value;
-        const savedKeys = Object.keys(localStorage).filter(k => k.startsWith(`upperracing_${track}_`));
-        
-        let absoluteBest = null;
-
-        savedKeys.forEach(k => {
-            try {
-                const sessionData = JSON.parse(localStorage.getItem(k));
-                if (sessionData && sessionData.lapTimes) {
-                    const matches = sessionData.lapTimes.match(/\d+:\d{2}\.\d+/g);
-                    if (matches) {
-                        matches.forEach(t => {
-                            const parts = t.split(':');
-                            const min = parseInt(parts[0]);
-                            const secParts = parts[1].split('.');
-                            const total = min * 60 + parseInt(secParts[0]) + parseInt(secParts[1].padEnd(3, '0')) / 1000;
-                            
-                            const sessionDateLabel = k.replace(`upperracing_${track}_`, '');
-
-                            if (!absoluteBest || total < absoluteBest.total) {
-                                absoluteBest = { raw: t, total, date: sessionDateLabel };
-                            }
-                        });
-                    }
-                }
-            } catch(e) {}
-        });
-
-        const allTimeKey = `alltime_${track}`;
-        if (absoluteBest) {
-            localStorage.setItem(allTimeKey, JSON.stringify(absoluteBest));
-        } else {
-            localStorage.removeItem(allTimeKey);
-        }
-        updateAllTimeBestDisplay();
-    }
-
-    function updateAllTimeBestDisplay() {
-        const track = document.getElementById('trackSelect').value;
-        const saved = localStorage.getItem(`alltime_${track}`);
-        const valEl = document.getElementById('allTimeValue');
-        const dateEl = document.getElementById('allTimeDate');
-        if (saved) {
-            const data = JSON.parse(saved);
-            valEl.innerText = data.raw;
-            dateEl.innerText = `Erzielt am: ${data.date}`;
-        } else {
-            valEl.innerText = '--:--.---';
-            dateEl.innerText = 'Noch keine Zeit';
-        }
-    }
-
-    function confirmClearAllTimeBest() {
-        if (confirm("All-Time-Bestzeit für diese Strecke datumsübergreifend wirklich löschen?")) {
-            const track = document.getElementById('trackSelect').value;
-            const savedKeys = Object.keys(localStorage).filter(k => k.startsWith(`upperracing_${track}_`));
-            savedKeys.forEach(k => {
-                try {
-                    let d = JSON.parse(localStorage.getItem(k));
-                    d.lapTimes = '';
-                    localStorage.setItem(k, JSON.stringify(d));
-                } catch(e) {}
-            });
-            localStorage.removeItem(`alltime_${track}`);
-            document.getElementById('lapTimes').value = '';
-            analyzeLaps();
-            updateAllTimeBestDisplay();
-        }
-    }
-
-    function confirmClearLaps() {
-        if (confirm("Alle Rundenzeiten in diesem Eintrag löschen?")) {
-            document.getElementById('lapTimes').value = '';
-            analyzeLaps();
-            saveData();
-        }
-    }
-
-    function handleLapPhotoScan(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const status = document.getElementById('scanStatus');
-            status.style.display = 'block';
-            status.innerText = "Foto verarbeitet – Rundenzeiten ausgelesen!";
-            setTimeout(() => { status.style.display = 'none'; }, 3000);
-        }
-    }
-
-    function openCupInBrowser() {
-        const url = document.getElementById('cupUrlInput').value || 'https://example.com';
-        window.open(url, '_blank');
-    }
-
-    function saveCupUrl() {
-        const url = document.getElementById('cupUrlInput').value;
-        localStorage.setItem('upperracing_cup_url', url);
-        alert("Cup-URL gespeichert!");
-    }
-
-    function loadSavedCupUrl() {
-        const url = localStorage.getItem('upperracing_cup_url');
-        if (url) document.getElementById('cupUrlInput').value = url;
-    }
-
-    function initPackDropdown() {
-        const select = document.getElementById('packDateSelect');
-        const savedKeys = Object.keys(localStorage).filter(k => k.startsWith('upperracing_pack_'));
-        let dates = savedKeys.map(k => k.replace('upperracing_pack_', ''));
-        if (dates.length === 0) dates = [new Date().toISOString().split('T')[0]];
-        dates = [...new Set(dates)].sort();
-
-        const currentVal = select.value;
-        select.innerHTML = '';
-        dates.forEach(d => {
-            const opt = document.createElement('option');
-            opt.value = d;
-            opt.innerText = d;
-            select.appendChild(opt);
-        });
-        select.value = dates.includes(currentVal) ? currentVal : dates[dates.length - 1];
-        loadPacking();
-    }
-
-    function onPackDateChange() {
-        loadPacking();
-    }
-
-    function startNewPackSession() {
-        const today = new Date().toISOString().split('T')[0];
-        const name = prompt("Datum / Event-Name für neue Packliste:", today);
-        if (!name) return;
-        const select = document.getElementById('packDateSelect');
-        let exists = false;
-        for (let opt of select.options) {
-            if (opt.value === name) exists = true;
-        }
-        if (!exists) {
-            const opt = document.createElement('option');
-            opt.value = name;
-            opt.innerText = name;
-            select.appendChild(opt);
-        }
-        select.value = name;
-        loadPacking();
-    }
-
-    function savePacking(showMsg = false) {
-        const dateKey = document.getElementById('packDateSelect').value || 'default';
-        const checkboxes = document.querySelectorAll('#pagePack input[type="checkbox"]');
-        let state = {};
-        checkboxes.forEach(cb => {
-            state[cb.id] = cb.checked;
-        });
-        localStorage.setItem(`upperracing_pack_${dateKey}`, JSON.stringify(state));
-        if (showMsg) showNotice('saveNoticePack', 'Packliste gespeichert!');
-    }
-
-    function loadPacking() {
-        const dateKey = document.getElementById('packDateSelect').value || 'default';
-        const saved = localStorage.getItem(`upperracing_pack_${dateKey}`);
-        const checkboxes = document.querySelectorAll('#pagePack input[type="checkbox"]');
-        checkboxes.forEach(cb => cb.checked = false);
-        if (saved) {
-            try {
-                const state = JSON.parse(saved);
-                for (let id in state) {
-                    const cb = document.getElementById(id);
-                    if (cb) cb.checked = state[id];
-                }
-            } catch(e) {}
-        }
-    }
-
-    function addCategoryItem(catNum) {
-        const input = document.getElementById(`add_input_${catNum}`);
-        const val = input.value.trim();
-        if (!val) return;
-        
-        const container = document.getElementById(`cat_items_${catNum}`);
-        const newId = 'custom_' + Date.now() + Math.random().toString(36).substr(2, 4);
-        
-        const div = document.createElement('div');
-        div.className = 'pack-item';
-        div.innerHTML = `
-            <div class="pack-item-left">
-                <input type="checkbox" id="${newId}" onchange="savePacking()">
-                <label for="${newId}">${val}</label>
-            </div>
-            <button type="button" class="btn-small-danger" onclick="this.parentElement.remove(); savePacking();">✕</button>
-        `;
-        container.appendChild(div);
-        input.value = '';
-        savePacking();
-    }
-
-    function exportData() {
-        const track = document.getElementById('trackSelect').value;
-        const session = document.getElementById('sessionSelect').value;
-        const key = getStorageKey();
-        const data = localStorage.getItem(key) || '{}';
-        
-        if (navigator.share) {
-            navigator.share({
-                title: `UpperRacing - ${track} (${session})`,
-                text: data
-            }).catch(() => {});
-        } else {
-            prompt("Deine Daten zum Kopieren:", data);
-        }
-    }
-</script>
-</body>
-</html>
+}
