@@ -3,342 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UpperRacing</title>
-
-    <!-- App-Modus Meta-Tags -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="UpperRacing">
-
-    <!-- Favicon & Icons -->
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3214/3214738.png" type="image/png">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3214/3214738.png">
-
-    <!-- Web App Manifest -->
-    <link rel="manifest" href='data:application/manifest+json,{"name":"UpperRacing","short_name":"UpperRacing","start_url":".","display":"standalone","background_color":"#f3f4f6","theme_color":"#2563eb","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3214/3214738.png","sizes":"512x512","type":"image/png"}]}'>
-
-    <!-- CSS einbinden -->
+    <title>UpperRacing App</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body onload="initApp()">
 
-<div class="container">
-    <header>
-        <h1>UpperRacing</h1>
-        <p style="margin:5px 0 0; font-size:0.8rem; color:#93c5fd;">Protokoll, Setup & Rundenzeiten</p>
+    <header class="app-header">
+        <h1>UpperRacing 🏍️💨</h1>
+        
+        <!-- Streckenauswahl & All-Time-Best -->
+        <div class="track-bar">
+            <select id="trackSelect" onchange="onTrackChange()">
+                <option value="pannoniaring">Pannoniaring</option>
+                <option value="slovakia">Slovakiaring</option>
+                <option value="brünn">Automotodrom Brno / Brünn</option>
+                <option value="most">Autodrom Most</option>
+                <option value="grobnik">Automotodrom Grobnik / Rijeka</option>
+            </select>
+            
+            <div class="all-time-box">
+                <span style="font-size: 0.65rem; color: #aaa;">ALL-TIME-BEST</span>
+                <div><strong id="allTimeValue">--:--.---</strong></div>
+                <span id="allTimeDate" style="font-size: 0.6rem; color: #888;">Noch keine Zeit</span>
+                <button onclick="confirmClearAllTimeBest()" style="background:none; border:none; color:#ff4444; font-size:0.6rem; cursor:pointer; padding:0; margin-top:2px;">[Reset Rekord]</button>
+            </div>
+        </div>
+
+        <!-- Navigation / Tabs -->
+        <nav class="nav-tabs">
+            <button id="tabAppBtn" class="tab-btn active" onclick="switchPage('app')">Setup</button>
+            <button id="tabCurvesBtn" class="tab-btn" onclick="switchPage('curves')">Kurven</button>
+            <button id="tabLapsBtn" class="tab-btn" onclick="switchPage('laps')">Zeiten</button>
+            <button id="tabCupBtn" class="tab-btn" onclick="switchPage('cup')">Cup Info</button>
+            <button id="tabPackBtn" class="tab-btn" onclick="switchPage('pack')">Packliste</button>
+        </nav>
     </header>
 
-    <div class="nav-tabs">
-        <button id="tabAppBtn" class="tab-btn active" onclick="switchPage('app')">🏁 Setup</button>
-        <button id="tabCurvesBtn" class="tab-btn" onclick="switchPage('curves')">🗺️ Kurven</button>
-        <button id="tabLapsBtn" class="tab-btn" onclick="switchPage('laps')">⏱️ Zeiten</button>
-        <button id="tabCupBtn" class="tab-btn" onclick="switchPage('cup')">🌐 Cup</button>
-        <button id="tabPackBtn" class="tab-btn" onclick="switchPage('pack')">🎒 Packen</button>
-    </div>
+    <main class="container">
 
-    <div id="selectorBoxContainer" class="selector-box">
-        <div class="grid-2" style="margin-bottom:8px;">
-            <div>
-                <label for="trackSelect"><strong>Rennstrecke:</strong></label>
-                <select id="trackSelect" onchange="onTrackChange()">
-                    <option value="pannoniaring">Pannoniaring (18 Kurven)</option>
-                    <option value="slovakia">Slovakiaring (14 Kurven)</option>
-                    <option value="brünn">Automotodrom Brno / Brünn (14 Kurven)</option>
-                    <option value="most">Autodrom Most (21 Kurven)</option>
-                    <option value="grobnik">Automotodrom Grobnik / Rijeka (18 Kurven)</option>
-                </select>
-            </div>
-            <div>
-                <label for="sessionSelect"><strong>Speicher:</strong></label>
+        <!-- SEITE 1: SETUP & STINT -->
+        <div id="pageApp" class="page-content active">
+            <div class="session-bar">
                 <select id="sessionSelect" onchange="onSessionChange()"></select>
+                <button onclick="startNewSessionForm()">+ Neu</button>
+                <button onclick="deleteCurrentSession()" style="background: #aa3333;">Löschen</button>
+            </div>
+
+            <div class="setup-box">
+                <h3>Reifen & Grip</h3>
+                <div class="grid-2">
+                    <div><label>Luftdruck Vorne (bar)</label><input type="text" id="tireFront" placeholder="z.B. 2.1"></div>
+                    <div><label>Luftdruck Hinten (bar)</label><input type="text" id="tireRear" placeholder="z.B. 1.7"></div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <label>Außentemperatur / Strecke (°C)</label>
+                    <input type="text" id="outsideTemp" placeholder="z.B. 28°C Asphalttemperatur">
+                </div>
+                <div style="margin-top: 10px;">
+                    <label>Grip-Notizen</label>
+                    <textarea id="gripNotes" rows="2" placeholder="Reifenbild, Rutscher am Kurvenausgang..."></textarea>
+                </div>
+                
+                <!-- Reifenbild Upload -->
+                <div style="margin-top: 10px;">
+                    <label>Reifenbild (Foto)</label>
+                    <input type="file" accept="image/*" onchange="handleImageUpload(event)">
+                    <div id="tireImageContainer" style="display:none; margin-top:5px; position:relative;">
+                        <img id="tireImagePreview" onclick="openModal(this.src)" style="max-width:100%; max-height:150px; border-radius:4px; cursor:pointer;">
+                        <br><button type="button" onclick="deleteTireImage()" style="background:#cc3333; font-size:0.7rem; padding:2px 6px; margin-top:4px;">Bild löschen</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="setup-box">
+                <h3>Fahrwerk & Übersetzung</h3>
+                <div class="grid-2">
+                    <div><label>Übersetzung (Ritzel/Kettenrad)</label><input type="text" id="gearing" placeholder="z.B. 15/43"></div>
+                    <div><label>Federbein Stufe (Preload)</label><input type="text" id="preload" placeholder="z.B. 5 Umdrehungen"></div>
+                    <div><label>Zugstufe (Rebound)</label><input type="text" id="rebound" placeholder="z.B. 12 Klicks offen"></div>
+                    <div><label>Druckstufe (Compression)</label><input type="text" id="compression" placeholder="z.B. 10 Klicks offen"></div>
+                </div>
+            </div>
+
+            <div class="setup-box">
+                <h3>Fahrer-Feedback & Runden im Stint</h3>
+                <textarea id="quickFeedback" rows="3" placeholder="Wie lief der Stint? Wo verlierst du Zeit?"></textarea>
+                
+                <div style="margin-top: 10px;">
+                    <label>Rundenzeiten (Format: mm:ss.ms oder Runden untereinander)</label>
+                    <textarea id="lapTimes" rows="4" placeholder="2:14.520&#10;2:13.890" oninput="analyzeLaps()"></textarea>
+                </div>
+                <div id="lapAnalysis" style="margin-top:8px; background: #222; padding:8px; border-radius:4px; font-size:0.85rem; display:none;"></div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-bottom: 20px;">
+                <button class="btn-main" onclick="saveData()" style="flex:2;">💾 Speichern</button>
+                <button class="btn-main" onclick="saveAsBaseline()" style="background:#444; flex:1;">Als Basis</button>
+                <button class="btn-main" onclick="loadBaseline()" style="background:#444; flex:1;">Basis laden</button>
+            </div>
+            <div id="saveNotice" class="notice-msg">Erfolgreich gespeichert!</div>
+        </div>
+
+        <!-- SEITE 2: KURVEN-GUIDE -->
+        <div id="pageCurves" class="page-content">
+            <div class="setup-box">
+                <h3>Strecken-Kurven-Guide</h3>
+                <p style="font-size:0.75rem; color:#aaa; margin-bottom:10px;">Markiere den Gang, die Linie und den Status für jede Kurve.</p>
+                <div id="curvesContainer"></div>
+                <button class="btn-main" onclick="saveData()" style="margin-top:10px;">💾 Kurven Speichern</button>
+                <div id="saveNoticeCurves" class="notice-msg">Kurven erfolgreich gespeichert!</div>
             </div>
         </div>
-        <button type="button" class="btn-secondary" style="margin-top:0; padding:6px; font-size:0.8rem;" onclick="startNewSessionForm()">➕ Neuen Eintrag (Datum/Uhrzeit) anlegen</button>
-    </div>
 
-    <!-- SEITE 1: STRECKEN & SETUP -->
-    <div id="pageApp" class="page-content active">
-        <div class="setup-box">
-            <h3>Turn Setup & Fahrwerk</h3>
+        <!-- SEITE 3: ZEITEN & SCAN -->
+        <div id="pageLaps" class="page-content">
+            <div class="setup-box">
+                <h3>Zeiten manuell hinzufügen</h3>
+                <div class="grid-3" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:6px; margin-bottom:8px;">
+                    <div><label style="font-size:0.7rem">Min</label><input type="number" id="manualMin" placeholder="2"></div>
+                    <div><label style="font-size:0.7rem">Sek</label><input type="number" id="manualSec" placeholder="14"></div>
+                    <div><label style="font-size:0.7rem">Hundertstel</label><input type="number" id="manualMs" placeholder="520"></div>
+                </div>
+                <div><label style="font-size:0.7rem">Runden-Nummer (optional)</label><input type="number" id="manualLapNum" placeholder="z.B. 4"></div>
+                <button class="btn-main" onclick="addManualLap()" style="margin-top:8px;">Runde hinzufügen</button>
+            </div>
+
+            <div class="setup-box">
+                <h3>Zeiten per Foto einlesen</h3>
+                <p style="font-size:0.75rem; color:#aaa; margin-bottom:8px;">Fotografiere deinen Laptimer / Zeiten-Ausdruck.</p>
+                <input type="file" accept="image/*" capture="environment" onchange="handleLapPhotoScan(event)">
+                <div id="scanStatus" style="margin-top:6px; font-size:0.8rem; color:#4CAF50; display:none;"></div>
+            </div>
             
-            <div class="setup-section-title">🛞 Reifendruck</div>
-            <div class="grid-2">
-                <div>
-                    <label style="font-size:0.75rem">Vorne</label>
-                    <div class="pressure-group">
-                        <input type="text" id="tireFront" placeholder="z.B. 2.1">
-                        <button type="button" class="btn-pressure" onclick="adjustPressure('tireFront', -0.1)">-</button>
-                        <button type="button" class="btn-pressure" onclick="adjustPressure('tireFront', 0.1)">+</button>
-                    </div>
-                </div>
-                <div>
-                    <label style="font-size:0.75rem">Hinten</label>
-                    <div class="pressure-group">
-                        <input type="text" id="tireRear" placeholder="z.B. 1.9">
-                        <button type="button" class="btn-pressure" onclick="adjustPressure('tireRear', -0.1)">-</button>
-                        <button type="button" class="btn-pressure" onclick="adjustPressure('tireRear', 0.1)">+</button>
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <label style="font-size:0.75rem; font-weight:bold; color:var(--text-muted); margin-top:6px; display:block;">Reifenbild / Verschleiß (Foto)</label>
-                <input type="file" id="tireImageInput" accept="image/*" onchange="handleImageUpload(event)">
-                <div id="tireImageContainer" class="img-container">
-                    <img id="tireImagePreview" class="img-preview" alt="Reifenbild Vorschau" onclick="openModal(this.src)">
-                    <button type="button" class="delete-img-btn" onclick="deleteTireImage()" title="Bild löschen">✕</button>
-                </div>
-            </div>
-
-            <div class="setup-section-title">🌡️ Bedingungen & Übersetzung</div>
-            <div class="grid-3">
-                <div>
-                    <label style="font-size:0.75rem">Außen / Asph.</label>
-                    <input type="text" id="outsideTemp" placeholder="24°/35°">
-                </div>
-                <div>
-                    <label style="font-size:0.75rem">Grip & Wetter</label>
-                    <input type="text" id="gripNotes" placeholder="Sonne, super Grip">
-                </div>
-                <div>
-                    <label style="font-size:0.75rem">Übersetzung</label>
-                    <input type="text" id="gearing" placeholder="15/42">
-                </div>
-            </div>
-
-            <div class="setup-section-title">⚙️ Fahrwerkseinstellungen (v / h)</div>
-            <div class="grid-3">
-                <div>
-                    <label style="font-size:0.75rem">Zugstufe</label>
-                    <input type="text" id="rebound" placeholder="8 / 10">
-                </div>
-                <div>
-                    <label style="font-size:0.75rem">Druckstufe</label>
-                    <input type="text" id="compression" placeholder="6 / 8">
-                </div>
-                <div>
-                    <label style="font-size:0.75rem">Vorspannung</label>
-                    <input type="text" id="preload" placeholder="5R / 12mm">
-                </div>
-            </div>
-
-            <div class="setup-section-title">📝 Turn-Feedback / Notizen</div>
-            <div>
-                <textarea id="quickFeedback" rows="3" placeholder="Z.B. Vorderrad stempelt beim harten Anbremsen in T1..."></textarea>
+            <div class="setup-box">
+                <button class="btn-main" onclick="confirmClearLaps()" style="background:#aa3333;">Alle Runden dieses Stints löschen</button>
             </div>
         </div>
 
-        <button class="btn-success" onclick="saveData()">💾 Speichern</button>
-        <button class="btn-warning" onclick="saveAsBaseline()">⭐ Aktuelles Setup als Basis-Setup speichern</button>
-        <button class="btn-secondary" onclick="loadBaseline()">⭐ Basis-Setup laden</button>
-        <button class="btn-danger" onclick="deleteCurrentSession()">🗑️ Diesen Eintrag löschen</button>
-        <button class="btn-secondary" onclick="exportData()">Daten Teilen / Exportieren</button>
-        <div id="saveNotice" class="save-notice">Erfolgreich gespeichert!</div>
-    </div>
-
-    <!-- SEITE 2: KURVEN & LINIE -->
-    <div id="pageCurves" class="page-content">
-        <div class="setup-box">
-            <h3>🗺️ Strecken- & Kurvennotizen</h3>
-            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0;">
-                Bewerte deine Kurven mit der Ampel (🔴 🟡 🟢) und klappe die Profi-Details aus.
-            </p>
-        </div>
-        <div id="curvesContainer"></div>
-        <button class="btn-success" onclick="saveData()">💾 Kurven-Daten speichern</button>
-        <div id="saveNoticeCurves" class="save-notice">Kurven erfolgreich gespeichert!</div>
-    </div>
-
-    <!-- SEITE 3: RUNDENZEITEN -->
-    <div id="pageLaps" class="page-content">
-        <div class="setup-box">
-            <div class="alltime-container">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                    <span class="alltime-title" style="margin:0;">🏆 All-Time-Best</span>
-                    <button type="button" class="btn-small-danger" onclick="confirmClearAllTimeBest()">🗑️ Rekord löschen</button>
-                </div>
-                <div class="alltime-box">
-                    <div>
-                        <div id="allTimeDate" class="alltime-date">Noch keine Zeit</div>
-                    </div>
-                    <div>
-                        <div id="allTimeValue" class="alltime-value">--:--.---</div>
-                    </div>
-                </div>
-            </div>
-
-            <h3>⏱️ Rundenzeiten & Stints</h3>
-            
-            <div style="background: #f0fdf4; border: 1px dashed var(--success); padding: 10px; border-radius: 6px; margin-top:12px;">
-                <label style="font-size:0.8rem; font-weight:bold; color:var(--success); display:block;">📸 Zettel abfotografieren & einlesen</label>
-                <input type="file" accept="image/*" capture="environment" id="lapPhotoInput" onchange="handleLapPhotoScan(event)">
-                <div id="scanStatus" style="font-size: 0.8rem; font-weight: bold; margin-top: 5px; color: var(--success); display: none;">Foto analysiert!</div>
-            </div>
-
-            <div style="background: #fff; border: 1px dashed var(--primary); padding: 10px; border-radius: 6px; margin-top: 10px;">
-                <label style="font-size:0.85rem; font-weight:bold; color:var(--primary); display:block; margin-bottom:6px;">➕ Manuell hinzufügen</label>
-                <div class="grid-4">
-                    <div><label style="font-size:0.7rem; color:var(--text-muted)">Runde</label><input type="number" id="manualLapNum" placeholder="Nr."></div>
-                    <div><label style="font-size:0.7rem; color:var(--text-muted)">Minuten</label><input type="number" id="manualMin" placeholder="2"></div>
-                    <div><label style="font-size:0.7rem; color:var(--text-muted)">Sekunden</label><input type="number" id="manualSec" placeholder="05"></div>
-                    <div><label style="font-size:0.7rem; color:var(--text-muted)">Hundertstel</label><input type="number" id="manualMs" placeholder="10"></div>
-                </div>
-                <button type="button" class="btn-success" style="margin-top:6px;" onclick="addManualLap()">Runde hinzufügen</button>
-            </div>
-
-            <div style="margin-top: 12px;">
-                <label style="font-size:0.75rem; font-weight:bold; color:var(--primary);">Gespeicherte Rundenzeiten (Protokoll)</label>
-                <textarea id="lapTimes" rows="6" oninput="analyzeLaps()"></textarea>
-            </div>
-            <button type="button" class="btn-danger" onclick="confirmClearLaps()">🗑️ Alle Rundenzeiten löschen</button>
-
-            <div id="lapAnalysis" class="lap-analysis-box" style="display:none;"></div>
-
-            <button class="btn-success" onclick="saveData()">💾 Zeiten speichern</button>
-            <div id="saveNoticeLaps" class="save-notice">Zeiten erfolgreich gespeichert!</div>
-        </div>
-    </div>
-
-    <!-- SEITE 4: CUP -->
-    <div id="pageCup" class="page-content">
-        <div class="setup-box">
-            <h3>🌐 Cup-Ergebnisse (PDF)</h3>
-            <button type="button" class="btn-success" style="font-size: 1.1rem; padding: 15px;" onclick="openCupInBrowser()">📄 Cup-PDF öffnen</button>
-            <div style="margin-top:20px;">
-                <label style="font-size:0.75rem; font-weight:bold; color:var(--primary)">PDF-Link anpassen:</label>
-                <div style="display: flex; gap: 8px;">
-                    <input type="url" id="cupUrlInput" placeholder="https://..." style="margin-bottom:0;">
-                    <button type="button" class="btn-secondary" style="margin-top:0; width:auto; padding: 0 15px;" onclick="saveCupUrl()">Speichern</button>
+        <!-- SEITE 4: CUP INFO -->
+        <div id="pageCup" class="page-content">
+            <div class="setup-box">
+                <h3>Cup / Veranstalter Link</h3>
+                <p style="font-size:0.75rem; color:#aaa; margin-bottom:8px;">Hinterlege hier den Link zum Live-Timing, Zeitplan oder Reglement.</p>
+                <input type="text" id="cupUrlInput" placeholder="https://... (z.B. Zeitplan-Link)">
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button class="btn-main" onclick="saveCupUrl()" style="flex:1;">Link speichern</button>
+                    <button class="btn-main" onclick="openCupInBrowser()" style="background:#336699; flex:1;">Öffnen ↗</button>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- SEITE 5: PACKLISTE -->
-    <div id="pagePack" class="page-content">
-        <div class="pack-box">
-            <h3>Packliste</h3>
-            <div style="background: #f8fafc; border: 1px solid var(--border); padding: 10px; border-radius: 6px; margin-bottom: 15px;">
-                <div class="grid-2" style="margin-bottom: 6px;">
-                    <div>
-                        <label for="packDateSelect" style="font-size:0.75rem; font-weight:bold;">📅 Speicher-Datum:</label>
-                        <select id="packDateSelect" onchange="onPackDateChange()"></select>
-                    </div>
-                    <div style="display: flex; align-items: flex-end;">
-                        <button type="button" class="btn-secondary" style="margin-top:0; padding: 8px; font-size: 0.8rem;" onclick="startNewPackSession()">➕ Neues Datum</button>
-                    </div>
-                </div>
-                <button type="button" class="btn-success" style="margin-top: 4px; padding: 8px; font-size: 0.85rem;" onclick="savePacking(true)">💾 Packliste speichern</button>
-                <div id="saveNoticePack" class="save-notice">Erfolgreich gespeichert!</div>
+        <!-- SEITE 5: PACKLISTE -->
+        <div id="pagePack" class="page-content">
+            <div class="setup-box">
+                <h3>Packliste & Check</h3>
+                <ul style="list-style:none; padding:0; font-size:0.9rem; line-height:1.8;">
+                    <li><label><input type="checkbox"> Motorrad & Zentralständer</label></li>
+                    <li><label><input type="checkbox"> Reifenwärmer & Verlängerungskabel</label></li>
+                    <li><label><input type="checkbox"> Ersatzreifen (Vorn & Hinten)</label></li>
+                    <li><label><input type="checkbox"> Benzin / Kanister</label></li>
+                    <li><label><input type="checkbox"> Kombi, Helm, Stiefel, Handschuhe, Rückenprotektor</label></li>
+                    <li><label><input type="checkbox"> Werkzeugkasten & Drehmomentschlüssel</label></li>
+                    <li><label><input type="checkbox"> Laptimer & Ladekabel</label></li>
+                    <li><label><input type="checkbox"> Pers. Dokumente & Anmeldung / Haftverzicht</label></li>
+                </ul>
             </div>
-
-            <!-- Kategorien 1-4 -->
-            <div class="pack-category-container">
-                <div class="pack-category"><span>🏍️ Motorrad & Technik</span></div>
-                <div id="cat_items_1">
-                    <div class="pack-item" data-id="p1">
-                        <div class="pack-item-left"><input type="checkbox" id="p1" onchange="savePacking()"><label for="p1">Motorrad</label></div>
-                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
-                    </div>
-                    <div class="pack-item" data-id="p2">
-                        <div class="pack-item-left"><input type="checkbox" id="p2" onchange="savePacking()"><label for="p2">Zweitschlüssel & Papiere</label></div>
-                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
-                    </div>
-                    <div class="pack-item" data-id="p3">
-                        <div class="pack-item-left"><input type="checkbox" id="p3" onchange="savePacking()"><label for="p3">Reifenwärmer</label></div>
-                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
-                    </div>
-                    <div class="pack-item" data-id="p4">
-                        <div class="pack-item-left"><input type="checkbox" id="p4" onchange="savePacking()"><label for="p4">Reifendruckprüfer</label></div>
-                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
-                    </div>
-                    <div class="pack-item" data-id="p5">
-                        <div class="pack-item-left"><input type="checkbox" id="p5" onchange="savePacking()"><label for="p5">Ersatzreifen</label></div>
-                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
-                    </div>
-                    <div class="pack-item" data-id="p7">
-                        <div class="pack-item-left"><input type="checkbox" id="p7" onchange="savePacking()"><label for="p7">Tankkanister (Benzin)</label></div>
-                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
-                    </div>
-                </div>
-                <div class="category-add-box"><input type="text" id="add_input_1" placeholder="Neues Teil..."><button type="button" onclick="addCategoryItem(1)">Hinzufügen</button></div>
-            </div>
-
-            <div class="pack-category-container">
-                <div class="pack-category"><span>🛠️ Werkzeug</span></div>
-                <div id="cat_items_2">
-                    <div class="pack-item" data-id="p9">
-                        <div class="pack-item-left"><input type="checkbox" id="p9" onchange="savePacking()"><label for="p9">Werkzeugkasten</label></div>
-                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
-                    </div>
-                    <div class="pack-item" data-id="p11">
-                        <div class="pack-item-left"><input type="checkbox" id="p11" onchange="savePacking()"><label for="p11">Montierständer</label></div>
-                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
-                    </div>
-                    <div class="pack-item" data-id="p12">
-                        <div class="pack-item-left"><input type="checkbox" id="p12" onchange="savePacking()"><label for="p12">Pavillon / Zelt</label></div>
-                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
-                    </div>
-                    <div class="pack-item" data-id="p14">
-                        <div class="pack-item-left"><input type="checkbox" id="p14" onchange="savePacking()"><label for="p14">Kabelbinder & Panzertape</label></div>
-                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
-                    </div>
-                </div>
-                <div class="category-add-box"><input type="text" id="add_input_2" placeholder="Neues Werkzeug..."><button type="button" onclick="addCategoryItem(2)">Hinzufügen</button></div>
-            </div>
-
-            <div class="pack-category-container">
-                <div class="pack-category"><span>🧑‍วม Bekleidung</span></div>
-                <div id="cat_items_3">
-                    <div class="pack-item" data-id="p16">
-                        <div class="pack-item-left"><input type="checkbox" id="p16" onchange="savePacking()"><label for="p16">Lederkombi</label></div>
-                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
-                    </div>
-                    <div class="pack-item" data-id="p17">
-                        <div class="pack-item-left"><input type="checkbox" id="p17" onchange="savePacking()"><label for="p17">Helm</label></div>
-                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
-                    </div>
-                    <div class="pack-item" data-id="p18">
-                        <div class="pack-item-left"><input type="checkbox" id="p18" onchange="savePacking()"><label for="p18">Stiefel & Handschuhe</label></div>
-                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
-                    </div>
-                    <div class="pack-item" data-id="p19">
-                        <div class="pack-item-left"><input type="checkbox" id="p19" onchange="savePacking()"><label for="p19">Rückenprotektor</label></div>
-                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
-                    </div>
-                </div>
-                <div class="category-add-box"><input type="text" id="add_input_3" placeholder="Neues Kleidungsstück..."><button type="button" onclick="addCategoryItem(3)">Hinzufügen</button></div>
-            </div>
-
-            <div class="pack-category-container">
-                <div class="pack-category"><span>🍎 Verpflegung</span></div>
-                <div id="cat_items_4">
-                    <div class="pack-item" data-id="p24">
-                        <div class="pack-item-left"><input type="checkbox" id="p24" onchange="savePacking()"><label for="p24">Wasser</label></div>
-                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
-                    </div>
-                    <div class="pack-item" data-id="p25">
-                        <div class="pack-item-left"><input type="checkbox" id="p25" onchange="savePacking()"><label for="p25">Snacks</label></div>
-                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
-                    </div>
-                    <div class="pack-item" data-id="p26">
-                        <div class="pack-item-left"><input type="checkbox" id="p26" onchange="savePacking()"><label for="p26">Smartphone & Ladekabel</label></div>
-                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
-                    </div>
-                </div>
-                <div class="category-add-box"><input type="text" id="add_input_4" placeholder="Sonstiges..."><button type="button" onclick="addCategoryItem(4)">Hinzufügen</button></div>
+            <div class="setup-box">
+                <button class="btn-main" onclick="exportData()" style="background:#336699;">Daten als JSON exportieren</button>
             </div>
         </div>
+
+    </main>
+
+    <!-- Modal für Bild-Vorschau -->
+    <div id="imageModal" onclick="closeModal()" style="display:none; position:fixed; z-index:999; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); text-align:center; padding-top:40px;">
+        <img id="modalImg" style="max-width:90%; max-height:85vh; border-radius:6px;">
+        <p style="color:#fff; margin-top:10px; font-size:0.8rem;">Zum Schließen irgendwo tippen</p>
     </div>
-</div>
 
-<div id="imageModal" onclick="closeModal()">
-    <span id="closeModal">&times;</span>
-    <img id="modalImg">
-</div>
-
-<!-- JavaScript Module einbinden -->
-<script src="app.js"></script>
-<script src="pack.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
