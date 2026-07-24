@@ -13,10 +13,17 @@ function initApp() {
         onTrackChange();
         loadCupUrl();
         switchPage('app');
-        setupBaselineButtons(); // Überschreibt fehlerhafte HTML-Buttons automatisch mit der richtigen Logik
+        setupBaselineButtons();
     } catch (e) {
         console.error("Init Error:", e);
     }
+}
+
+// Hilfsfunktion für korrekte lokale Zeit (verhindert den 2-Stunden-UTC-Versatz)
+function getLocalTimestamp() {
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
 }
 
 // Erzwingt, dass die HTML-Buttons für Basis-Setup garantiert die richtigen Funktionen nutzen
@@ -29,7 +36,7 @@ function setupBaselineButtons() {
             if (text.includes('basis') || text.includes('baseline') || onclick.includes('baseline') || onclick.includes('base')) {
                 if (text.includes('speichern') || onclick.includes('save') || text.includes('als')) {
                     btn.removeAttribute('onclick');
-                    btn.onclick = executeSaveBaseline; // Zwingt zur Ausführung mit Bestätigungsfenster
+                    btn.onclick = executeSaveBaseline;
                 } else if (text.includes('laden') || onclick.includes('load')) {
                     btn.removeAttribute('onclick');
                     btn.onclick = loadBaseline;
@@ -102,7 +109,7 @@ function loadSessionsForTrack(track) {
     let keys = Object.keys(sessions).sort((a, b) => new Date(b) - new Date(a));
     
     if (keys.length === 0) {
-        const defaultKey = new Date().toISOString().slice(0,16).replace('T', ' ');
+        const defaultKey = getLocalTimestamp();
         sessions[defaultKey] = getEmptySessionData(track);
         localStorage.setItem(getSessionsKey(track), JSON.stringify(sessions));
         keys = [defaultKey];
@@ -187,11 +194,10 @@ function setFieldValue(id, val) {
 
 function startNewSessionForm() {
     const track = document.getElementById('trackSelect').value;
-    const now = new Date();
-    const newKey = now.toISOString().slice(0,16).replace('T', ' ');
+    const newKey = getLocalTimestamp();
     
     let sessions = JSON.parse(localStorage.getItem(getSessionsKey(track))) || {};
-    sessions[newKey] = getEmptySessionData(track); // Übernimmt hier direkt das Basis-Setup!
+    sessions[newKey] = getEmptySessionData(track);
     localStorage.setItem(getSessionsKey(track), JSON.stringify(sessions));
 
     loadSessionsForTrack(track);
@@ -264,7 +270,6 @@ function saveBasisSetup() { executeSaveBaseline(); }
 function executeSaveBaseline() {
     const track = document.getElementById('trackSelect').value;
     
-    // Erzwingt die Sicherheitsabfrage
     if (!confirm("Möchtest du das aktuelle Setup wirklich als neues Basis-Setup für " + (tracksData[track]?.name || track) + " speichern?")) {
         return;
     }
