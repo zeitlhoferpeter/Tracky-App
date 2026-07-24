@@ -13,15 +13,37 @@ function initApp() {
         onTrackChange();
         loadCupUrl();
         switchPage('app');
+        setupBaselineButtons(); // Überschreibt fehlerhafte HTML-Buttons automatisch mit der richtigen Logik
     } catch (e) {
         console.error("Init Error:", e);
+    }
+}
+
+// Erzwingt, dass die HTML-Buttons für Basis-Setup garantiert die richtigen Funktionen nutzen
+function setupBaselineButtons() {
+    try {
+        document.querySelectorAll('button').forEach(btn => {
+            const text = btn.textContent.toLowerCase();
+            const onclick = (btn.getAttribute('onclick') || '').toLowerCase();
+            
+            if (text.includes('basis') || text.includes('baseline') || onclick.includes('baseline') || onclick.includes('base')) {
+                if (text.includes('speichern') || onclick.includes('save') || text.includes('als')) {
+                    btn.removeAttribute('onclick');
+                    btn.onclick = executeSaveBaseline; // Zwingt zur Ausführung mit Bestätigungsfenster
+                } else if (text.includes('laden') || onclick.includes('load')) {
+                    btn.removeAttribute('onclick');
+                    btn.onclick = loadBaseline;
+                }
+            }
+        });
+    } catch(e) {
+        console.error("Setup buttons error:", e);
     }
 }
 
 // --- ABSOLUT SICHERE SEITEN-NAVIGATION ---
 function switchPage(pageKey) {
     try {
-        // Alle bekannten Seiten-IDs hart verstecken
         ['pageApp', 'pageCurves', 'pageLaps', 'pageCup', 'pagePack'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -30,13 +52,11 @@ function switchPage(pageKey) {
             }
         });
 
-        // Generische Klassen ebenfalls verstecken
         document.querySelectorAll('.page-content').forEach(el => {
             el.style.display = 'none';
             el.classList.remove('active');
         });
 
-        // Ziel-Seite ermitteln und anzeigen (sucht nach page + Key, z.B. pageCurves)
         let target = document.getElementById('page' + pageKey.charAt(0).toUpperCase() + pageKey.slice(1)) ||
                      document.getElementById(pageKey);
         
@@ -45,7 +65,6 @@ function switchPage(pageKey) {
             target.classList.add('active');
         }
 
-        // Buttons aktualisieren
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.remove('active');
             if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(pageKey)) {
@@ -100,7 +119,7 @@ function loadSessionsForTrack(track) {
     loadSessionData(keys[0]);
 }
 
-// Lädt bei einem neuen Eintrag automatisch das streckenabhängige Basis-Setup (falls vorhanden)
+// Holt bei neuen Einträgen automatisch das Basis-Setup der Strecke
 function getEmptySessionData(track) {
     const baseline = JSON.parse(localStorage.getItem(`baseline_${track}`));
     if (baseline) {
@@ -114,13 +133,14 @@ function getEmptySessionData(track) {
             compression: baseline.compression || '',
             preload: baseline.preload || '',
             quickFeedback: '',
-            lapTimes: ''
+            lapTimes: '',
+            tireImage: ''
         };
     }
     return {
         tireFront: '', tireRear: '', outsideTemp: '', gripNotes: '',
         gearing: '', rebound: '', compression: '', preload: '',
-        quickFeedback: '', lapTimes: ''
+        quickFeedback: '', lapTimes: '', tireImage: ''
     };
 }
 
@@ -171,13 +191,13 @@ function startNewSessionForm() {
     const newKey = now.toISOString().slice(0,16).replace('T', ' ');
     
     let sessions = JSON.parse(localStorage.getItem(getSessionsKey(track))) || {};
-    sessions[newKey] = getEmptySessionData(track);
+    sessions[newKey] = getEmptySessionData(track); // Übernimmt hier direkt das Basis-Setup!
     localStorage.setItem(getSessionsKey(track), JSON.stringify(sessions));
 
     loadSessionsForTrack(track);
     document.getElementById('sessionSelect').value = newKey;
     loadSessionData(newKey);
-    showNotice('saveNotice', 'Neuer Eintrag angelegt (Basis-Setup übernommen)!');
+    showNotice('saveNotice', 'Neuer Eintrag angelegt (Basis-Setup automatisch übernommen)!');
 }
 
 function saveData() {
@@ -235,15 +255,16 @@ function deleteCurrentSession() {
     }
 }
 
-// --- BASIS SETUP SPEICHERN & LADEN (ALLE NAMENSVARIANTEN ABGEDECKT) ---
+// --- BASIS SETUP SPEICHERN & LADEN ---
 function saveAsBaseline() { executeSaveBaseline(); }
 function saveBaseline() { executeSaveBaseline(); }
 function saveBaseSetup() { executeSaveBaseline(); }
+function saveBasisSetup() { executeSaveBaseline(); }
 
 function executeSaveBaseline() {
     const track = document.getElementById('trackSelect').value;
     
-    // Sicherheitsabfrage mit Bestätigung, damit man nicht unabsichtlich überschreibt
+    // Erzwingt die Sicherheitsabfrage
     if (!confirm("Möchtest du das aktuelle Setup wirklich als neues Basis-Setup für " + (tracksData[track]?.name || track) + " speichern?")) {
         return;
     }
