@@ -3,613 +3,342 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UpperRacing - Trackday App</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f2f5;
-            color: #111111;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 650px;
-            margin: 0 auto;
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        h2 {
-            text-align: center;
-            color: #111111;
-            font-size: 26px;
-            margin-bottom: 20px;
-            letter-spacing: 1px;
-        }
-        /* REITER / NAVIGATION */
-        .tab-nav {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .tab-btn {
-            flex: 1;
-            background: #e2e8f0;
-            color: #333;
-            border: none;
-            padding: 10px;
-            font-size: 15px;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .tab-btn.active {
-            background: #2563eb;
-            color: white;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
+    <title>UpperRacing</title>
 
-        /* STYLES AUS DEM SETUP */
-        h3 { color: #1d4ed8; font-size: 18px; }
-        .form-group { margin-bottom: 15px; }
-        .row { display: flex; gap: 10px; }
-        .col { flex: 1; }
-        label { display: block; margin-bottom: 5px; font-size: 13px; font-weight: bold; color: #333333; }
-        input, select, textarea {
-            width: 100%; padding: 10px; background: #f9fafb;
-            border: 1px solid #cbd5e1; color: #111111;
-            border-radius: 4px; box-sizing: border-box; font-size: 15px;
-        }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: #2563eb; background: #ffffff; }
-        .action-btn {
-            background: #2563eb; color: white; border: none;
-            padding: 12px 20px; font-size: 16px; border-radius: 4px;
-            cursor: pointer; width: 100%; font-weight: bold;
-        }
-        .action-btn:hover { background: #1d4ed8; }
-        hr { border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0; }
-        .sub-header {
-            font-size: 15px; font-weight: bold; color: #1d4ed8;
-            margin-top: 15px; margin-bottom: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;
-        }
-        #success-message, #info-message {
-            color: white; padding: 10px; text-align: center;
-            border-radius: 4px; margin-top: 15px; display: none; font-weight: bold;
-        }
-        #success-message { background: #16a34a; }
-        #info-message { background: #2563eb; }
+    <!-- App-Modus Meta-Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="UpperRacing">
 
-        /* PACKLISTEN STYLING */
-        .category-box {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 15px;
-        }
-        .category-title {
-            font-size: 16px;
-            font-weight: bold;
-            color: #1e293b;
-            margin-bottom: 8px;
-            border-bottom: 2px solid #cbd5e1;
-            padding-bottom: 4px;
-        }
-        .packing-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 6px 0;
-            border-bottom: 1px solid #f1f5f9;
-            font-size: 15px;
-        }
-        .packing-item-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex: 1;
-        }
-        .packing-item input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-        .delete-btn {
-            background: #dc2626;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            font-size: 12px;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-        .delete-btn:hover {
-            background: #b91c1c;
-        }
-        .add-item-row {
-            display: flex;
-            gap: 5px;
-            margin-top: 10px;
-        }
-        .add-item-row input {
-            padding: 6px 10px;
-            font-size: 14px;
-        }
-        .add-item-btn {
-            background: #16a34a;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            font-size: 14px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            white-space: nowrap;
-        }
-        .add-item-btn:hover {
-            background: #15803d;
-        }
-        .save-status {
-            font-size: 12px;
-            color: #64748b;
-            text-align: right;
-            margin-bottom: 15px;
-            font-style: italic;
-        }
-    </style>
+    <!-- Favicon & Icons -->
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3214/3214738.png" type="image/png">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3214/3214738.png">
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href='data:application/manifest+json,{"name":"UpperRacing","short_name":"UpperRacing","start_url":".","display":"standalone","background_color":"#f3f4f6","theme_color":"#2563eb","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3214/3214738.png","sizes":"512x512","type":"image/png"}]}'>
+
+    <!-- CSS einbinden -->
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body onload="initApp()">
 
 <div class="container">
-    <h2>UpperRacing 🏍️</h2>
+    <header>
+        <h1>UpperRacing</h1>
+        <p style="margin:5px 0 0; font-size:0.8rem; color:#93c5fd;">Protokoll, Setup & Rundenzeiten</p>
+    </header>
 
-    <!-- REITER-NAVIGATION -->
-    <div class="tab-nav">
-        <button class="tab-btn active" onclick="switchTab('setup')">🛠️ Setup & Bike</button>
-        <button class="tab-btn" onclick="switchTab('packing')">🎒 Packliste</button>
+    <div class="nav-tabs">
+        <button id="tabAppBtn" class="tab-btn active" onclick="switchPage('app')">🏁 Setup</button>
+        <button id="tabCurvesBtn" class="tab-btn" onclick="switchPage('curves')">🗺️ Kurven</button>
+        <button id="tabLapsBtn" class="tab-btn" onclick="switchPage('laps')">⏱️ Zeiten</button>
+        <button id="tabCupBtn" class="tab-btn" onclick="switchPage('cup')">🌐 Cup</button>
+        <button id="tabPackBtn" class="tab-btn" onclick="switchPage('pack')">🎒 Packen</button>
     </div>
 
-    <!-- ========================================== -->
-    <!-- REITER 1: SETUP                            -->
-    <!-- ========================================== -->
-    <div id="tab-setup" class="tab-content active">
-        <div class="form-group">
-            <h3>1. Motorrad wählen</h3>
-            <select id="bike-select">
-                <option value="">-- Bitte Motorrad wählen --</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <h3>2. Rennstrecke wählen</h3>
-            <select id="track-select">
-                <option value="pannoniaring">Pannoniaring</option>
-                <option value="slovakiaring">Slovakiaring</option>
-                <option value="bruenn">Automotodrom Brno / Brünn</option>
-                <option value="most">Autodrom Most</option>
-                <option value="grobnik">Automotodrom Grobnik / Rijeka</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <h3>Oder neues Motorrad hinzufügen</h3>
-            <div class="row" style="margin-bottom: 10px;">
-                <div class="col"><input type="text" id="bike-brand" placeholder="Marke (z.B. Yamaha)"></div>
-                <div class="col"><input type="text" id="bike-model" placeholder="Modell (z.B. R1)"></div>
+    <div id="selectorBoxContainer" class="selector-box">
+        <div class="grid-2" style="margin-bottom:8px;">
+            <div>
+                <label for="trackSelect"><strong>Rennstrecke:</strong></label>
+                <select id="trackSelect" onchange="onTrackChange()">
+                    <option value="pannoniaring">Pannoniaring (18 Kurven)</option>
+                    <option value="slovakia">Slovakiaring (14 Kurven)</option>
+                    <option value="brünn">Automotodrom Brno / Brünn (14 Kurven)</option>
+                    <option value="most">Autodrom Most (21 Kurven)</option>
+                    <option value="grobnik">Automotodrom Grobnik / Rijeka (18 Kurven)</option>
+                </select>
             </div>
-            <input type="text" id="bike-year" placeholder="Baujahr (z.B. 2022)" style="margin-bottom: 10px;">
-            <button class="action-btn" id="add-bike-btn">Motorrad speichern</button>
+            <div>
+                <label for="sessionSelect"><strong>Speicher (Datum & Zeit):</strong></label>
+                <select id="sessionSelect" onchange="onSessionChange()"></select>
+            </div>
         </div>
+        <button type="button" class="btn-secondary" style="margin-top:0; padding:6px; font-size:0.8rem;" onclick="startNewSessionForm()">➕ Neuen Eintrag (Datum/Uhrzeit) anlegen</button>
+    </div>
 
-        <hr>
-
-        <div id="setup-section" style="display: none;">
-            <h3>3. Setup für gewähltes Bike & Strecke</h3>
+    <!-- SEITE 1: STRECKEN & SETUP -->
+    <div id="pageApp" class="page-content active">
+        <div class="setup-box">
+            <h3>Turn Setup & Fahrwerk</h3>
             
-            <div class="sub-header">🛞 Reifendruck (bar)</div>
-            <div class="row">
-                <div class="form-group col"><label>Vorne</label><input type="text" id="pressure-front" placeholder="z.B. 2.1"></div>
-                <div class="form-group col"><label>Hinten</label><input type="text" id="pressure-rear" placeholder="z.B. 1.7"></div>
+            <div class="setup-section-title">🛞 Reifendruck</div>
+            <div class="grid-2">
+                <div>
+                    <label style="font-size:0.75rem">Vorne</label>
+                    <div class="pressure-group">
+                        <input type="text" id="tireFront" placeholder="z.B. 2.1">
+                        <button type="button" class="btn-pressure" onclick="adjustPressure('tireFront', -0.1)">-</button>
+                        <button type="button" class="btn-pressure" onclick="adjustPressure('tireFront', 0.1)">+</button>
+                    </div>
+                </div>
+                <div>
+                    <label style="font-size:0.75rem">Hinten</label>
+                    <div class="pressure-group">
+                        <input type="text" id="tireRear" placeholder="z.B. 1.9">
+                        <button type="button" class="btn-pressure" onclick="adjustPressure('tireRear', -0.1)">-</button>
+                        <button type="button" class="btn-pressure" onclick="adjustPressure('tireRear', 0.1)">+</button>
+                    </div>
+                </div>
             </div>
 
-            <div class="sub-header">⚙️ Übersetzung</div>
-            <div class="row">
-                <div class="form-group col"><label>Ritzel Vorne</label><input type="text" id="gear-front" placeholder="z.B. 15"></div>
-                <div class="form-group col"><label>Kettenrad Hinten</label><input type="text" id="gear-rear" placeholder="z.B. 42"></div>
+            <div>
+                <label style="font-size:0.75rem; font-weight:bold; color:var(--text-muted); margin-top:6px; display:block;">Reifenbild / Verschleiß (Foto)</label>
+                <input type="file" id="tireImageInput" accept="image/*" onchange="handleImageUpload(event)">
+                <div id="tireImageContainer" class="img-container">
+                    <img id="tireImagePreview" class="img-preview" alt="Reifenbild Vorschau" onclick="openModal(this.src)">
+                    <button type="button" class="delete-img-btn" onclick="deleteTireImage()" title="Bild löschen">✕</button>
+                </div>
             </div>
 
-            <div class="sub-header">🔧 Fahrwerk Gabel (Vorne)</div>
-            <div class="form-group"><label>Federvorspannung (Ringe / mm)</label><input type="text" id="fork-preload" placeholder="z.B. 5 Ringen sichtbar / 12mm"></div>
-            <div class="row">
-                <div class="form-group col"><label>Zugstufe (clicks)</label><input type="text" id="fork-rebound" placeholder="z.B. 10 auf"></div>
-                <div class="form-group col"><label>Druckstufe (clicks)</label><input type="text" id="fork-compression" placeholder="z.B. 12 auf"></div>
+            <div class="setup-section-title">🌡️ Bedingungen & Übersetzung</div>
+            <div class="grid-3">
+                <div>
+                    <label style="font-size:0.75rem">Außen / Asph.</label>
+                    <input type="text" id="outsideTemp" placeholder="24°/35°">
+                </div>
+                <div>
+                    <label style="font-size:0.75rem">Grip & Wetter</label>
+                    <input type="text" id="gripNotes" placeholder="Sonne, super Grip">
+                </div>
+                <div>
+                    <label style="font-size:0.75rem">Übersetzung</label>
+                    <input type="text" id="gearing" placeholder="15/42">
+                </div>
             </div>
 
-            <div class="sub-header">🔧 Fahrwerk Federbein (Hinten)</div>
-            <div class="form-group"><label>Federvorspannung (Gewinde / mm)</label><input type="text" id="shock-preload" placeholder="z.B. 10mm Gewinde frei"></div>
-            <div class="row">
-                <div class="form-group col"><label>Zugstufe (clicks)</label><input type="text" id="shock-rebound" placeholder="z.B. 14 auf"></div>
-                <div class="form-group col"><label>Druckstufe (High/Low)</label><input type="text" id="shock-compression" placeholder="z.B. 1.5 Umdrehungen"></div>
+            <div class="setup-section-title">⚙️ Fahrwerkseinstellungen (v / h)</div>
+            <div class="grid-3">
+                <div>
+                    <label style="font-size:0.75rem">Zugstufe</label>
+                    <input type="text" id="rebound" placeholder="8 / 10">
+                </div>
+                <div>
+                    <label style="font-size:0.75rem">Druckstufe</label>
+                    <input type="text" id="compression" placeholder="6 / 8">
+                </div>
+                <div>
+                    <label style="font-size:0.75rem">Vorspannung</label>
+                    <input type="text" id="preload" placeholder="5R / 12mm">
+                </div>
             </div>
 
-            <div class="sub-header">📝 Notizen / Feedback</div>
-            <div class="form-group"><textarea id="setup-notes" rows="3" placeholder="Wie lief der Turn auf dieser Strecke? Grip etc."></textarea></div>
+            <div class="setup-section-title">📝 Turn-Feedback / Notizen</div>
+            <div>
+                <textarea id="quickFeedback" rows="3" placeholder="Z.B. Vorderrad stempelt beim harten Anbremsen in T1..."></textarea>
+            </div>
+        </div>
 
-            <button class="action-btn" id="save-setup-btn">Setup speichern</button>
-            <div id="success-message">Erfolgreich gespeichert!</div>
-            <div id="info-message">Gewähltes Setup geladen!</div>
+        <button class="btn-success" onclick="saveData()">💾 Speichern</button>
+        <button class="btn-warning" onclick="saveAsBaseline()">⭐ Aktuelles Setup als Basis-Setup speichern</button>
+        <button class="btn-secondary" onclick="loadBaseline()">⭐ Basis-Setup laden</button>
+        <button class="btn-danger" onclick="deleteCurrentSession()">🗑️ Diesen Eintrag löschen</button>
+        <button class="btn-secondary" onclick="exportData()">Daten Teilen / Exportieren</button>
+        <div id="saveNotice" class="save-notice">Erfolgreich gespeichert!</div>
+    </div>
+
+    <!-- SEITE 2: KURVEN & LINIE -->
+    <div id="pageCurves" class="page-content">
+        <div class="setup-box">
+            <h3>🗺️ Strecken- & Kurvennotizen</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0;">
+                Bewerte deine Kurven mit der Ampel (🔴 🟡 🟢) und klappe die Profi-Details aus.
+            </p>
+        </div>
+        <div id="curvesContainer"></div>
+        <button class="btn-success" onclick="saveData()">💾 Kurven-Daten speichern</button>
+        <div id="saveNoticeCurves" class="save-notice">Kurven erfolgreich gespeichert!</div>
+    </div>
+
+    <!-- SEITE 3: RUNDENZEITEN -->
+    <div id="pageLaps" class="page-content">
+        <div class="setup-box">
+            <div class="alltime-container">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span class="alltime-title" style="margin:0;">🏆 All-Time-Best</span>
+                    <button type="button" class="btn-small-danger" onclick="confirmClearAllTimeBest()">🗑️ Rekord löschen</button>
+                </div>
+                <div class="alltime-box">
+                    <div>
+                        <div id="allTimeDate" class="alltime-date">Noch keine Zeit</div>
+                    </div>
+                    <div>
+                        <div id="allTimeValue" class="alltime-value">--:--.---</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3>⏱️ Rundenzeiten & Stints</h3>
+            
+            <div style="background: #f0fdf4; border: 1px dashed var(--success); padding: 10px; border-radius: 6px; margin-top:12px;">
+                <label style="font-size:0.8rem; font-weight:bold; color:var(--success); display:block;">📸 Zettel abfotografieren & einlesen</label>
+                <input type="file" accept="image/*" capture="environment" id="lapPhotoInput" onchange="handleLapPhotoScan(event)">
+                <div id="scanStatus" style="font-size: 0.8rem; font-weight: bold; margin-top: 5px; color: var(--success); display: none;">Foto analysiert!</div>
+            </div>
+
+            <div style="background: #fff; border: 1px dashed var(--primary); padding: 10px; border-radius: 6px; margin-top: 10px;">
+                <label style="font-size:0.85rem; font-weight:bold; color:var(--primary); display:block; margin-bottom:6px;">➕ Manuell hinzufügen</label>
+                <div class="grid-4">
+                    <div><label style="font-size:0.7rem; color:var(--text-muted)">Runde</label><input type="number" id="manualLapNum" placeholder="Nr."></div>
+                    <div><label style="font-size:0.7rem; color:var(--text-muted)">Minuten</label><input type="number" id="manualMin" placeholder="2"></div>
+                    <div><label style="font-size:0.7rem; color:var(--text-muted)">Sekunden</label><input type="number" id="manualSec" placeholder="05"></div>
+                    <div><label style="font-size:0.7rem; color:var(--text-muted)">Hundertstel</label><input type="number" id="manualMs" placeholder="10"></div>
+                </div>
+                <button type="button" class="btn-success" style="margin-top:6px;" onclick="addManualLap()">Runde hinzufügen</button>
+            </div>
+
+            <div style="margin-top: 12px;">
+                <label style="font-size:0.75rem; font-weight:bold; color:var(--primary);">Gespeicherte Rundenzeiten (Protokoll)</label>
+                <textarea id="lapTimes" rows="6" oninput="analyzeLaps()"></textarea>
+            </div>
+            <button type="button" class="btn-danger" onclick="confirmClearLaps()">🗑️ Alle Rundenzeiten löschen</button>
+
+            <div id="lapAnalysis" class="lap-analysis-box" style="display:none;"></div>
+
+            <button class="btn-success" onclick="saveData()">💾 Zeiten speichern</button>
+            <div id="saveNoticeLaps" class="save-notice">Zeiten erfolgreich gespeichert!</div>
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- REITER 2: PACKLISTE                        -->
-    <!-- ========================================== -->
-    <div id="tab-packing" class="tab-content">
-        <h3>🎒 Trackday Packliste</h3>
-        <div id="last-saved-time" class="save-status">Automatisch gespeichert: -</div>
-        
-        <div id="packing-categories-container">
-            <!-- Wird dynamisch geladen -->
+    <!-- SEITE 4: CUP -->
+    <div id="pageCup" class="page-content">
+        <div class="setup-box">
+            <h3>🌐 Cup-Ergebnisse (PDF)</h3>
+            <button type="button" class="btn-success" style="font-size: 1.1rem; padding: 15px;" onclick="openCupInBrowser()">📄 Cup-PDF öffnen</button>
+            <div style="margin-top:20px;">
+                <label style="font-size:0.75rem; font-weight:bold; color:var(--primary)">PDF-Link anpassen:</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="url" id="cupUrlInput" placeholder="https://..." style="margin-bottom:0;">
+                    <button type="button" class="btn-secondary" style="margin-top:0; width:auto; padding: 0 15px;" onclick="saveCupUrl()">Speichern</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEITE 5: PACKLISTE -->
+    <div id="pagePack" class="page-content">
+        <div class="pack-box">
+            <h3>Packliste</h3>
+            <div style="background: #f8fafc; border: 1px solid var(--border); padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+                <div class="grid-2" style="margin-bottom: 6px;">
+                    <div>
+                        <label for="packDateSelect" style="font-size:0.75rem; font-weight:bold;">📅 Speicher-Datum:</label>
+                        <select id="packDateSelect" onchange="onPackDateChange()"></select>
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button type="button" class="btn-secondary" style="margin-top:0; padding: 8px; font-size: 0.8rem;" onclick="startNewPackSession()">➕ Neues Datum</button>
+                    </div>
+                </div>
+                <button type="button" class="btn-success" style="margin-top: 4px; padding: 8px; font-size: 0.85rem;" onclick="savePacking(true)">💾 Packliste speichern</button>
+                <div id="saveNoticePack" class="save-notice">Erfolgreich gespeichert!</div>
+            </div>
+
+            <!-- Kategorien 1-4 -->
+            <div class="pack-category-container">
+                <div class="pack-category"><span>🏍️ Motorrad & Technik</span></div>
+                <div id="cat_items_1">
+                    <div class="pack-item" data-id="p1">
+                        <div class="pack-item-left"><input type="checkbox" id="p1" onchange="savePacking()"><label for="p1">Motorrad</label></div>
+                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
+                    </div>
+                    <div class="pack-item" data-id="p2">
+                        <div class="pack-item-left"><input type="checkbox" id="p2" onchange="savePacking()"><label for="p2">Zweitschlüssel & Papiere</label></div>
+                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
+                    </div>
+                    <div class="pack-item" data-id="p3">
+                        <div class="pack-item-left"><input type="checkbox" id="p3" onchange="savePacking()"><label for="p3">Reifenwärmer</label></div>
+                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
+                    </div>
+                    <div class="pack-item" data-id="p4">
+                        <div class="pack-item-left"><input type="checkbox" id="p4" onchange="savePacking()"><label for="p4">Reifendruckprüfer</label></div>
+                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
+                    </div>
+                    <div class="pack-item" data-id="p5">
+                        <div class="pack-item-left"><input type="checkbox" id="p5" onchange="savePacking()"><label for="p5">Ersatzreifen</label></div>
+                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
+                    </div>
+                    <div class="pack-item" data-id="p7">
+                        <div class="pack-item-left"><input type="checkbox" id="p7" onchange="savePacking()"><label for="p7">Tankkanister (Benzin)</label></div>
+                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
+                    </div>
+                </div>
+                <div class="category-add-box"><input type="text" id="add_input_1" placeholder="Neues Teil..."><button type="button" onclick="addCategoryItem(1)">Hinzufügen</button></div>
+            </div>
+
+            <div class="pack-category-container">
+                <div class="pack-category"><span>🛠️ Werkzeug</span></div>
+                <div id="cat_items_2">
+                    <div class="pack-item" data-id="p9">
+                        <div class="pack-item-left"><input type="checkbox" id="p9" onchange="savePacking()"><label for="p9">Werkzeugkasten</label></div>
+                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
+                    </div>
+                    <div class="pack-item" data-id="p11">
+                        <div class="pack-item-left"><input type="checkbox" id="p11" onchange="savePacking()"><label for="p11">Montierständer</label></div>
+                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
+                    </div>
+                    <div class="pack-item" data-id="p12">
+                        <div class="pack-item-left"><input type="checkbox" id="p12" onchange="savePacking()"><label for="p12">Pavillon / Zelt</label></div>
+                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
+                    </div>
+                    <div class="pack-item" data-id="p14">
+                        <div class="pack-item-left"><input type="checkbox" id="p14" onchange="savePacking()"><label for="p14">Kabelbinder & Panzertape</label></div>
+                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
+                    </div>
+                </div>
+                <div class="category-add-box"><input type="text" id="add_input_2" placeholder="Neues Werkzeug..."><button type="button" onclick="addCategoryItem(2)">Hinzufügen</button></div>
+            </div>
+
+            <div class="pack-category-container">
+                <div class="pack-category"><span>🧑‍วม Bekleidung</span></div>
+                <div id="cat_items_3">
+                    <div class="pack-item" data-id="p16">
+                        <div class="pack-item-left"><input type="checkbox" id="p16" onchange="savePacking()"><label for="p16">Lederkombi</label></div>
+                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
+                    </div>
+                    <div class="pack-item" data-id="p17">
+                        <div class="pack-item-left"><input type="checkbox" id="p17" onchange="savePacking()"><label for="p17">Helm</label></div>
+                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
+                    </div>
+                    <div class="pack-item" data-id="p18">
+                        <div class="pack-item-left"><input type="checkbox" id="p18" onchange="savePacking()"><label for="p18">Stiefel & Handschuhe</label></div>
+                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
+                    </div>
+                    <div class="pack-item" data-id="p19">
+                        <div class="pack-item-left"><input type="checkbox" id="p19" onchange="savePacking()"><label for="p19">Rückenprotektor</label></div>
+                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
+                    </div>
+                </div>
+                <div class="category-add-box"><input type="text" id="add_input_3" placeholder="Neues Kleidungsstück..."><button type="button" onclick="addCategoryItem(3)">Hinzufügen</button></div>
+            </div>
+
+            <div class="pack-category-container">
+                <div class="pack-category"><span>🍎 Verpflegung</span></div>
+                <div id="cat_items_4">
+                    <div class="pack-item" data-id="p24">
+                        <div class="pack-item-left"><input type="checkbox" id="p24" onchange="savePacking()"><label for="p24">Wasser</label></div>
+                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
+                    </div>
+                    <div class="pack-item" data-id="p25">
+                        <div class="pack-item-left"><input type="checkbox" id="p25" onchange="savePacking()"><label for="p25">Snacks</label></div>
+                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
+                    </div>
+                    <div class="pack-item" data-id="p26">
+                        <div class="pack-item-left"><input type="checkbox" id="p26" onchange="savePacking()"><label for="p26">Smartphone & Ladekabel</label></div>
+                        <button type="button" class="btn-small-danger" onclick="deletePackItem(this)">✕</button>
+                    </div>
+                </div>
+                <div class="category-add-box"><input type="text" id="add_input_4" placeholder="Sonstiges..."><button type="button" onclick="addCategoryItem(4)">Hinzufügen</button></div>
+            </div>
         </div>
     </div>
 </div>
 
-<script>
-    /* ========================================== */
-    /* GLOBALER REITER-WECHSEL-CONTROLLER        */
-    /* ========================================== */
-    function switchTab(tabName) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+<div id="imageModal" onclick="closeModal()">
+    <span id="closeModal">&times;</span>
+    <img id="modalImg">
+</div>
 
-        if (tabName === 'setup') {
-            document.getElementById('tab-setup').classList.add('active');
-            document.querySelectorAll('.tab-btn')[0].classList.add('active');
-        } else if (tabName === 'packing') {
-            document.getElementById('tab-packing').classList.add('active');
-            document.querySelectorAll('.tab-btn')[1].classList.add('active');
-            renderPackingList();
-        }
-    }
-
-
-    /* ========================================== */
-    /* MODUL 1: SETUP LOGIK                       */
-    /* ========================================== */
-    let appState = {
-        selectedBikeId: null,
-        selectedTrack: 'pannoniaring',
-        bikes: [],
-        setups: {}
-    };
-
-    function loadData() {
-        const savedBikes = localStorage.getItem('ur_bikes');
-        const savedSetups = localStorage.getItem('ur_setups');
-        const savedLastBike = localStorage.getItem('ur_last_bike');
-        
-        if (savedBikes) appState.bikes = JSON.parse(savedBikes);
-        if (savedSetups) appState.setups = JSON.parse(savedSetups);
-        if (savedLastBike) appState.selectedBikeId = savedLastBike;
-    }
-
-    function saveData() {
-        localStorage.setItem('ur_bikes', JSON.stringify(appState.bikes));
-        localStorage.setItem('ur_setups', JSON.stringify(appState.setups));
-        if (appState.selectedBikeId) {
-            localStorage.setItem('ur_last_bike', appState.selectedBikeId);
-        }
-    }
-
-    function renderBikes() {
-        const select = document.getElementById('bike-select');
-        select.innerHTML = '<option value="">-- Bitte Motorrad wählen --</option>';
-
-        appState.bikes.forEach(bike => {
-            const option = document.createElement('option');
-            option.value = bike.id;
-            option.textContent = `${bike.brand} ${bike.model} (${bike.year})`;
-            if (bike.id === appState.selectedBikeId) {
-                option.selected = true;
-            }
-            select.appendChild(option);
-        });
-
-        const setupSection = document.getElementById('setup-section');
-        if (appState.selectedBikeId) {
-            setupSection.style.display = 'block';
-            loadSetup();
-        } else {
-            setupSection.style.display = 'none';
-        }
-    }
-
-    function getSetupKey() {
-        return `${appState.selectedBikeId}_${appState.selectedTrack}`;
-    }
-
-    function loadSetup() {
-        if (!appState.selectedBikeId) return;
-
-        const key = getSetupKey();
-        const setup = appState.setups[key] || {
-            front: '', rear: '',
-            gearFront: '', gearRear: '',
-            forkPreload: '', forkRebound: '', forkCompression: '',
-            shockPreload: '', shockRebound: '', shockCompression: '',
-            notes: ''
-        };
-        
-        document.getElementById('pressure-front').value = setup.front;
-        document.getElementById('pressure-rear').value = setup.rear;
-        document.getElementById('gear-front').value = setup.gearFront;
-        document.getElementById('gear-rear').value = setup.gearRear;
-        document.getElementById('fork-preload').value = setup.forkPreload;
-        document.getElementById('fork-rebound').value = setup.forkRebound;
-        document.getElementById('fork-compression').value = setup.forkCompression;
-        document.getElementById('shock-preload').value = setup.shockPreload;
-        document.getElementById('shock-rebound').value = setup.shockRebound;
-        document.getElementById('shock-compression').value = setup.shockCompression;
-        document.getElementById('setup-notes').value = setup.notes;
-    }
-
-    function showInfoMessage(text) {
-        const msg = document.getElementById('info-message');
-        msg.textContent = text;
-        msg.style.display = 'block';
-        setTimeout(() => { msg.style.display = 'none'; }, 1500);
-    }
-
-    document.getElementById('add-bike-btn').addEventListener('click', () => {
-        const brand = document.getElementById('bike-brand').value.trim();
-        const model = document.getElementById('bike-model').value.trim();
-        const year = document.getElementById('bike-year').value.trim();
-
-        if (!brand || !model) {
-            alert('Bitte mindestens Marke und Modell eingeben!');
-            return;
-        }
-
-        const newBike = {
-            id: 'bike_' + Date.now(),
-            brand: brand,
-            model: model,
-            year: year || 'k.A.'
-        };
-
-        appState.bikes.push(newBike);
-        appState.selectedBikeId = newBike.id;
-        saveData();
-        renderBikes();
-        showInfoMessage('Neues Motorrad hinzugefügt & ausgewählt!');
-
-        document.getElementById('bike-brand').value = '';
-        document.getElementById('bike-model').value = '';
-        document.getElementById('bike-year').value = '';
-    });
-
-    document.getElementById('bike-select').addEventListener('change', (e) => {
-        appState.selectedBikeId = e.target.value;
-        saveData();
-        renderBikes();
-        if (appState.selectedBikeId) {
-            showInfoMessage('Motorrad gewechselt – Setup geladen!');
-        }
-    });
-
-    document.getElementById('track-select').addEventListener('change', (e) => {
-        appState.selectedTrack = e.target.value;
-        loadSetup();
-        showInfoMessage('Strecke gewechselt – Setup geladen!');
-    });
-
-    document.getElementById('save-setup-btn').addEventListener('click', () => {
-        if (!appState.selectedBikeId) return;
-
-        const key = getSetupKey();
-        appState.setups[key] = {
-            front: document.getElementById('pressure-front').value,
-            rear: document.getElementById('pressure-rear').value,
-            gearFront: document.getElementById('gear-front').value,
-            gearRear: document.getElementById('gear-rear').value,
-            forkPreload: document.getElementById('fork-preload').value,
-            forkRebound: document.getElementById('fork-rebound').value,
-            forkCompression: document.getElementById('fork-compression').value,
-            shockPreload: document.getElementById('shock-preload').value,
-            shockRebound: document.getElementById('shock-rebound').value,
-            shockCompression: document.getElementById('shock-compression').value,
-            notes: document.getElementById('setup-notes').value
-        };
-
-        saveData();
-        const msg = document.getElementById('success-message');
-        msg.style.display = 'block';
-        setTimeout(() => { msg.style.display = 'none'; }, 2000);
-    });
-
-
-    /* ========================================== */
-    /* MODUL 2: ERWEITERTE PACKLISTEN LOGIK       */
-    /* ========================================== */
-    const defaultPackingData = {
-        "motorrad": {
-            title: "🏍️ Motorrad & Technik",
-            items: [
-                { id: "m1", text: "Motorrad & Zentralständer / Montageständer", default: true },
-                { id: "m2", text: "Reifenwärmer & Verlängerungskabel", default: true },
-                { id: "m3", text: "Luftdruckprüfer & Pumpe / Kompressor", default: true },
-                { id: "m4", text: "Ersatz-Kraftstoff (Benzinkanister & Rüssel)", default: true },
-                { id: "m5", text: "Ersatzteile (Hebel, Bremsbeläge, Ritzel/Kettenrad)", default: true }
-            ]
-        },
-        "box": {
-            title: "⛺ Fahrerlager & Box",
-            items: [
-                { id: "b1", text: "Fahrerlagerzelt (Pavillon) & Gewichte", default: true },
-                { id: "b2", text: "Werkzeugkasten & Panzertape / Kabelbinder", default: true },
-                { id: "b3", text: "Campingstühle & Tisch", default: true },
-                { id: "b4", text: "Kabeltrommel & Mehrfachstecker", default: true }
-            ]
-        },
-        "fahrer": {
-            title: "🪖 Fahrer & Ausrüstung",
-            items: [
-                { id: "f1", text: "Lederkombi, Helm, Handschuhe, Stiefel", default: true },
-                { id: "f2", text: "Rückenprotektor & Funktionsunterwäsche", default: true },
-                { id: "f3", text: "Zweites Paar Handschuhe / Visier (klar/getönt)", default: true },
-                { id: "f4", text: "Ohrstöpsel & Regenkombi", default: true }
-            ]
-        },
-        "essen": {
-            title: "🍎 Essen & Trinken",
-            items: [
-                { id: "e1", text: "Ausreichend Wasser & Isotonische Getränke", default: true },
-                { id: "e2", text: "Energieriegel / Bananen / Traubenzucker", default: true },
-                { id: "e3", text: "Mittagsverpflegung / Snacks", default: true }
-            ]
-        }
-    };
-
-    function renderPackingList() {
-        const container = document.getElementById('packing-categories-container');
-        container.innerHTML = '';
-
-        const savedData = JSON.parse(localStorage.getItem('ur_packing_data') || '{}');
-        const customItems = JSON.parse(localStorage.getItem('ur_packing_custom') || '{}');
-        const lastSaved = localStorage.getItem('ur_packing_timestamp') || '-';
-
-        document.getElementById('last-saved-time').textContent = `Zuletzt gespeichert: ${lastSaved}`;
-
-        Object.keys(defaultPackingData).forEach(catKey => {
-            const cat = defaultPackingData[catKey];
-            
-            const box = document.createElement('div');
-            box.className = 'category-box';
-            
-            let html = `<div class="category-title">${cat.title}</div>`;
-
-            cat.items.forEach(item => {
-                const isChecked = savedData[item.id] ? 'checked' : '';
-                html += `
-                    <div class="packing-item">
-                        <div class="packing-item-left">
-                            <input type="checkbox" id="${item.id}" ${isChecked} onchange="savePackingData()">
-                            <label for="${item.id}" style="cursor: pointer; font-weight: normal; margin-bottom: 0;">${item.text}</label>
-                        </div>
-                    </div>
-                `;
-            });
-
-            const catCustom = customItems[catKey] || [];
-            catCustom.forEach((customItem, index) => {
-                const isChecked = savedData[customItem.id] ? 'checked' : '';
-                html += `
-                    <div class="packing-item">
-                        <div class="packing-item-left">
-                            <input type="checkbox" id="${customItem.id}" ${isChecked} onchange="savePackingData()">
-                            <label for="${customItem.id}" style="cursor: pointer; font-weight: normal; margin-bottom: 0;">${customItem.text}</label>
-                        </div>
-                        <button class="delete-btn" onclick="deleteCustomItem('${catKey}', ${index})">Löschen</button>
-                    </div>
-                `;
-            });
-
-            html += `
-                <div class="add-item-row">
-                    <input type="text" id="new-item-${catKey}" placeholder="Neuen Artikel hinzufügen...">
-                    <button class="add-item-btn" onclick="addCustomItem('${catKey}')">Hinzufügen</button>
-                </div>
-            `;
-
-            box.innerHTML = html;
-            container.appendChild(box);
-        });
-    }
-
-    function addCustomItem(catKey) {
-        const input = document.getElementById(`new-item-${catKey}`);
-        const text = input.value.trim();
-        if (!text) return;
-
-        let customItems = JSON.parse(localStorage.getItem('ur_packing_custom') || '{}');
-        if (!customItems[catKey]) {
-            customItems[catKey] = [];
-        }
-
-        const newItem = {
-            id: 'custom_' + Date.now() + '_' + Math.floor(Math.random()*1000),
-            text: text
-        };
-
-        customItems[catKey].push(newItem);
-        localStorage.setItem('ur_packing_custom', JSON.stringify(customItems));
-
-        updateTimestamp();
-        renderPackingList();
-    }
-
-    function deleteCustomItem(catKey, index) {
-        if (!confirm("Möchtest du diesen Artikel wirklich aus der Packliste löschen?")) {
-            return;
-        }
-
-        let customItems = JSON.parse(localStorage.getItem('ur_packing_custom') || '{}');
-        if (customItems[catKey]) {
-            customItems[catKey].splice(index, 1);
-            localStorage.setItem('ur_packing_custom', JSON.stringify(customItems));
-        }
-
-        updateTimestamp();
-        renderPackingList();
-    }
-
-    function savePackingData() {
-        const savedData = {};
-        
-        Object.keys(defaultPackingData).forEach(catKey => {
-            defaultPackingData[catKey].items.forEach(item => {
-                const cb = document.getElementById(item.id);
-                if (cb && cb.checked) {
-                    savedData[item.id] = true;
-                }
-            });
-        });
-
-        const customItems = JSON.parse(localStorage.getItem('ur_packing_custom') || '{}');
-        Object.keys(customItems).forEach(catKey => {
-            customItems[catKey].forEach(item => {
-                const cb = document.getElementById(item.id);
-                if (cb && cb.checked) {
-                    savedData[item.id] = true;
-                }
-            });
-        });
-
-        localStorage.setItem('ur_packing_data', JSON.stringify(savedData));
-        updateTimestamp();
-    }
-
-    function updateTimestamp() {
-        const now = new Date();
-        const timeString = now.toLocaleDateString('de-DE') + ', ' + now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' Uhr';
-        localStorage.setItem('ur_packing_timestamp', timeString);
-        
-        const timeDisplay = document.getElementById('last-saved-time');
-        if (timeDisplay) {
-            timeDisplay.textContent = `Automatisch gespeichert: ${timeString}`;
-        }
-    }
-
-    // App beim Start initialisieren
-    loadData();
-    renderBikes();
-</script>
-
+<!-- JavaScript Module einbinden -->
+<script src="app.js"></script>
+<script src="pack.js"></script>
 </body>
 </html>
