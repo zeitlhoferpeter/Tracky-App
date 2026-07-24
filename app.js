@@ -13,6 +13,29 @@ function initApp() {
     loadCupUrl();
 }
 
+// --- SEITEN-NAVIGATION ---
+function switchPage(pageId) {
+    document.querySelectorAll('.page-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    
+    if (pageId === 'app') {
+        document.getElementById('pageApp').classList.add('active');
+        document.getElementById('tabAppBtn').classList.add('active');
+    } else if (pageId === 'curves') {
+        document.getElementById('pageCurves').classList.add('active');
+        document.getElementById('tabCurvesBtn').classList.add('active');
+    } else if (pageId === 'laps') {
+        document.getElementById('pageLaps').classList.add('active');
+        document.getElementById('tabLapsBtn').classList.add('active');
+    } else if (pageId === 'cup') {
+        document.getElementById('pageCup').classList.add('active');
+        document.getElementById('tabCupBtn').classList.add('active');
+    } else if (pageId === 'pack') {
+        document.getElementById('pagePack').classList.add('active');
+        document.getElementById('tabPackBtn').classList.add('active');
+    }
+}
+
 function onTrackChange() {
     const track = document.getElementById('trackSelect').value;
     loadSessionsForTrack(track);
