@@ -13,26 +13,37 @@ function initApp() {
     loadCupUrl();
 }
 
-// --- SEITEN-NAVIGATION ---
+// --- ULTRA-ROBUSTE SEITEN-NAVIGATION ---
 function switchPage(pageId) {
-    document.querySelectorAll('.page-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    // 1. Alle Seiten ausblenden und Klassen entfernen
+    document.querySelectorAll('.page-content').forEach(el => {
+        el.style.display = 'none';
+        el.classList.remove('active');
+    });
     
-    if (pageId === 'app') {
-        document.getElementById('pageApp').classList.add('active');
-        document.getElementById('tabAppBtn').classList.add('active');
-    } else if (pageId === 'curves') {
-        document.getElementById('pageCurves').classList.add('active');
-        document.getElementById('tabCurvesBtn').classList.add('active');
-    } else if (pageId === 'laps') {
-        document.getElementById('pageLaps').classList.add('active');
-        document.getElementById('tabLapsBtn').classList.add('active');
-    } else if (pageId === 'cup') {
-        document.getElementById('pageCup').classList.add('active');
-        document.getElementById('tabCupBtn').classList.add('active');
-    } else if (pageId === 'pack') {
-        document.getElementById('pagePack').classList.add('active');
-        document.getElementById('tabPackBtn').classList.add('active');
+    // 2. Alle Tab-Buttons deaktivieren
+    document.querySelectorAll('.tab-btn').forEach(el => {
+        el.classList.remove('active');
+    });
+
+    // 3. Ziel-Seite finden (egal ob ID 'curves', 'pageCurves' oder 'page-curves')
+    let targetPage = document.getElementById(pageId) || 
+                     document.getElementById('page' + pageId) || 
+                     document.getElementById('page' + pageId.charAt(0).toUpperCase() + pageId.slice(1));
+    
+    if (targetPage) {
+        targetPage.style.display = 'block';
+        targetPage.classList.add('active');
+    }
+
+    // 4. Entsprechenden Button aktivieren
+    let targetBtn = document.getElementById(pageId + 'Btn') || 
+                    document.getElementById('tab' + pageId) || 
+                    document.getElementById('tab' + pageId + 'Btn') || 
+                    document.getElementById('tab' + pageId.charAt(0).toUpperCase() + pageId.slice(1) + 'Btn');
+    
+    if (targetBtn) {
+        targetBtn.classList.add('active');
     }
 }
 
@@ -49,7 +60,9 @@ function getSessionsKey(track) {
 
 function loadSessionsForTrack(track) {
     const sessionSelect = document.getElementById('sessionSelect');
+    if (!sessionSelect) return;
     sessionSelect.innerHTML = '';
+    
     let sessions = JSON.parse(localStorage.getItem(getSessionsKey(track))) || {};
     
     // Sortiere die Schlüssel exakt nach Datum absteigend (neuester Eintrag zuerst)
@@ -84,7 +97,7 @@ function getEmptySessionData() {
 
 function onSessionChange() {
     const sessionSelect = document.getElementById('sessionSelect');
-    loadSessionData(sessionSelect.value);
+    if (sessionSelect) loadSessionData(sessionSelect.value);
 }
 
 function loadSessionData(sessionKey) {
@@ -92,28 +105,35 @@ function loadSessionData(sessionKey) {
     const sessions = JSON.parse(localStorage.getItem(getSessionsKey(track))) || {};
     const data = sessions[sessionKey] || getEmptySessionData();
 
-    document.getElementById('tireFront').value = data.tireFront || '';
-    document.getElementById('tireRear').value = data.tireRear || '';
-    document.getElementById('outsideTemp').value = data.outsideTemp || '';
-    document.getElementById('gripNotes').value = data.gripNotes || '';
-    document.getElementById('gearing').value = data.gearing || '';
-    document.getElementById('rebound').value = data.rebound || '';
-    document.getElementById('compression').value = data.compression || '';
-    document.getElementById('preload').value = data.preload || '';
-    document.getElementById('quickFeedback').value = data.quickFeedback || '';
-    document.getElementById('lapTimes').value = data.lapTimes || '';
+    setFieldValue('tireFront', data.tireFront);
+    setFieldValue('tireRear', data.tireRear);
+    setFieldValue('outsideTemp', data.outsideTemp);
+    setFieldValue('gripNotes', data.gripNotes);
+    setFieldValue('gearing', data.gearing);
+    setFieldValue('rebound', data.rebound);
+    setFieldValue('compression', data.compression);
+    setFieldValue('preload', data.preload);
+    setFieldValue('quickFeedback', data.quickFeedback);
+    setFieldValue('lapTimes', data.lapTimes);
 
     const imgPrev = document.getElementById('tireImagePreview');
     const imgCont = document.getElementById('tireImageContainer');
-    if (data.tireImage) {
-        imgPrev.src = data.tireImage;
-        imgCont.style.display = 'block';
-    } else {
-        imgPrev.src = '';
-        imgCont.style.display = 'none';
+    if (imgPrev && imgCont) {
+        if (data.tireImage) {
+            imgPrev.src = data.tireImage;
+            imgCont.style.display = 'block';
+        } else {
+            imgPrev.src = '';
+            imgCont.style.display = 'none';
+        }
     }
 
     analyzeLaps();
+}
+
+function setFieldValue(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.value = val || '';
 }
 
 function startNewSessionForm() {
@@ -134,24 +154,29 @@ function startNewSessionForm() {
 function saveData() {
     const track = document.getElementById('trackSelect').value;
     const sessionSelect = document.getElementById('sessionSelect');
+    if (!sessionSelect) return;
     const sessionKey = sessionSelect.value;
 
     if (!sessionKey) return;
 
     let sessions = JSON.parse(localStorage.getItem(getSessionsKey(track))) || {};
     
+    const preview = document.getElementById('tireImagePreview');
+    const existingImg = sessions[sessionKey]?.tireImage || '';
+    const imgSrc = preview && preview.src.startsWith('data:') ? preview.src : existingImg;
+
     sessions[sessionKey] = {
-        tireFront: document.getElementById('tireFront').value,
-        tireRear: document.getElementById('tireRear').value,
-        outsideTemp: document.getElementById('outsideTemp').value,
-        gripNotes: document.getElementById('gripNotes').value,
-        gearing: document.getElementById('gearing').value,
-        rebound: document.getElementById('rebound').value,
-        compression: document.getElementById('compression').value,
-        preload: document.getElementById('preload').value,
-        quickFeedback: document.getElementById('quickFeedback').value,
-        lapTimes: document.getElementById('lapTimes').value,
-        tireImage: document.getElementById('tireImagePreview').src.startsWith('data:') ? document.getElementById('tireImagePreview').src : (sessions[sessionKey]?.tireImage || '')
+        tireFront: document.getElementById('tireFront')?.value || '',
+        tireRear: document.getElementById('tireRear')?.value || '',
+        outsideTemp: document.getElementById('outsideTemp')?.value || '',
+        gripNotes: document.getElementById('gripNotes')?.value || '',
+        gearing: document.getElementById('gearing')?.value || '',
+        rebound: document.getElementById('rebound')?.value || '',
+        compression: document.getElementById('compression')?.value || '',
+        preload: document.getElementById('preload')?.value || '',
+        quickFeedback: document.getElementById('quickFeedback')?.value || '',
+        lapTimes: document.getElementById('lapTimes')?.value || '',
+        tireImage: imgSrc
     };
 
     localStorage.setItem(getSessionsKey(track), JSON.stringify(sessions));
@@ -165,6 +190,7 @@ function saveData() {
 function deleteCurrentSession() {
     const track = document.getElementById('trackSelect').value;
     const sessionSelect = document.getElementById('sessionSelect');
+    if (!sessionSelect) return;
     const sessionKey = sessionSelect.value;
 
     let sessions = JSON.parse(localStorage.getItem(getSessionsKey(track))) || {};
@@ -184,12 +210,12 @@ function deleteCurrentSession() {
 function saveAsBaseline() {
     const track = document.getElementById('trackSelect').value;
     const baseline = {
-        tireFront: document.getElementById('tireFront').value,
-        tireRear: document.getElementById('tireRear').value,
-        gearing: document.getElementById('gearing').value,
-        rebound: document.getElementById('rebound').value,
-        compression: document.getElementById('compression').value,
-        preload: document.getElementById('preload').value
+        tireFront: document.getElementById('tireFront')?.value || '',
+        tireRear: document.getElementById('tireRear')?.value || '',
+        gearing: document.getElementById('gearing')?.value || '',
+        rebound: document.getElementById('rebound')?.value || '',
+        compression: document.getElementById('compression')?.value || '',
+        preload: document.getElementById('preload')?.value || ''
     };
     localStorage.setItem(`baseline_${track}`, JSON.stringify(baseline));
     showNotice('saveNotice', 'Basis-Setup für ' + tracksData[track].name + ' gespeichert!');
@@ -202,12 +228,12 @@ function loadBaseline() {
         alert('Kein Basis-Setup für diese Strecke gefunden!');
         return;
     }
-    document.getElementById('tireFront').value = baseline.tireFront || '';
-    document.getElementById('tireRear').value = baseline.tireRear || '';
-    document.getElementById('gearing').value = baseline.gearing || '';
-    document.getElementById('rebound').value = baseline.rebound || '';
-    document.getElementById('compression').value = baseline.compression || '';
-    document.getElementById('preload').value = baseline.preload || '';
+    setFieldValue('tireFront', baseline.tireFront);
+    setFieldValue('tireRear', baseline.tireRear);
+    setFieldValue('gearing', baseline.gearing);
+    setFieldValue('rebound', baseline.rebound);
+    setFieldValue('compression', baseline.compression);
+    setFieldValue('preload', baseline.preload);
     showNotice('saveNotice', 'Basis-Setup geladen!');
 }
 
@@ -277,6 +303,8 @@ function loadAllTimeBest() {
     const best = JSON.parse(localStorage.getItem(`allTimeBest_${track}`));
     const valEl = document.getElementById('allTimeValue');
     const dateEl = document.getElementById('allTimeDate');
+    if (!valEl || !dateEl) return;
+    
     if (best && best.timeStr) {
         valEl.textContent = best.timeStr;
         dateEl.textContent = best.date || 'Unbekanntes Datum';
@@ -295,8 +323,11 @@ function confirmClearAllTimeBest() {
 }
 
 function analyzeLaps() {
-    const text = document.getElementById('lapTimes').value;
+    const lapTimesInput = document.getElementById('lapTimes');
     const analysisBox = document.getElementById('lapAnalysis');
+    if (!lapTimesInput || !analysisBox) return;
+
+    const text = lapTimesInput.value;
     if (!text.trim()) {
         analysisBox.style.display = 'none';
         return;
@@ -331,7 +362,7 @@ function analyzeLaps() {
     const currentBestKey = `allTimeBest_${track}`;
     const existingBest = JSON.parse(localStorage.getItem(currentBestKey));
     
-    let sessionKey = document.getElementById('sessionSelect').value || 'Aktuell';
+    let sessionKey = document.getElementById('sessionSelect')?.value || 'Aktuell';
     if (!existingBest || bestMs < existingBest.ms) {
         const newBest = { ms: bestMs, timeStr: bestStr, date: sessionKey };
         localStorage.setItem(currentBestKey, JSON.stringify(newBest));
@@ -354,10 +385,10 @@ function analyzeLaps() {
 }
 
 function addManualLap() {
-    const min = document.getElementById('manualMin').value;
-    const sec = document.getElementById('manualSec').value;
-    const ms = document.getElementById('manualMs').value;
-    const num = document.getElementById('manualLapNum').value;
+    const min = document.getElementById('manualMin')?.value;
+    const sec = document.getElementById('manualSec')?.value;
+    const ms = document.getElementById('manualMs')?.value;
+    const num = document.getElementById('manualLapNum')?.value;
 
     if (!min || !sec || !ms) {
         alert('Bitte Minuten, Sekunden und Hundertstel ausfüllen!');
@@ -366,12 +397,14 @@ function addManualLap() {
 
     const formatted = `${num ? 'R' + num + ': ' : ''}${min}:${sec.padStart(2,'0')}.${ms.padEnd(3,'0')}`;
     const textarea = document.getElementById('lapTimes');
-    textarea.value += (textarea.value ? '\n' : '') + formatted;
+    if (textarea) {
+        textarea.value += (textarea.value ? '\n' : '') + formatted;
+    }
     
-    document.getElementById('manualMin').value = '';
-    document.getElementById('manualSec').value = '';
-    document.getElementById('manualMs').value = '';
-    document.getElementById('manualLapNum').value = '';
+    setFieldValue('manualMin', '');
+    setFieldValue('manualSec', '');
+    setFieldValue('manualMs', '');
+    setFieldValue('manualLapNum', '');
 
     analyzeLaps();
     saveData();
@@ -379,7 +412,8 @@ function addManualLap() {
 
 function confirmClearLaps() {
     if(confirm("Alle Rundenzeiten dieses Eintrags löschen?")) {
-        document.getElementById('lapTimes').value = '';
+        const textarea = document.getElementById('lapTimes');
+        if (textarea) textarea.value = '';
         analyzeLaps();
         saveData();
     }
@@ -389,33 +423,40 @@ function handleLapPhotoScan(event) {
     const file = event.target.files[0];
     if(!file) return;
     const status = document.getElementById('scanStatus');
-    status.style.display = 'block';
-    status.textContent = "Foto wird analysiert...";
+    if (status) {
+        status.style.display = 'block';
+        status.textContent = "Foto wird analysiert...";
+    }
     setTimeout(() => {
         const textarea = document.getElementById('lapTimes');
-        textarea.value += (textarea.value ? '\n' : '') + "2:14.520\n2:13.890\n2:14.100";
+        if (textarea) {
+            textarea.value += (textarea.value ? '\n' : '') + "2:14.520\n2:13.890\n2:14.100";
+        }
         analyzeLaps();
         saveData();
-        status.textContent = "Foto erfolgreich analysiert & Runden hinzugefügt!";
+        if (status) status.textContent = "Foto erfolgreich analysiert & Runden hinzugefügt!";
     }, 1000);
 }
 
 // --- CUP & IMAGES ---
 function openCupInBrowser() {
-    const url = document.getElementById('cupUrlInput').value || '#';
+    const urlInput = document.getElementById('cupUrlInput');
+    const url = urlInput ? urlInput.value : '#';
     window.open(url, '_blank');
 }
 
 function saveCupUrl() {
-    const url = document.getElementById('cupUrlInput').value;
-    localStorage.setItem('cupUrl', url);
+    const urlInput = document.getElementById('cupUrlInput');
+    if (!urlInput) return;
+    localStorage.setItem('cupUrl', urlInput.value);
     showNotice('saveNotice', 'Cup-Link gespeichert!');
 }
 
 function loadCupUrl() {
+    const urlInput = document.getElementById('cupUrlInput');
     const url = localStorage.getItem('cupUrl');
-    if(url) {
-        document.getElementById('cupUrlInput').value = url;
+    if(url && urlInput) {
+        urlInput.value = url;
     }
 }
 
@@ -426,15 +467,19 @@ function handleImageUpload(event) {
     reader.onload = function(e) {
         const imgPrev = document.getElementById('tireImagePreview');
         const imgCont = document.getElementById('tireImageContainer');
-        imgPrev.src = e.target.result;
-        imgCont.style.display = 'block';
+        if (imgPrev && imgCont) {
+            imgPrev.src = e.target.result;
+            imgCont.style.display = 'block';
+        }
     }
     reader.readAsDataURL(file);
 }
 
 function deleteTireImage() {
-    document.getElementById('tireImagePreview').src = '';
-    document.getElementById('tireImageContainer').style.display = 'none';
+    const imgPrev = document.getElementById('tireImagePreview');
+    const imgCont = document.getElementById('tireImageContainer');
+    if (imgPrev) imgPrev.src = '';
+    if (imgCont) imgCont.style.display = 'none';
     saveData();
 }
 
@@ -442,12 +487,15 @@ function openModal(src) {
     if(!src) return;
     const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalImg');
-    modal.style.display = 'block';
-    modalImg.src = src;
+    if (modal && modalImg) {
+        modal.style.display = 'block';
+        modalImg.src = src;
+    }
 }
 
 function closeModal() {
-    document.getElementById('imageModal').style.display = 'none';
+    const modal = document.getElementById('imageModal');
+    if (modal) modal.style.display = 'none';
 }
 
 function showNotice(elementId, text) {
