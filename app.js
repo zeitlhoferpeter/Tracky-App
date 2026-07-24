@@ -22,7 +22,7 @@ function initApp() {
 function switchPage(pageKey) {
     try {
         // Alle bekannten Seiten-IDs hart verstecken
-        ['app', 'pageApp', 'curves', 'pageCurves', 'laps', 'pageLaps', 'cup', 'pageCup', 'pack', 'pagePack'].forEach(id => {
+        ['pageApp', 'pageCurves', 'pageLaps', 'pageCup', 'pagePack'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.style.display = 'none';
@@ -36,10 +36,9 @@ function switchPage(pageKey) {
             el.classList.remove('active');
         });
 
-        // Ziel-Seite ermitteln und anzeigen
-        let target = document.getElementById(pageKey) || 
-                     document.getElementById('page' + pageKey) || 
-                     document.getElementById('page' + pageKey.charAt(0).toUpperCase() + pageKey.slice(1));
+        // Ziel-Seite ermitteln und anzeigen (sucht nach page + Key, z.B. pageCurves)
+        let target = document.getElementById('page' + pageKey.charAt(0).toUpperCase() + pageKey.slice(1)) ||
+                     document.getElementById(pageKey);
         
         if (target) {
             target.style.display = 'block';
