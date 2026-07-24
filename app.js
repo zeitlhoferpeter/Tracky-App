@@ -84,7 +84,7 @@ function loadSessionsForTrack(track) {
     
     if (keys.length === 0) {
         const defaultKey = new Date().toISOString().slice(0,16).replace('T', ' ');
-        sessions[defaultKey] = getEmptySessionData();
+        sessions[defaultKey] = getEmptySessionData(track);
         localStorage.setItem(getSessionsKey(track), JSON.stringify(sessions));
         keys = [defaultKey];
     }
@@ -100,7 +100,23 @@ function loadSessionsForTrack(track) {
     loadSessionData(keys[0]);
 }
 
-function getEmptySessionData() {
+// Lädt bei einem neuen Eintrag automatisch das streckenabhängige Basis-Setup (falls vorhanden)
+function getEmptySessionData(track) {
+    const baseline = JSON.parse(localStorage.getItem(`baseline_${track}`));
+    if (baseline) {
+        return {
+            tireFront: baseline.tireFront || '',
+            tireRear: baseline.tireRear || '',
+            outsideTemp: '',
+            gripNotes: '',
+            gearing: baseline.gearing || '',
+            rebound: baseline.rebound || '',
+            compression: baseline.compression || '',
+            preload: baseline.preload || '',
+            quickFeedback: '',
+            lapTimes: ''
+        };
+    }
     return {
         tireFront: '', tireRear: '', outsideTemp: '', gripNotes: '',
         gearing: '', rebound: '', compression: '', preload: '',
@@ -116,7 +132,7 @@ function onSessionChange() {
 function loadSessionData(sessionKey) {
     const track = document.getElementById('trackSelect').value;
     const sessions = JSON.parse(localStorage.getItem(getSessionsKey(track))) || {};
-    const data = sessions[sessionKey] || getEmptySessionData();
+    const data = sessions[sessionKey] || getEmptySessionData(track);
 
     setFieldValue('tireFront', data.tireFront);
     setFieldValue('tireRear', data.tireRear);
@@ -155,13 +171,13 @@ function startNewSessionForm() {
     const newKey = now.toISOString().slice(0,16).replace('T', ' ');
     
     let sessions = JSON.parse(localStorage.getItem(getSessionsKey(track))) || {};
-    sessions[newKey] = getEmptySessionData();
+    sessions[newKey] = getEmptySessionData(track);
     localStorage.setItem(getSessionsKey(track), JSON.stringify(sessions));
 
     loadSessionsForTrack(track);
     document.getElementById('sessionSelect').value = newKey;
     loadSessionData(newKey);
-    showNotice('saveNotice', 'Neuer Eintrag angelegt!');
+    showNotice('saveNotice', 'Neuer Eintrag angelegt (Basis-Setup übernommen)!');
 }
 
 function saveData() {
@@ -221,6 +237,12 @@ function deleteCurrentSession() {
 
 function saveAsBaseline() {
     const track = document.getElementById('trackSelect').value;
+    
+    // Sicherheitsabfrage, damit man nicht unabsichtlich das Basis-Setup überschreibt
+    if (!confirm("Möchtest du das aktuelle Setup wirklich als neues Basis-Setup für " + tracksData[track].name + " speichern?")) {
+        return;
+    }
+
     const baseline = {
         tireFront: document.getElementById('tireFront')?.value || '',
         tireRear: document.getElementById('tireRear')?.value || '',
