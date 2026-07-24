@@ -29,7 +29,9 @@ function loadSessionsForTrack(track) {
     sessionSelect.innerHTML = '';
     let sessions = JSON.parse(localStorage.getItem(getSessionsKey(track))) || {};
     
-    let keys = Object.keys(sessions).sort().reverse();
+    // Sortiere die Schlüssel exakt nach Datum absteigend (neuester Eintrag zuerst)
+    let keys = Object.keys(sessions).sort((a, b) => new Date(b) - new Date(a));
+    
     if (keys.length === 0) {
         const defaultKey = new Date().toISOString().slice(0,16).replace('T', ' ');
         sessions[defaultKey] = getEmptySessionData();
@@ -44,6 +46,7 @@ function loadSessionsForTrack(track) {
         sessionSelect.appendChild(opt);
     });
 
+    // Immer den allerneuesten Eintrag als Standard auswählen
     sessionSelect.value = keys[0];
     loadSessionData(keys[0]);
 }
