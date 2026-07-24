@@ -235,11 +235,16 @@ function deleteCurrentSession() {
     }
 }
 
-function saveAsBaseline() {
+// --- BASIS SETUP SPEICHERN & LADEN (ALLE NAMENSVARIANTEN ABGEDECKT) ---
+function saveAsBaseline() { executeSaveBaseline(); }
+function saveBaseline() { executeSaveBaseline(); }
+function saveBaseSetup() { executeSaveBaseline(); }
+
+function executeSaveBaseline() {
     const track = document.getElementById('trackSelect').value;
     
-    // Sicherheitsabfrage, damit man nicht unabsichtlich das Basis-Setup überschreibt
-    if (!confirm("Möchtest du das aktuelle Setup wirklich als neues Basis-Setup für " + tracksData[track].name + " speichern?")) {
+    // Sicherheitsabfrage mit Bestätigung, damit man nicht unabsichtlich überschreibt
+    if (!confirm("Möchtest du das aktuelle Setup wirklich als neues Basis-Setup für " + (tracksData[track]?.name || track) + " speichern?")) {
         return;
     }
 
@@ -251,8 +256,9 @@ function saveAsBaseline() {
         compression: document.getElementById('compression')?.value || '',
         preload: document.getElementById('preload')?.value || ''
     };
+    
     localStorage.setItem(`baseline_${track}`, JSON.stringify(baseline));
-    showNotice('saveNotice', 'Basis-Setup für ' + tracksData[track].name + ' gespeichert!');
+    showNotice('saveNotice', 'Basis-Setup für ' + (tracksData[track]?.name || track) + ' gespeichert!');
 }
 
 function loadBaseline() {
