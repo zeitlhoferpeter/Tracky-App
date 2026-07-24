@@ -9,49 +9,66 @@ const tracksData = {
 };
 
 function initApp() {
-    onTrackChange();
-    loadCupUrl();
+    try {
+        onTrackChange();
+        loadCupUrl();
+        switchPage('app');
+    } catch (e) {
+        console.error("Init Error:", e);
+    }
 }
 
-// --- ULTRA-ROBUSTE SEITEN-NAVIGATION ---
-function switchPage(pageId) {
-    // 1. Alle Seiten ausblenden und Klassen entfernen
-    document.querySelectorAll('.page-content').forEach(el => {
-        el.style.display = 'none';
-        el.classList.remove('active');
-    });
-    
-    // 2. Alle Tab-Buttons deaktivieren
-    document.querySelectorAll('.tab-btn').forEach(el => {
-        el.classList.remove('active');
-    });
+// --- ABSOLUT SICHERE SEITEN-NAVIGATION ---
+function switchPage(pageKey) {
+    try {
+        // Alle bekannten Seiten-IDs hart verstecken
+        ['app', 'pageApp', 'curves', 'pageCurves', 'laps', 'pageLaps', 'cup', 'pageCup', 'pack', 'pagePack'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.style.display = 'none';
+                el.classList.remove('active');
+            }
+        });
 
-    // 3. Ziel-Seite finden (egal ob ID 'curves', 'pageCurves' oder 'page-curves')
-    let targetPage = document.getElementById(pageId) || 
-                     document.getElementById('page' + pageId) || 
-                     document.getElementById('page' + pageId.charAt(0).toUpperCase() + pageId.slice(1));
-    
-    if (targetPage) {
-        targetPage.style.display = 'block';
-        targetPage.classList.add('active');
-    }
+        // Generische Klassen ebenfalls verstecken
+        document.querySelectorAll('.page-content').forEach(el => {
+            el.style.display = 'none';
+            el.classList.remove('active');
+        });
 
-    // 4. Entsprechenden Button aktivieren
-    let targetBtn = document.getElementById(pageId + 'Btn') || 
-                    document.getElementById('tab' + pageId) || 
-                    document.getElementById('tab' + pageId + 'Btn') || 
-                    document.getElementById('tab' + pageId.charAt(0).toUpperCase() + pageId.slice(1) + 'Btn');
-    
-    if (targetBtn) {
-        targetBtn.classList.add('active');
+        // Ziel-Seite ermitteln und anzeigen
+        let target = document.getElementById(pageKey) || 
+                     document.getElementById('page' + pageKey) || 
+                     document.getElementById('page' + pageKey.charAt(0).toUpperCase() + pageKey.slice(1));
+        
+        if (target) {
+            target.style.display = 'block';
+            target.classList.add('active');
+        }
+
+        // Buttons aktualisieren
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(pageKey)) {
+                btn.classList.add('active');
+            }
+        });
+    } catch (e) {
+        console.error("Navigation Error:", e);
     }
 }
 
 function onTrackChange() {
-    const track = document.getElementById('trackSelect').value;
-    loadSessionsForTrack(track);
-    renderCurves(track);
-    loadAllTimeBest();
+    try {
+        const trackEl = document.getElementById('trackSelect');
+        if (!trackEl) return;
+        const track = trackEl.value;
+        loadSessionsForTrack(track);
+        renderCurves(track);
+        loadAllTimeBest();
+    } catch (e) {
+        console.error("TrackChange Error:", e);
+    }
 }
 
 function getSessionsKey(track) {
@@ -64,8 +81,6 @@ function loadSessionsForTrack(track) {
     sessionSelect.innerHTML = '';
     
     let sessions = JSON.parse(localStorage.getItem(getSessionsKey(track))) || {};
-    
-    // Sortiere die Schlüssel exakt nach Datum absteigend (neuester Eintrag zuerst)
     let keys = Object.keys(sessions).sort((a, b) => new Date(b) - new Date(a));
     
     if (keys.length === 0) {
@@ -82,7 +97,6 @@ function loadSessionsForTrack(track) {
         sessionSelect.appendChild(opt);
     });
 
-    // Immer den allerneuesten Eintrag als Standard auswählen
     sessionSelect.value = keys[0];
     loadSessionData(keys[0]);
 }
@@ -156,7 +170,6 @@ function saveData() {
     const sessionSelect = document.getElementById('sessionSelect');
     if (!sessionSelect) return;
     const sessionKey = sessionSelect.value;
-
     if (!sessionKey) return;
 
     let sessions = JSON.parse(localStorage.getItem(getSessionsKey(track))) || {};
@@ -297,7 +310,7 @@ function saveCurvesData() {
     localStorage.setItem(`curves_${track}`, JSON.stringify(savedCurves));
 }
 
-// --- LAPS & ALL TIME BEST (STRECKENABHÄNGIG) ---
+// --- LAPS & ALL TIME BEST ---
 function loadAllTimeBest() {
     const track = document.getElementById('trackSelect').value;
     const best = JSON.parse(localStorage.getItem(`allTimeBest_${track}`));
