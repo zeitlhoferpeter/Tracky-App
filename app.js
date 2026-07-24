@@ -19,11 +19,18 @@ function initApp() {
     }
 }
 
-// Hilfsfunktion für korrekte lokale Zeit (verhindert den 2-Stunden-UTC-Versatz)
+// Robuste und präzise lokale Zeit (verhindert den UTC-Versatz komplett)
 function getLocalTimestamp() {
     const now = new Date();
-    const pad = (n) => String(n).padStart(2, '0');
-    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    const formatter = new Intl.DateTimeFormat('sv-SE', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    });
+    return formatter.format(now);
 }
 
 // Erzwingt, dass die HTML-Buttons für Basis-Setup garantiert die richtigen Funktionen nutzen
@@ -74,7 +81,7 @@ function switchPage(pageKey) {
 
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.remove('active');
-            if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(pageKey)) {
+            if (btn.getAttribute('onclick') && btn.getAttribute('onclick'].includes(pageKey)) {
                 btn.classList.add('active');
             }
         });
@@ -136,18 +143,19 @@ function getEmptySessionData(track) {
             outsideTemp: '',
             gripNotes: '',
             gearing: baseline.gearing || '',
-            rebound: baseline.rebound || '',
-            compression: baseline.compression || '',
-            preload: baseline.preload || '',
-            quickFeedback: '',
-            lapTimes: '',
+            forkRebound: baseline.forkRebound || baseline.rebound || '',
+            forkCompression: baseline.forkCompression || baseline.compression || '',
+            forkPreload: baseline.forkPreload || baseline.preload || '',
+            shockRebound: baseline.shockRebound || '',
+            shockCompression: baseline.shockCompression || '',
+            shockPreload: baseline.shockPreload || '',
             tireImage: ''
         };
     }
     return {
         tireFront: '', tireRear: '', outsideTemp: '', gripNotes: '',
-        gearing: '', rebound: '', compression: '', preload: '',
-        quickFeedback: '', lapTimes: '', tireImage: ''
+        gearing: '', forkRebound: '', forkCompression: '', forkPreload: '',
+        shockRebound: '', shockCompression: '', shockPreload: '', tireImage: ''
     };
 }
 
@@ -166,11 +174,16 @@ function loadSessionData(sessionKey) {
     setFieldValue('outsideTemp', data.outsideTemp);
     setFieldValue('gripNotes', data.gripNotes);
     setFieldValue('gearing', data.gearing);
-    setFieldValue('rebound', data.rebound);
-    setFieldValue('compression', data.compression);
-    setFieldValue('preload', data.preload);
-    setFieldValue('quickFeedback', data.quickFeedback);
-    setFieldValue('lapTimes', data.lapTimes);
+    
+    // Gabel (Front) & Fallbacks für ältere IDs
+    setFieldValue('forkRebound', data.forkRebound || data.rebound);
+    setFieldValue('forkCompression', data.forkCompression || data.compression);
+    setFieldValue('forkPreload', data.forkPreload || data.preload);
+
+    // Federbein (Rear)
+    setFieldValue('shockRebound', data.shockRebound);
+    setFieldValue('shockCompression', data.shockCompression);
+    setFieldValue('shockPreload', data.shockPreload);
 
     const imgPrev = document.getElementById('tireImagePreview');
     const imgCont = document.getElementById('tireImageContainer');
@@ -183,8 +196,6 @@ function loadSessionData(sessionKey) {
             imgCont.style.display = 'none';
         }
     }
-
-    analyzeLaps();
 }
 
 function setFieldValue(id, val) {
@@ -225,11 +236,12 @@ function saveData() {
         outsideTemp: document.getElementById('outsideTemp')?.value || '',
         gripNotes: document.getElementById('gripNotes')?.value || '',
         gearing: document.getElementById('gearing')?.value || '',
-        rebound: document.getElementById('rebound')?.value || '',
-        compression: document.getElementById('compression')?.value || '',
-        preload: document.getElementById('preload')?.value || '',
-        quickFeedback: document.getElementById('quickFeedback')?.value || '',
-        lapTimes: document.getElementById('lapTimes')?.value || '',
+        forkRebound: document.getElementById('forkRebound')?.value || document.getElementById('rebound')?.value || '',
+        forkCompression: document.getElementById('forkCompression')?.value || document.getElementById('compression')?.value || '',
+        forkPreload: document.getElementById('forkPreload')?.value || document.getElementById('preload')?.value || '',
+        shockRebound: document.getElementById('shockRebound')?.value || '',
+        shockCompression: document.getElementById('shockCompression')?.value || '',
+        shockPreload: document.getElementById('shockPreload')?.value || '',
         tireImage: imgSrc
     };
 
@@ -238,7 +250,6 @@ function saveData() {
 
     showNotice('saveNotice', 'Erfolgreich gespeichert!');
     showNotice('saveNoticeCurves', 'Kurven erfolgreich gespeichert!');
-    showNotice('saveNoticeLaps', 'Zeiten erfolgreich gespeichert!');
 }
 
 function deleteCurrentSession() {
@@ -278,9 +289,12 @@ function executeSaveBaseline() {
         tireFront: document.getElementById('tireFront')?.value || '',
         tireRear: document.getElementById('tireRear')?.value || '',
         gearing: document.getElementById('gearing')?.value || '',
-        rebound: document.getElementById('rebound')?.value || '',
-        compression: document.getElementById('compression')?.value || '',
-        preload: document.getElementById('preload')?.value || ''
+        forkRebound: document.getElementById('forkRebound')?.value || document.getElementById('rebound')?.value || '',
+        forkCompression: document.getElementById('forkCompression')?.value || document.getElementById('compression')?.value || '',
+        forkPreload: document.getElementById('forkPreload')?.value || document.getElementById('preload')?.value || '',
+        shockRebound: document.getElementById('shockRebound')?.value || '',
+        shockCompression: document.getElementById('shockCompression')?.value || '',
+        shockPreload: document.getElementById('shockPreload')?.value || ''
     };
     
     localStorage.setItem(`baseline_${track}`, JSON.stringify(baseline));
@@ -297,9 +311,13 @@ function loadBaseline() {
     setFieldValue('tireFront', baseline.tireFront);
     setFieldValue('tireRear', baseline.tireRear);
     setFieldValue('gearing', baseline.gearing);
-    setFieldValue('rebound', baseline.rebound);
-    setFieldValue('compression', baseline.compression);
-    setFieldValue('preload', baseline.preload);
+    setFieldValue('forkRebound', baseline.forkRebound || baseline.rebound);
+    setFieldValue('forkCompression', baseline.forkCompression || baseline.compression);
+    setFieldValue('forkPreload', baseline.forkPreload || baseline.preload);
+    setFieldValue('shockRebound', baseline.shockRebound);
+    setFieldValue('shockCompression', baseline.shockCompression);
+    setFieldValue('shockPreload', baseline.shockPreload);
+    
     showNotice('saveNotice', 'Basis-Setup geladen!');
 }
 
@@ -363,7 +381,7 @@ function saveCurvesData() {
     localStorage.setItem(`curves_${track}`, JSON.stringify(savedCurves));
 }
 
-// --- LAPS & ALL TIME BEST ---
+// --- ALL TIME BEST ---
 function loadAllTimeBest() {
     const track = document.getElementById('trackSelect').value;
     const best = JSON.parse(localStorage.getItem(`allTimeBest_${track}`));
@@ -386,122 +404,6 @@ function confirmClearAllTimeBest() {
         localStorage.removeItem(`allTimeBest_${track}`);
         loadAllTimeBest();
     }
-}
-
-function analyzeLaps() {
-    const lapTimesInput = document.getElementById('lapTimes');
-    const analysisBox = document.getElementById('lapAnalysis');
-    if (!lapTimesInput || !analysisBox) return;
-
-    const text = lapTimesInput.value;
-    if (!text.trim()) {
-        analysisBox.style.display = 'none';
-        return;
-    }
-
-    const regex = /(\d{1,2}):([0-5]?\d)[.,](\d{1,3})/g;
-    let match;
-    let timesInMs = [];
-    let timeStrings = [];
-
-    while ((match = regex.exec(text)) !== null) {
-        const min = parseInt(match[1]);
-        const sec = parseInt(match[2]);
-        let ms = parseInt(match[3]);
-        if (match[3].length === 2) ms *= 10;
-        if (match[3].length === 1) ms *= 100;
-        const totalMs = min * 60000 + sec * 1000 + ms;
-        timesInMs.push(totalMs);
-        timeStrings.push(`${min}:${sec < 10 ? '0':''}${sec}.${String(ms).padStart(3,'0')}`);
-    }
-
-    if (timesInMs.length === 0) {
-        analysisBox.style.display = 'none';
-        return;
-    }
-
-    const bestMs = Math.min(...timesInMs);
-    const bestIndex = timesInMs.indexOf(bestMs);
-    const bestStr = timeStrings[bestIndex];
-
-    const track = document.getElementById('trackSelect').value;
-    const currentBestKey = `allTimeBest_${track}`;
-    const existingBest = JSON.parse(localStorage.getItem(currentBestKey));
-    
-    let sessionKey = document.getElementById('sessionSelect')?.value || 'Aktuell';
-    if (!existingBest || bestMs < existingBest.ms) {
-        const newBest = { ms: bestMs, timeStr: bestStr, date: sessionKey };
-        localStorage.setItem(currentBestKey, JSON.stringify(newBest));
-        loadAllTimeBest();
-    }
-
-    const avgMs = timesInMs.reduce((a,b)=>a+b, 0) / timesInMs.length;
-    const avgMin = Math.floor(avgMs / 60000);
-    const avgSec = Math.floor((avgMs % 60000) / 1000);
-    const avgMsRem = Math.floor((avgMs % 1000));
-    const avgStr = `${avgMin}:${avgSec < 10 ? '0':''}${avgSec}.${String(avgMsRem).padStart(3,'0')}`;
-
-    analysisBox.style.display = 'block';
-    analysisBox.innerHTML = `
-        <strong>📊 Runden-Analyse:</strong><br>
-        Anzahl Runden: ${timesInMs.length}<br>
-        Beste Runde im Stint: <strong>${bestStr}</strong><br>
-        Durchschnitt: ${avgStr}
-    `;
-}
-
-function addManualLap() {
-    const min = document.getElementById('manualMin')?.value;
-    const sec = document.getElementById('manualSec')?.value;
-    const ms = document.getElementById('manualMs')?.value;
-    const num = document.getElementById('manualLapNum')?.value;
-
-    if (!min || !sec || !ms) {
-        alert('Bitte Minuten, Sekunden und Hundertstel ausfüllen!');
-        return;
-    }
-
-    const formatted = `${num ? 'R' + num + ': ' : ''}${min}:${sec.padStart(2,'0')}.${ms.padEnd(3,'0')}`;
-    const textarea = document.getElementById('lapTimes');
-    if (textarea) {
-        textarea.value += (textarea.value ? '\n' : '') + formatted;
-    }
-    
-    setFieldValue('manualMin', '');
-    setFieldValue('manualSec', '');
-    setFieldValue('manualMs', '');
-    setFieldValue('manualLapNum', '');
-
-    analyzeLaps();
-    saveData();
-}
-
-function confirmClearLaps() {
-    if(confirm("Alle Rundenzeiten dieses Eintrags löschen?")) {
-        const textarea = document.getElementById('lapTimes');
-        if (textarea) textarea.value = '';
-        analyzeLaps();
-        saveData();
-    }
-}
-
-function handleLapPhotoScan(event) {
-    const file = event.target.files[0];
-    if(!file) return;
-    const status = document.getElementById('scanStatus');
-    if (status) {
-        status.style.display = 'block';
-        status.textContent = "Foto wird analysiert...";
-    }
-    setTimeout(() => {
-        const textarea = document.getElementById('lapTimes');
-        if (textarea) {
-            textarea.value += (textarea.value ? '\n' : '') + "2:14.520\n2:13.890\n2:14.100";
-        }
-        analyzeLaps();
-        saveData();
-        if (status) status.textContent = "Foto erfolgreich analysiert & Runden hinzugefügt!";
-    }, 1000);
 }
 
 // --- CUP & IMAGES ---
